@@ -519,6 +519,17 @@ frontend/
 - Use JWT access tokens + refresh tokens for SPA auth.
 - Store refresh token metadata for rotation and revocation.
 
+### Environment Constraints (Windows + npm Workspaces)
+
+This project runs on Windows with npm workspaces. The `package-lock.json` and `node_modules` are located at the monorepo root (`/`), not inside `packages/backend` or `packages/frontend`. This has the following mandatory implications for all tasks:
+
+- All TypeORM CLI scripts MUST use `npx typeorm-ts-node-commonjs` — never `./node_modules/.bin/typeorm` or direct binary paths
+- The `seed` script MUST use `npx ts-node` — never `ts-node` alone without `npx`
+- No script may reference `./node_modules/.bin/` paths — these will fail on Windows with workspaces
+- When generating new migrations, use: `npx typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts src/database/migrations/<MigrationName>`
+- Environment variables MUST be set using PowerShell syntax: `$env:VAR="value"` — never `VAR=value` (Linux syntax)
+- Docker Compose context for backend and frontend MUST point to the monorepo root (`.`), with `dockerfile` referencing the relative path inside each package
+
 ### Known Risks
 - Tenant data leakage if tenant context is not enforced. Mitigation: global middleware and repository-level tenant filters.
 - Refresh token replay or theft. Mitigation: rotate refresh tokens and keep hashed token store.
