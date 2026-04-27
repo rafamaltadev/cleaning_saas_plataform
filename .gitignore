@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.*.local
+
+# Test coverage and results
+coverage/
+test-results/
+playwright-report/
+cypress/videos/
+cypress/screenshots/
+
+# OS files
+.DS_Store
+
+# Editor directories
+.vscode/
+.idea/
+
+# Compozy cache and logs (NOT tasks/)
+.compozy/cache/
+.compozy/tmp/
+.compozy/logs/
+
+# Local tooling
+.adal/
+.agents/
+.claude/
+.mcpjam/
