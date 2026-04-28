@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Booking & Scheduling"
 type: backend
 complexity: high
@@ -76,12 +76,12 @@ Implements the `Booking`, `Availability`, and `Assignment` entities with migrati
 
 ## Subtasks
 
-- [ ] 8.1 Create `Booking`, `Availability`, and `Assignment` entities and migrations
-- [ ] 8.2 Implement idempotency-key check on `POST /api/v1/bookings` — return original response if key already exists for the tenant
-- [ ] 8.3 Implement atomic booking creation transaction: quote status → accepted, booking record, audit log, domain event
-- [ ] 8.4 Implement scheduling conflict detection for `POST /api/v1/availability` and `PUT /api/v1/bookings/:id`
-- [ ] 8.5 Implement booking endpoints with role guards, pagination, and response DTOs
-- [ ] 8.6 Implement availability and assignment endpoints with appropriate role guards and pagination
+- [x] 8.1 Create `Booking`, `Availability`, and `Assignment` entities and migrations
+- [x] 8.2 Implement idempotency-key check on `POST /api/v1/bookings` — return original response if key already exists for the tenant
+- [x] 8.3 Implement atomic booking creation transaction: quote status → accepted, booking record, audit log, domain event
+- [x] 8.4 Implement scheduling conflict detection for `POST /api/v1/availability` and `PUT /api/v1/bookings/:id`
+- [x] 8.5 Implement booking endpoints with role guards, pagination, and response DTOs
+- [x] 8.6 Implement availability and assignment endpoints with appropriate role guards and pagination
 
 ## Implementation Details
 
@@ -127,16 +127,16 @@ Conflict detection: an availability slot overlaps if `(new_start < existing_end)
 ## Tests
 
 - Unit tests:
-  - [ ] Booking creation with an existing `idempotency_key` for the same tenant returns the original response without inserting a new record
-  - [ ] Conflict detection: `availability` slot with overlapping `start_time`/`end_time` for the same `employee_id` and date returns HTTP 400
-  - [ ] Conflict detection: non-overlapping availability slot for the same employee is accepted
+  - [x] Booking creation with an existing `idempotency_key` for the same tenant returns the original response without inserting a new record
+  - [x] Conflict detection: `availability` slot with overlapping `start_time`/`end_time` for the same `employee_id` and date returns HTTP 400
+  - [x] Conflict detection: non-overlapping availability slot for the same employee is accepted
 - Integration tests:
-  - [ ] Booking creation transaction rolls back completely if the quote status update fails — no partial booking record persists
-  - [ ] `POST /api/v1/bookings/:id/complete` emits the `booking.completed` domain event
-  - [ ] Bookings from a different tenant are not accessible
-  - [ ] `staff` role can `POST /api/v1/availability` but receives HTTP 403 on `POST /api/v1/bookings`
-  - [ ] Soft-deleted bookings do not appear in `GET /api/v1/bookings`
-  - [ ] `GET /api/v1/bookings` pagination meta is accurate
+  - [x] Booking creation transaction rolls back completely if the quote status update fails — no partial booking record persists
+  - [x] `POST /api/v1/bookings/:id/complete` emits the `booking.completed` domain event
+  - [x] Bookings from a different tenant are not accessible
+  - [x] `staff` role can `POST /api/v1/availability` but receives HTTP 403 on `POST /api/v1/bookings`
+  - [x] Soft-deleted bookings do not appear in `GET /api/v1/bookings`
+  - [x] `GET /api/v1/bookings` pagination meta is accurate
 - Test coverage target: >=80%
 - All tests must pass
 
