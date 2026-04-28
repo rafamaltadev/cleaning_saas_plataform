@@ -9,7 +9,7 @@
 | 03 | Auth Module | completed | high | task_02 |
 | 04 | Tenant & User Management | completed | high | task_03 |
 | 05 | Client & Address Management | completed | medium | task_04 |
-| 06 | Services & Pricing Rules | pending | medium | task_05 |
+| 06 | Services & Pricing Rules | completed | medium | task_05 |
 | 07 | Quote Flow | pending | high | task_06 |
 | 08 | Booking & Scheduling | pending | high | task_07 |
 | 09 | Domain Events & Audit Log Infrastructure | pending | high | task_08 |

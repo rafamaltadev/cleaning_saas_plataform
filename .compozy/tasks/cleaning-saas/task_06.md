@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Services & Pricing Rules"
 type: backend
 complexity: medium
@@ -76,11 +76,11 @@ Implements the `Service` and `PricingRule` entities with their migrations, the t
 
 ## Subtasks
 
-- [ ] 6.1 Create `Service` entity, migration, and repository extending `SoftDeleteRepository`
-- [ ] 6.2 Create `PricingRule` entity, migration, and repository extending `SoftDeleteRepository`
-- [ ] 6.3 Implement the pricing calculation as a pure `PricingService.calculate()` method with no side effects, following the SPEC formula
-- [ ] 6.4 Implement service endpoints with pagination, `supervisor` role guard, and response DTOs
-- [ ] 6.5 Implement pricing-rule endpoints with pagination, `supervisor` role guard, and response DTOs
+- [x] 6.1 Create `Service` entity, migration, and repository extending `SoftDeleteRepository`
+- [x] 6.2 Create `PricingRule` entity, migration, and repository extending `SoftDeleteRepository`
+- [x] 6.3 Implement the pricing calculation as a pure `PricingService.calculate()` method with no side effects, following the SPEC formula
+- [x] 6.4 Implement service endpoints with pagination, `supervisor` role guard, and response DTOs
+- [x] 6.5 Implement pricing-rule endpoints with pagination, `supervisor` role guard, and response DTOs
 
 ## Implementation Details
 
@@ -127,17 +127,17 @@ Pricing formula order per SPEC:
 ## Tests
 
 - Unit tests:
-  - [ ] `PricingService.calculate()` with unit `sqm`: result equals `base_rate_cents × area_sqm` before discounts
-  - [ ] `PricingService.calculate()` with unit `hour`: result equals `base_rate_cents × duration_hours` before discounts
-  - [ ] `PricingService.calculate()` with unit `flat`: result equals `base_rate_cents` regardless of area or duration inputs
-  - [ ] `PricingService.calculate()` applies `price_multiplier` before `discount_percent`
-  - [ ] `PricingService.calculate()` applies `manual_discount_percent` last
-  - [ ] `PricingService.calculate()` returns an integer (rounds to nearest cent)
+  - [x] `PricingService.calculate()` with unit `sqm`: result equals `base_rate_cents × area_sqm` before discounts
+  - [x] `PricingService.calculate()` with unit `hour`: result equals `base_rate_cents × duration_hours` before discounts
+  - [x] `PricingService.calculate()` with unit `flat`: result equals `base_rate_cents` regardless of area or duration inputs
+  - [x] `PricingService.calculate()` applies `price_multiplier` before `discount_percent`
+  - [x] `PricingService.calculate()` applies `manual_discount_percent` last
+  - [x] `PricingService.calculate()` returns an integer (rounds to nearest cent)
 - Integration tests:
-  - [ ] `GET /api/v1/services` does not return services belonging to a different tenant
-  - [ ] `GET /api/v1/services` does not return soft-deleted services
-  - [ ] `POST /api/v1/services` with `staff` role returns HTTP 403
-  - [ ] `GET /api/v1/pricing-rules` pagination meta is accurate
+  - [x] `GET /api/v1/services` does not return services belonging to a different tenant
+  - [x] `GET /api/v1/services` does not return soft-deleted services
+  - [x] `POST /api/v1/services` with `staff` role returns HTTP 403
+  - [x] `GET /api/v1/pricing-rules` pagination meta is accurate
 - Test coverage target: >=80%
 - All tests must pass
 
