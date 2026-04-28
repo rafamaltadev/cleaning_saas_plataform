@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Auth Module"
 type: backend
 complexity: high
@@ -80,13 +80,13 @@ Implements the complete authentication system: User entity and migration, JWT ac
 
 ## Subtasks
 
-- [ ] 3.1 Create `User` entity and `users` table migration with all specified fields
-- [ ] 3.2 Implement JWT access + refresh token generation and the bcrypt-hashed refresh token storage
-- [ ] 3.3 Implement token rotation logic and reuse detection in `POST /api/v1/auth/refresh`
-- [ ] 3.4 Implement the `AuthUser` middleware extracting claims from the JWT and injecting into the request context
-- [ ] 3.5 Implement `JwtAuthGuard` and `RolesGuard` as standalone reusable guards
-- [ ] 3.6 Wire up auth endpoints (`login`, `refresh`, `logout`) with DTOs, guards, and stricter rate limiting
-- [ ] 3.7 Configure CORS restriction to the environment-defined frontend origin
+- [x] 3.1 Create `User` entity and `users` table migration with all specified fields
+- [x] 3.2 Implement JWT access + refresh token generation and the bcrypt-hashed refresh token storage
+- [x] 3.3 Implement token rotation logic and reuse detection in `POST /api/v1/auth/refresh`
+- [x] 3.4 Implement the `AuthUser` middleware extracting claims from the JWT and injecting into the request context
+- [x] 3.5 Implement `JwtAuthGuard` and `RolesGuard` as standalone reusable guards
+- [x] 3.6 Wire up auth endpoints (`login`, `refresh`, `logout`) with DTOs, guards, and stricter rate limiting
+- [x] 3.7 Configure CORS restriction to the environment-defined frontend origin
 
 ## Implementation Details
 

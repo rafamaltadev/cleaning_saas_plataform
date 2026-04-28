@@ -14,4 +14,5 @@ export default () => ({
     accessExpiration: process.env.JWT_ACCESS_EXPIRATION ?? '15m',
     refreshExpiration: process.env.JWT_REFRESH_EXPIRATION ?? '30d',
   },
+  frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
 });

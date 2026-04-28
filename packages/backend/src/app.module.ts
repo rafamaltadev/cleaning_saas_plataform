@@ -1,9 +1,13 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.schema';
 import { SharedModule } from './modules/shared/shared.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
 
 @Module({
   imports: [
@@ -29,7 +33,19 @@ import { SharedModule } from './modules/shared/shared.module';
       }),
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
     SharedModule,
+    AuthModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(AuthUserMiddleware).forRoutes('*');
+  }
+}
