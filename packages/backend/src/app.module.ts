@@ -9,6 +9,7 @@ import { SharedModule } from './modules/shared/shared.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { UsersModule } from './modules/users/users.module';
+import { ClientsModule } from './modules/clients/clients.module';
 import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
 
 @Module({
@@ -40,6 +41,7 @@ import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
     AuthModule,
     TenantModule,
     UsersModule,
+    ClientsModule,
   ],
   providers: [
     {

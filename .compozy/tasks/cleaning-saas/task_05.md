@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Client & Address Management"
 type: backend
 complexity: medium
@@ -75,11 +75,11 @@ Implements the `Client` and `Address` entities with their migrations, following 
 
 ## Subtasks
 
-- [ ] 5.1 Create `Client` entity, migration, and repository extending `SoftDeleteRepository`
-- [ ] 5.2 Create `Address` entity, migration, and repository extending `SoftDeleteRepository`
-- [ ] 5.3 Implement client endpoints with pagination, `supervisor` role guard, and response DTOs
-- [ ] 5.4 Implement address endpoints with `supervisor` role guard and response DTOs
-- [ ] 5.5 Emit audit log entries for all POST and PUT operations on Client and Address
+- [x] 5.1 Create `Client` entity, migration, and repository extending `SoftDeleteRepository`
+- [x] 5.2 Create `Address` entity, migration, and repository extending `SoftDeleteRepository`
+- [x] 5.3 Implement client endpoints with pagination, `supervisor` role guard, and response DTOs
+- [x] 5.4 Implement address endpoints with `supervisor` role guard and response DTOs
+- [x] 5.5 Emit audit log entries for all POST and PUT operations on Client and Address
 
 ## Implementation Details
 
