@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Quote Flow"
 type: backend
 complexity: high
@@ -79,13 +79,13 @@ Implements the `Quote` entity with its state machine (`draft → sent → accept
 
 ## Subtasks
 
-- [ ] 7.1 Create `Quote` entity, migration, and tenant-scoped repository
-- [ ] 7.2 Implement the Quote state machine with invalid-transition 400 enforcement
-- [ ] 7.3 Implement `POST /api/v1/quotes` calculating `estimated_total_cents` via `PricingService.calculate()` from task_06
-- [ ] 7.4 Implement lazy expiration logic on `GET /api/v1/quotes` and `GET /api/v1/quotes/:id`
-- [ ] 7.5 Implement `POST /api/v1/quotes/:id/send` with `quotes.send` permission check, transaction wrapper, and event emission
-- [ ] 7.6 Implement remaining endpoints (`GET`, `PUT`) with pagination and response DTOs
-- [ ] 7.7 Emit domain events (`quote.created`, `quote.sent`, `quote.accepted`, `quote.expired`) and audit log entries for all transitions
+- [x] 7.1 Create `Quote` entity, migration, and tenant-scoped repository
+- [x] 7.2 Implement the Quote state machine with invalid-transition 400 enforcement
+- [x] 7.3 Implement `POST /api/v1/quotes` calculating `estimated_total_cents` via `PricingService.calculate()` from task_06
+- [x] 7.4 Implement lazy expiration logic on `GET /api/v1/quotes` and `GET /api/v1/quotes/:id`
+- [x] 7.5 Implement `POST /api/v1/quotes/:id/send` with `quotes.send` permission check, transaction wrapper, and event emission
+- [x] 7.6 Implement remaining endpoints (`GET`, `PUT`) with pagination and response DTOs
+- [x] 7.7 Emit domain events (`quote.created`, `quote.sent`, `quote.accepted`, `quote.expired`) and audit log entries for all transitions
 
 ## Implementation Details
 
@@ -128,19 +128,19 @@ Lazy expiration: the status update to `expired` on read must be persisted in a d
 ## Tests
 
 - Unit tests:
-  - [ ] `QuoteService.create()` correctly delegates to `PricingService.calculate()` and stores the returned cents value
-  - [ ] State machine: `draft → sent` transition is valid
-  - [ ] State machine: `sent → accepted` transition is valid
-  - [ ] State machine: `accepted → sent` transition is invalid and returns HTTP 400
-  - [ ] Lazy expiration: a `sent` quote with `valid_until` in the past returns with status `expired` after the GET call
-  - [ ] Draft quotes with `valid_until` in the past are NOT changed to `expired` by lazy expiration
-  - [ ] Accepted and rejected quotes do NOT change status regardless of `valid_until`
+  - [x] `QuoteService.create()` correctly delegates to `PricingService.calculate()` and stores the returned cents value
+  - [x] State machine: `draft → sent` transition is valid
+  - [x] State machine: `sent → accepted` transition is valid
+  - [x] State machine: `accepted → sent` transition is invalid and returns HTTP 400
+  - [x] Lazy expiration: a `sent` quote with `valid_until` in the past returns with status `expired` after the GET call
+  - [x] Draft quotes with `valid_until` in the past are NOT changed to `expired` by lazy expiration
+  - [x] Accepted and rejected quotes do NOT change status regardless of `valid_until`
 - Integration tests:
-  - [ ] `POST /api/v1/quotes` stores correct `estimated_total_cents` matching the pricing formula
-  - [ ] `POST /api/v1/quotes/:id/send` returns HTTP 403 when the user lacks the `quotes.send` permission
-  - [ ] Domain events `quote.created`, `quote.sent`, `quote.accepted` are emitted on the corresponding transitions
-  - [ ] Quotes from a different tenant are not accessible
-  - [ ] `GET /api/v1/quotes` pagination meta is accurate
+  - [x] `POST /api/v1/quotes` stores correct `estimated_total_cents` matching the pricing formula
+  - [x] `POST /api/v1/quotes/:id/send` returns HTTP 403 when the user lacks the `quotes.send` permission
+  - [x] Domain events `quote.created`, `quote.sent`, `quote.accepted` are emitted on the corresponding transitions
+  - [x] Quotes from a different tenant are not accessible
+  - [x] `GET /api/v1/quotes` pagination meta is accurate
 - Test coverage target: >=80%
 - All tests must pass
 

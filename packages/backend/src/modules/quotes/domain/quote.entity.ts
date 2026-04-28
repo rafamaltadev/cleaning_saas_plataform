@@ -1,0 +1,54 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'rejected';
+
+@Entity('quotes')
+export class Quote {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'uuid' })
+  tenant_id: string;
+
+  @Column({ type: 'uuid' })
+  client_id: string;
+
+  @Column({ type: 'uuid' })
+  service_id: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  pricing_rule_id: string | null;
+
+  @Column({ type: 'varchar', default: 'draft' })
+  status: QuoteStatus;
+
+  @Column({ type: 'integer' })
+  estimated_total_cents: number;
+
+  @Column({ type: 'varchar' })
+  currency: string;
+
+  @Column({ type: 'timestamp' })
+  valid_until: Date;
+
+  @Column({ type: 'integer', default: 0 })
+  manual_discount_percent: number;
+
+  @Column({ type: 'uuid' })
+  created_by: string;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updated_at: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  deleted_at: Date | null;
+}

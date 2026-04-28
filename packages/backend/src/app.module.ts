@@ -11,6 +11,7 @@ import { TenantModule } from './modules/tenant/tenant.module';
 import { UsersModule } from './modules/users/users.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { ServicesModule } from './modules/services/services.module';
+import { QuotesModule } from './modules/quotes/quotes.module';
 import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
 
 @Module({
@@ -44,6 +45,7 @@ import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
     UsersModule,
     ClientsModule,
     ServicesModule,
+    QuotesModule,
   ],
   providers: [
     {
