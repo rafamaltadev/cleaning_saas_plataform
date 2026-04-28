@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Tenant & User Management"
 type: backend
 complexity: high
@@ -74,12 +74,12 @@ Implements the `Tenant` entity aligned with the task_02 migration, establishes t
 
 ## Subtasks
 
-- [ ] 4.1 Create `Tenant` entity and verify alignment with the task_02 `tenants` migration
-- [ ] 4.2 Implement `TenantScopedRepository` extending `SoftDeleteRepository`, requiring explicit `tenantId` on all queries
-- [ ] 4.3 Implement tenant endpoints (`GET /api/v1/tenants/me`, `PUT /api/v1/tenants/me`) with `tenant_admin` guard
-- [ ] 4.4 Implement user management endpoints (`GET /api/v1/users`, `POST /api/v1/users`, `PUT /api/v1/users/:id`) with pagination and `tenant_admin` guard
-- [ ] 4.5 Map all responses through DTOs ensuring `password_hash` and `deleted_at` are never returned
-- [ ] 4.6 Emit audit log entries for user create and update operations
+- [x] 4.1 Create `Tenant` entity and verify alignment with the task_02 `tenants` migration
+- [x] 4.2 Implement `TenantScopedRepository` extending `SoftDeleteRepository`, requiring explicit `tenantId` on all queries
+- [x] 4.3 Implement tenant endpoints (`GET /api/v1/tenants/me`, `PUT /api/v1/tenants/me`) with `tenant_admin` guard
+- [x] 4.4 Implement user management endpoints (`GET /api/v1/users`, `POST /api/v1/users`, `PUT /api/v1/users/:id`) with pagination and `tenant_admin` guard
+- [x] 4.5 Map all responses through DTOs ensuring `password_hash` and `deleted_at` are never returned
+- [x] 4.6 Emit audit log entries for user create and update operations
 
 ## Implementation Details
 
@@ -119,17 +119,17 @@ Audit log emission should call the audit log infrastructure (as defined in task_
 ## Tests
 
 - Unit tests:
-  - [ ] `TenantScopedRepository` includes `tenant_id` filter in all generated queries
-  - [ ] User response DTO does not include `password_hash` or `deleted_at` fields
-  - [ ] Pagination helper computes `totalPages` correctly for given `total` and `limit`
+  - [x] `TenantScopedRepository` includes `tenant_id` filter in all generated queries
+  - [x] User response DTO does not include `password_hash` or `deleted_at` fields
+  - [x] Pagination helper computes `totalPages` correctly for given `total` and `limit`
 - Integration tests:
-  - [ ] `GET /api/v1/tenants/me` returns the correct tenant data for the authenticated `tenant_admin` user
-  - [ ] `GET /api/v1/tenants/me` returns HTTP 403 for a user with `supervisor` or `staff` role
-  - [ ] `POST /api/v1/users` creates a user scoped to the requesting user's `tenant_id`
-  - [ ] A user authenticated as tenant A cannot read or modify users belonging to tenant B (returns HTTP 403 or empty result)
-  - [ ] `GET /api/v1/users` pagination meta contains correct `total`, `page`, `limit`, and `totalPages` values
-  - [ ] Soft-deleted users do not appear in `GET /api/v1/users` response
-  - [ ] `POST /api/v1/users` response body does not contain `password_hash` or `deleted_at`
+  - [x] `GET /api/v1/tenants/me` returns the correct tenant data for the authenticated `tenant_admin` user
+  - [x] `GET /api/v1/tenants/me` returns HTTP 403 for a user with `supervisor` or `staff` role
+  - [x] `POST /api/v1/users` creates a user scoped to the requesting user's `tenant_id`
+  - [x] A user authenticated as tenant A cannot read or modify users belonging to tenant B (returns HTTP 403 or empty result)
+  - [x] `GET /api/v1/users` pagination meta contains correct `total`, `page`, `limit`, and `totalPages` values
+  - [x] Soft-deleted users do not appear in `GET /api/v1/users` response
+  - [x] `POST /api/v1/users` response body does not contain `password_hash` or `deleted_at`
 - Test coverage target: >=80%
 - All tests must pass
 

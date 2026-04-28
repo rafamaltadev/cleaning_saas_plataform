@@ -7,6 +7,8 @@ import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.schema';
 import { SharedModule } from './modules/shared/shared.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { TenantModule } from './modules/tenant/tenant.module';
+import { UsersModule } from './modules/users/users.module';
 import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
 
 @Module({
@@ -36,6 +38,8 @@ import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
     SharedModule,
     AuthModule,
+    TenantModule,
+    UsersModule,
   ],
   providers: [
     {
