@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { QuoteService } from '../application/quote.service';
 import { CreateQuoteDto } from '../validation/create-quote.dto';
 import { UpdateQuoteDto } from '../validation/update-quote.dto';
@@ -20,6 +21,8 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthUser } from '../../../common/interfaces/auth-user.interface';
 
+@ApiTags('quotes')
+@ApiBearerAuth()
 @Controller('v1/quotes')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('supervisor', 'tenant_admin')
@@ -27,6 +30,10 @@ export class QuotesController {
   constructor(private readonly quoteService: QuoteService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List quotes' })
+  @ApiResponse({ status: 200, description: 'Paginated quote list' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   findAll(
     @Req() req: Request & { user?: AuthUser },
     @Query() query: PaginationQueryDto,
@@ -35,6 +42,11 @@ export class QuotesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a quote by ID' })
+  @ApiResponse({ status: 200, type: QuoteResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   findById(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,
@@ -43,6 +55,11 @@ export class QuotesController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a quote' })
+  @ApiResponse({ status: 201, type: QuoteResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Req() req: Request & { user?: AuthUser },
     @Body() dto: CreateQuoteDto,
@@ -51,6 +68,11 @@ export class QuotesController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a quote' })
+  @ApiResponse({ status: 200, type: QuoteResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   update(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,
@@ -60,6 +82,11 @@ export class QuotesController {
   }
 
   @Post(':id/send')
+  @ApiOperation({ summary: 'Send a quote to the client' })
+  @ApiResponse({ status: 201, type: QuoteResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid quote status' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   send(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,

@@ -15,4 +15,8 @@ export const envValidationSchema = Joi.object({
   JWT_ACCESS_EXPIRATION: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRATION: Joi.string().default('30d'),
   FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
+  THROTTLE_TTL: Joi.number().default(60000),
+  THROTTLE_LIMIT: Joi.number().default(100),
+  THROTTLE_AUTH_TTL: Joi.number().default(60000),
+  THROTTLE_AUTH_LIMIT: Joi.number().default(5),
 });

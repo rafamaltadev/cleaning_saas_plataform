@@ -1,13 +1,12 @@
 ---
 status: pending
-title: "Frontend MVP Part A: Auth, Shell & Client Management"
-type: frontend
+title: "Frontend MVP Part A: Auth, Shell, Client Management, Settings & Kanban"
+type: feature
 complexity: high
-dependencies:
-  - task_12
+dependencies: [task_12]
 ---
 
-# Task 13: Frontend MVP Part A: Auth, Shell & Client Management
+# Task 13: Frontend MVP Part A — Auth, Shell, Client Management, Settings & Kanban
 
 ---
 You are a senior software engineer executing a predefined task in an existing codebase.
@@ -49,101 +48,100 @@ Your objective is to implement the task EXACTLY as specified.
 Now execute the task below exactly as specified:
 ---
 
+## Design System Reference
+
+MUST read and follow `.compozy/tasks/cleaning-saas/_design_system.md` before writing any frontend code.
+All UI MUST conform strictly to the design system defined there — colors, typography, spacing, components, responsiveness, and screen patterns.
+
 ## Overview
 
-Implements the React application from the task_01 scaffold: login screen with secure token storage, automatic 401-triggered token refresh with request retry, application shell with React Router protected routes, role-based route guards, and the full Client and Address CRUD screens with paginated lists and validation feedback. No backend changes are made in this task.
+Implements the authenticated application shell and all Part A screens: login, client management, settings, and kanban board. The frontend scaffold already exists from T01 — implement the application from the existing scaffold. No backend changes in this task.
 
 <critical>
-- ALWAYS READ the PRD and TechSpec before starting
-- REFERENCE TECHSPEC for implementation details — do not duplicate here
-- FOCUS ON "WHAT" — describe what needs to be accomplished, not how
-- MINIMIZE CODE — show code only to illustrate current structure or problem areas
-- TESTS REQUIRED — every task MUST include tests in deliverables
+- ALWAYS READ the design system reference before starting
+- ALL screens MUST be mobile-first following the responsiveness rules defined in the design system
+- NEVER invent colors, spacing, or components outside the design system
+- TESTS REQUIRED — every deliverable MUST include tests
 </critical>
 
 <requirements>
-- MUST implement the login screen: call `POST /api/v1/auth/login`, store access token in memory and refresh token via httpOnly cookie or equivalent secure strategy
-- MUST implement automatic token refresh: intercept 401 responses, call `POST /api/v1/auth/refresh`, retry the original request — if refresh fails, redirect to login and clear stored tokens
+
+### Auth
+- MUST implement the login screen: call POST /api/v1/auth/login, store access token and refresh token securely (memory + httpOnly cookie or equivalent secure strategy)
+- MUST implement automatic token refresh: intercept 401 responses, call POST /api/v1/auth/refresh, retry the original request — if refresh fails, redirect to login and clear stored tokens
+- Login screen MUST follow the Auth Screen pattern defined in the design system (centered card layout, minimal, focused)
+
+### Application Shell
 - MUST implement the application shell with React Router: protected routes that redirect unauthenticated users to login
 - MUST implement role-based route protection: routes inaccessible to the authenticated user's role MUST redirect to an appropriate fallback
-- MUST implement Client list screen: paginated table consuming `GET /api/v1/clients` with page navigation
-- MUST implement Client create screen: form consuming `POST /api/v1/clients` with validation feedback
-- MUST implement Client edit screen: form consuming `PUT /api/v1/clients/:id` with validation feedback and pre-populated data
+- Shell MUST include sidebar navigation (desktop) and bottom navigation (mobile) with maximum 5 primary actions
+- All screens MUST respect the authenticated user's permissions for UI element visibility
+
+### Client Management
+- MUST implement Client list screen: paginated table consuming GET /api/v1/clients — use the Data Listing Screen pattern (search, filters, badges for status, pagination, row actions)
+- MUST implement Client create screen: form consuming POST /api/v1/clients — use the Form Screen pattern (grouped fields, inline validation, submit + cancel)
+- MUST implement Client edit screen: form consuming PUT /api/v1/clients/:id — pre-populated with existing data
 - MUST implement Address create and edit forms as part of the Client screens
-- All screens MUST respect the authenticated user's permissions for UI element visibility (e.g. hide create button if role is `staff`)
-- MUST NOT make backend changes in this task
+
+### Settings
+- MUST implement a Settings screen with sidebar or tabs for the following configuration categories:
+  - Company profile: name, email, timezone, currency
+  - Business hours: configurable open/close times per day of week
+  - Services & pricing: list of services with base rates (read-only display, linking to the services module)
+  - Payment integration: Stripe connection section — structure and UI MUST be implemented but the actual Stripe integration is NOT active in the MVP (display a "Coming soon" or "Connect Stripe" placeholder state)
+- Settings MUST use the Settings Screen pattern defined in the design system (sidebar/tabs, grouped forms, save actions with feedback)
+- Settings MUST consume GET /api/v1/tenants/me for company profile and PUT /api/v1/tenants/me to save — requires tenant_admin role
+
+### Kanban Board
+- MUST implement a Kanban board screen for managing leads and bookings by status
+- Columns: New Lead, Contacted, Quote Sent, Booking Confirmed, Completed, Cancelled
+- Each card MUST display: client name, service, scheduled date (if applicable), and current status badge
+- Cards MUST be draggable between columns — updating the underlying booking or quote status via the appropriate API endpoint
+- MUST follow the Kanban Board pattern defined in the design system (clear column separation, card-based, smooth drag interactions)
+- Kanban data MUST be sourced from GET /api/v1/quotes and GET /api/v1/bookings, mapped to the appropriate columns by status
+
 </requirements>
 
 ## Subtasks
 
-- [ ] 13.1 Implement login screen with API call, secure token storage (memory for access token, httpOnly cookie or equivalent for refresh)
-- [ ] 13.2 Implement axios/fetch interceptor for automatic 401 refresh and original request retry
-- [ ] 13.3 Implement application shell with React Router, protected route component, and redirect-to-login for unauthenticated access
-- [ ] 13.4 Implement role-based route protection with redirect to fallback for unauthorized roles
-- [ ] 13.5 Implement Client list screen with paginated table and page navigation controls
-- [ ] 13.6 Implement Client create and edit screens with form validation feedback
-- [ ] 13.7 Implement Address create and edit forms integrated within the Client screens
-- [ ] 13.8 Apply role-based UI element visibility (hide/show create and edit buttons by role)
-
-## Implementation Details
-
-Reference the TechSpec 'Frontend Architecture' section for routing structure, auth state management, and HTTP client interceptor patterns. Access token must never be stored in `localStorage` or `sessionStorage` — memory storage (React context or state) is the required pattern.
-
-The HTTP interceptor must queue concurrent requests during a refresh to avoid multiple simultaneous refresh calls.
-
-### Relevant Files
-
-- `packages/frontend/src/main.tsx` — app entry point
-- `packages/frontend/src/router/index.tsx` — React Router routes
-- `packages/frontend/src/router/ProtectedRoute.tsx` — auth + role guard component
-- `packages/frontend/src/features/auth/LoginPage.tsx` — login screen
-- `packages/frontend/src/features/auth/auth.store.ts` — token storage state
-- `packages/frontend/src/api/http-client.ts` — axios/fetch instance with interceptors
-- `packages/frontend/src/features/clients/ClientListPage.tsx` — paginated list
-- `packages/frontend/src/features/clients/ClientCreatePage.tsx` — create form
-- `packages/frontend/src/features/clients/ClientEditPage.tsx` — edit form
-- `packages/frontend/src/features/clients/AddressForm.tsx` — address sub-form
-
-### Dependent Files
-
-- task_14 adds Quote, Booking, and Dashboard screens to the same shell established here
-
-### Related ADRs
-
-- [ADR-002: Monolithic Modular Architecture with Logical Multi-Tenant Isolation and JWT RBAC](../adrs/adr-002-monolith-jwt-rbac.md) — confirms JWT-based SPA auth pattern
+- [ ] 13.1 Implement login screen with auth flow, token storage, and automatic refresh
+- [ ] 13.2 Implement application shell with React Router, protected routes, and role-based access
+- [ ] 13.3 Implement Client list, create, and edit screens with Address forms
+- [ ] 13.4 Implement Settings screen with company profile, business hours, services display, and Stripe placeholder
+- [ ] 13.5 Implement Kanban board with draggable cards mapped to quote/booking statuses
 
 ## Deliverables
 
-- Login screen with secure token storage
-- 401 interceptor with refresh retry logic
-- Protected routing shell with role-based guards
-- Client list, create, and edit screens
+- Login screen following auth screen pattern
+- Application shell with sidebar (desktop) and bottom nav (mobile)
+- Client list, create, and edit screens with pagination and inline validation
 - Address create and edit forms
-- Role-based UI visibility applied to all screens
-- Unit/component tests with 80%+ coverage **(REQUIRED)**
-- Integration tests for auth flow and client CRUD screens **(REQUIRED)**
+- Settings screen with all four category sections
+- Kanban board with draggable cards and status columns
+- All screens mobile-first and design-system compliant
+- Unit and component tests for all screens and interactions (REQUIRED)
 
 ## Tests
 
-- Unit tests:
-  - [ ] Login form submits credentials to `POST /api/v1/auth/login` and stores tokens on HTTP 200
-  - [ ] Failed login (HTTP 401 from API) displays an error message and does not store any tokens
-  - [ ] HTTP 401 response triggers the refresh interceptor, calls `POST /api/v1/auth/refresh`, and retries the original request
-  - [ ] Failed token refresh redirects to the login page and clears all stored tokens
-  - [ ] Protected route redirects an unauthenticated user to the login page
-  - [ ] Role-based route protection: `staff` role is redirected away from `supervisor`-only routes
-  - [ ] Client create form shows a validation error when a required field is empty and does not submit
-  - [ ] Client edit form is pre-populated with the existing client data on mount
-- Integration tests:
-  - [ ] Client list renders paginated rows and clicking next-page loads the next page of results
-- Test coverage target: >=80%
-- All tests must pass
+- Unit / component tests:
+  - [ ] Login form submits credentials and stores tokens on success
+  - [ ] Failed login displays error message and does not store tokens
+  - [ ] 401 response triggers automatic token refresh and retries the original request
+  - [ ] Failed token refresh redirects to login and clears stored tokens
+  - [ ] Protected routes redirect unauthenticated users to login
+  - [ ] Role-based route protection: staff cannot access supervisor-only routes
+  - [ ] Client list renders paginated results and navigates between pages
+  - [ ] Client create form validates required fields before submitting
+  - [ ] Client edit form pre-populates with existing data
+  - [ ] Settings company profile form loads tenant data and saves changes
+  - [ ] Stripe section renders placeholder state without throwing errors
+  - [ ] Kanban board renders columns with correct cards mapped by status
+  - [ ] Dragging a card between columns triggers the correct API update
 
 ## Success Criteria
 
 - All tests passing
-- Test coverage >=80%
-- Access token is never stored in `localStorage` or `sessionStorage`
-- 401 refresh cycle works transparently without the user seeing an error
-- `staff` users cannot access or see supervisor-only UI elements
-- Client list, create, and edit flows work end-to-end against the backend API
+- Login, shell, clients, settings, and kanban screens functional end-to-end
+- All screens follow the design system strictly (colors, spacing, components, responsiveness)
+- No backend changes were made
+- No design system tokens were invented or overridden

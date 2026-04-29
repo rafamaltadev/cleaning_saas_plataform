@@ -33,3 +33,4 @@ cypress/screenshots/
 .agents/
 .claude/
 .mcpjam/
+frontend_prompts

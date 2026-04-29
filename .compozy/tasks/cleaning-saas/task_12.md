@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Security Baseline, Rate Limiting & OpenAPI"
 type: backend
 complexity: medium
@@ -74,11 +74,11 @@ Hardens the existing API surface: applies global rate limiting per IP and per au
 
 ## Subtasks
 
-- [ ] 12.1 Configure global rate limiting (per IP, per authenticated user) with env-var limits; verify auth endpoint stricter limit is consistent
-- [ ] 12.2 Verify CORS configuration — enforce env-var frontend origin, ensure wildcard is never allowed
-- [ ] 12.3 Audit all existing DTOs for missing `@IsWhitelisted` / `whitelist: true` / `@Exclude` patterns — fix any mass assignment gaps
-- [ ] 12.4 Verify global `ValidationPipe` with `forbidNonWhitelisted: true` is applied; fix any input sanitization gaps
-- [ ] 12.5 Install Swagger and annotate all controllers and DTOs from task_03 to task_11 — expose spec at `/api/v1/docs`
+- [x] 12.1 Configure global rate limiting (per IP, per authenticated user) with env-var limits; verify auth endpoint stricter limit is consistent
+- [x] 12.2 Verify CORS configuration — enforce env-var frontend origin, ensure wildcard is never allowed
+- [x] 12.3 Audit all existing DTOs for missing `@IsWhitelisted` / `whitelist: true` / `@Exclude` patterns — fix any mass assignment gaps
+- [x] 12.4 Verify global `ValidationPipe` with `forbidNonWhitelisted: true` is applied; fix any input sanitization gaps
+- [x] 12.5 Install Swagger and annotate all controllers and DTOs from task_03 to task_11 — expose spec at `/api/v1/docs`
 
 ## Implementation Details
 

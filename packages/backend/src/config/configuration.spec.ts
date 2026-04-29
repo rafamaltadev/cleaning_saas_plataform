@@ -60,4 +60,37 @@ describe('configuration', () => {
     expect(config.jwt.accessExpiration).toBe('15m');
     expect(config.jwt.refreshExpiration).toBe('30d');
   });
+
+  it('reads throttle limits from env vars', () => {
+    process.env.THROTTLE_TTL = '30000';
+    process.env.THROTTLE_LIMIT = '200';
+    process.env.THROTTLE_AUTH_TTL = '30000';
+    process.env.THROTTLE_AUTH_LIMIT = '3';
+    const config = configuration();
+    expect(config.throttle.ttl).toBe(30000);
+    expect(config.throttle.limit).toBe(200);
+    expect(config.throttle.authTtl).toBe(30000);
+    expect(config.throttle.authLimit).toBe(3);
+  });
+
+  it('authLimit default (5) is strictly lower than global limit default (100)', () => {
+    delete process.env.THROTTLE_TTL;
+    delete process.env.THROTTLE_LIMIT;
+    delete process.env.THROTTLE_AUTH_TTL;
+    delete process.env.THROTTLE_AUTH_LIMIT;
+    const config = configuration();
+    expect(config.throttle.authLimit).toBeLessThan(config.throttle.limit);
+  });
+
+  it('uses correct defaults for throttle when env vars are not set', () => {
+    delete process.env.THROTTLE_TTL;
+    delete process.env.THROTTLE_LIMIT;
+    delete process.env.THROTTLE_AUTH_TTL;
+    delete process.env.THROTTLE_AUTH_LIMIT;
+    const config = configuration();
+    expect(config.throttle.ttl).toBe(60000);
+    expect(config.throttle.limit).toBe(100);
+    expect(config.throttle.authTtl).toBe(60000);
+    expect(config.throttle.authLimit).toBe(5);
+  });
 });

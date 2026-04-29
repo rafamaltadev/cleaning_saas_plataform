@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ServicesService } from '../application/services.service';
 import { CreateServiceDto } from '../domain/create-service.dto';
 import { UpdateServiceDto } from '../domain/update-service.dto';
@@ -20,6 +21,8 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthUser } from '../../../common/interfaces/auth-user.interface';
 
+@ApiTags('services')
+@ApiBearerAuth()
 @Controller('v1/services')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('supervisor', 'tenant_admin')
@@ -27,6 +30,10 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List services' })
+  @ApiResponse({ status: 200, description: 'Paginated service list' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   getAll(
     @Req() req: Request & { user?: AuthUser },
     @Query() query: PaginationQueryDto,
@@ -35,6 +42,11 @@ export class ServicesController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a service' })
+  @ApiResponse({ status: 201, type: ServiceResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Req() req: Request & { user?: AuthUser },
     @Body() dto: CreateServiceDto,
@@ -43,6 +55,11 @@ export class ServicesController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a service' })
+  @ApiResponse({ status: 200, type: ServiceResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   update(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,

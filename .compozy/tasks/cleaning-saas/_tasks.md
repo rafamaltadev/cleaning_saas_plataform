@@ -14,8 +14,9 @@
 | 08 | Booking & Scheduling | completed | high | task_07 |
 | 09 | Domain Events & Audit Log Infrastructure | completed | high | task_08 |
 | 10 | Notifications | completed | high | task_09 |
-| 11 | Billing | pending | high | task_10 |
-| 12 | Security Baseline, Rate Limiting & OpenAPI | pending | medium | task_11 |
-| 13 | Frontend MVP Part A: Auth, Shell & Client Management | pending | high | task_12 |
+| 11 | Billing | completed | high | task_10 |
+| 12 | Security Baseline, Rate Limiting & OpenAPI | completed | medium | task_11 |
+| 13 | Frontend MVP Part A: Auth, Shell, Client Management, Settings & Kanban | pending | high | task_12 |
 | 14 | Frontend MVP Part B: Quotes, Bookings & Dashboard | pending | high | task_13 |
-| 15 | Full System Validation (Integration & E2E) | pending | critical | task_14 |
+| 15 | Public Landing Page & Subscriber Login | pending | high | task_14 |
+| 16 | Full System Validation (Integration & E2E) | pending | critical | task_15 |

@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.schema';
@@ -15,7 +15,9 @@ import { QuotesModule } from './modules/quotes/quotes.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
+import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 
 @Module({
   imports: [
@@ -41,7 +43,22 @@ import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
       }),
       inject: [ConfigService],
     }),
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          name: 'default',
+          ttl: config.get<number>('throttle.ttl')!,
+          limit: config.get<number>('throttle.limit')!,
+        },
+        {
+          name: 'auth',
+          ttl: config.get<number>('throttle.authTtl')!,
+          limit: config.get<number>('throttle.authLimit')!,
+        },
+      ],
+    }),
     SharedModule,
     AuthModule,
     TenantModule,
@@ -52,11 +69,12 @@ import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
     BookingsModule,
     AuditLogModule,
     NotificationsModule,
+    BillingModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: AppThrottlerGuard,
     },
   ],
 })

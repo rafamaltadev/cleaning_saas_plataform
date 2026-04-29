@@ -1,13 +1,12 @@
 ---
 status: pending
-title: "Full System Validation (Integration & E2E)"
-type: test
-complexity: critical
-dependencies:
-  - task_14
+title: "Public Landing Page & Subscriber Login"
+type: feature
+complexity: high
+dependencies: [task_14]
 ---
 
-# Task 15: Full System Validation (Integration & E2E)
+# Task 15: Public Landing Page & Subscriber Login
 
 ---
 You are a senior software engineer executing a predefined task in an existing codebase.
@@ -49,112 +48,178 @@ Your objective is to implement the task EXACTLY as specified.
 Now execute the task below exactly as specified:
 ---
 
+## Design System Reference
+
+MUST read and follow `.compozy/tasks/cleaning-saas/_design_system.md` before writing any frontend code.
+All UI MUST conform strictly to the design system defined there — colors, typography, spacing, components, responsiveness, and screen patterns.
+
 ## Overview
 
-Contains NO production code changes. Creates a comprehensive integration and E2E test suite in `tests/e2e/`, `tests/integration/`, and `tests/support/` covering the full system: auth lifecycle, cross-tenant isolation, RBAC enforcement, the complete quote-to-booking-to-invoice flow, idempotency, soft delete, feature flag gating, and browser-level frontend flows. All tests run against the local Docker Compose environment with seed data from task_02.
+Implements the public-facing landing page (conversion-optimized sales page) and the subscriber login entry point. This is a standalone public route — unauthenticated users land here. Authenticated users are redirected to the dashboard. No backend changes in this task.
 
 <critical>
-- ALWAYS READ the PRD and TechSpec before starting
-- REFERENCE TECHSPEC for implementation details — do not duplicate here
-- FOCUS ON "WHAT" — describe what needs to be accomplished, not how
-- MINIMIZE CODE — show code only to illustrate current structure or problem areas
-- TESTS REQUIRED — every task MUST include tests in deliverables
+- ALWAYS READ the design system reference before starting
+- This is a CONVERSION ENGINE — every section must justify its existence and drive action
+- ALL copy and pricing MUST match exactly what is specified below — DO NOT change prices, rename plans, or invent features
+- MUST be mobile-first and fully responsive
+- TESTS REQUIRED — every deliverable MUST include tests
 </critical>
 
 <requirements>
-- This task MUST contain NO production code changes
-- All test files MUST be created in `tests/e2e/` and `tests/integration/` — no existing file outside these folders MAY be modified
-- The agent MUST choose the most appropriate E2E testing tool for the project stack and context (e.g. Playwright, Cypress, Supertest, or a combination) — the choice MUST be justified in a brief comment at the top of the test suite file
-- All tests MUST run against the local environment (`docker compose up` with seed data from task_02)
-- If a required fixture, factory, or test helper does not exist, the agent MAY create it inside `tests/support/` — no production code may be created or modified
-- MUST cover Authentication & Security: full auth lifecycle (login → access protected endpoint → token expiry → refresh → retry → logout), reuse detection (revoked token revokes all sessions → 401), cross-tenant access (tenant A → tenant B resource → 403), CORS rejection, rate limiting (auth endpoint 429)
-- MUST cover Quote-to-Booking E2E flow: create service → create pricing rule → create client → create quote → send quote → accept quote → verify booking created → verify invoice generated → verify notifications enqueued → verify audit log entries written
-- MUST cover Billing & Idempotency: submit payment with `idempotency_key` → submit same request again → verify one payment record → verify `payment.received` emitted once
-- MUST cover Soft Delete: create entity → soft delete → verify absent from list → verify absent from GET by ID → verify retrievable with `withDeleted` if applicable
-- MUST cover RBAC enforcement across all endpoints: `staff` role (allowed vs. 403), `supervisor` role (allowed vs. tenant_admin-only 403), `tenant_admin` (full access)
-- MUST cover Feature flags: disable `sms_notifications` → trigger `booking.confirmed` → verify SMS NOT dispatched → verify email IS dispatched
-- MUST cover Frontend E2E (browser): login → clients → create client → create quote → send quote → create booking → complete booking → verify dashboard metrics updated; transparent token refresh during long session; role-based UI restrictions in browser
+
+### Route Structure
+- MUST be accessible at the public root route (e.g., `/` or `/landing`)
+- Authenticated users visiting this route MUST be redirected to the dashboard
+- The subscriber login button/link MUST route to the existing auth login screen (implemented in T13)
+- No new auth logic — reuse the auth flow from T13
+
+### Landing Page Structure (MANDATORY — implement all sections in this order)
+
+#### 1. Hero (Above the Fold)
+- Strong, outcome-driven headline focused on results for cleaning business owners
+- Clear subheadline: what the platform does + who it's for + the key result
+- Primary CTA button: "Start Free" (or equivalent in pt-BR: "Começar Grátis")
+- Secondary CTA button: "See Demo" (or equivalent: "Ver Demonstração")
+- Product preview mockup or screenshot placeholder
+
+#### 2. Social Proof
+- Metrics section (e.g., bookings created, quotes sent, time saved) — use plausible placeholder numbers
+- Optional: logo strip or testimonial cards with placeholder content
+
+#### 3. Problem → Solution
+- Highlight three real pain points:
+  1. Missed leads and lost clients
+  2. Manual and disorganized operations
+  3. Too much time on admin, not enough on service delivery
+- Immediately connect each pain point to a solution the platform provides
+
+#### 4. Features (Value-Driven)
+- Focus on outcomes, not technical details:
+  1. Automate client communication
+  2. Manage quotes and bookings in one place
+  3. Organize your team and schedule
+  4. Centralize operations and reporting
+
+#### 5. How It Works
+- 3 simple steps (visual, scannable):
+  1. Create your account and set up your services
+  2. Send quotes and confirm bookings
+  3. Manage your team and track everything in real time
+
+#### 6. Benefits / Differentials
+- Save hours of manual work every week
+- Never miss a lead or lose a booking
+- Run your entire operation from your phone
+
+#### 7. Pricing (STRICT — DO NOT MODIFY)
+
+Display pricing based on user region:
+- If browser locale is pt-BR → show BRL pricing
+- If locale is unknown or not pt-BR → show toggle (BRL / USD) defaulting to USD
+- Highlight "Growth" as MOST POPULAR with visual badge and scaled card
+- Highlight "Scale" as BEST VALUE with visual badge
+
+**Brazil (pt-BR)**
+
+| Plan | Price | Description | Features |
+|---|---|---|---|
+| Starter | R$ 59,90/mês | Ideal para quem está começando | Uso individual, Página pública + agendamento, Gestão básica |
+| Growth ⭐ Most Popular | R$ 249,90 / 6 meses | Para organizar e crescer | Até 3 membros na equipe, Agenda completa, Gestão de leads |
+| Scale 🏆 Best Value | R$ 399,90 / ano | Para escalar sua operação | Até 10 membros na equipe, Acesso completo à plataforma, Suporte prioritário |
+
+**International (en-US)**
+
+| Plan | Price | Description | Features |
+|---|---|---|---|
+| Starter | $19.90/month | For getting started | Single user, Public page + scheduling, Basic management |
+| Growth ⭐ Most Popular | $79.90 / 6 months | For growing operations | Up to 3 team members, Full scheduling, Lead management |
+| Scale 🏆 Best Value | $149.90 / year | For scaling | Up to 10 team members, Full platform access, Priority support |
+
+Pricing UI requirements:
+- 3 pricing cards side-by-side (stacked on mobile)
+- Middle card (Growth) visually emphasized: scaled up, distinct border, "Most Popular" badge
+- Scale card: "Best Value" badge
+- Each card MUST include a CTA button
+- Microcopy below cards: "Cancel anytime" and "No credit card required"
+- DO NOT focus copy on price — reinforce time saved, automation power, revenue impact
+
+#### 8. Live Simulation Section
+- Animated or visually dynamic section showing:
+  1. A quote being created and sent to a client
+  2. A booking being confirmed
+  3. A notification being dispatched automatically
+- MUST feel real and dynamic — use CSS animations or simple state transitions, not static screenshots
+
+#### 9. Final CTA
+- Strong repetition of the primary CTA ("Start Free")
+- Reinforce the core value proposition
+- Remove friction: no credit card required, cancel anytime
+
+### Subscriber Login Entry
+- Persistent "Log in" link in the page header/navigation
+- Routes to the existing login screen from T13
+- No new auth implementation
+
+### Copy Rules
+- Direct and benefit-driven
+- Clear and simple — no buzzwords
+- Every section must drive conversion
+- Short sections — highly scannable
+
+### Forbidden
+- DO NOT change prices
+- DO NOT rename plans
+- DO NOT invent features
+- DO NOT add unnecessary complexity
+- No backend changes in this task
+
 </requirements>
 
 ## Subtasks
 
-- [ ] 15.1 Choose and justify the E2E testing tool in a comment at the top of the test suite file; set up test infrastructure in `tests/` with shared fixtures and factories in `tests/support/`
-- [ ] 15.2 Write authentication & security integration tests (auth lifecycle, reuse detection, cross-tenant, CORS, rate limiting)
-- [ ] 15.3 Write the full quote-to-booking E2E integration test covering all intermediate state verifications
-- [ ] 15.4 Write billing & idempotency integration tests
-- [ ] 15.5 Write soft-delete integration tests covering list, GET by ID, and `withDeleted` scenarios
-- [ ] 15.6 Write RBAC enforcement integration tests for all three roles across all endpoints
-- [ ] 15.7 Write feature-flag gating integration test for `sms_notifications`
-- [ ] 15.8 Write browser E2E tests using the chosen tool covering the three frontend scenarios
-
-## Implementation Details
-
-Reference the TechSpec for endpoint paths, expected response shapes, and role permission matrix when writing RBAC tests. Seed data from task_02 provides the three known users (`admin@seed.local`, `supervisor@seed.local`, `staff@seed.local`) and the default tenant — tests should use these fixtures for reproducibility.
-
-Test tool justification comment example (at top of main suite file):
-```
-// E2E tool: Playwright (browser flows) + Supertest (API integration)
-// Rationale: Supertest integrates directly with NestJS HTTP adapter for fast API tests;
-// Playwright provides cross-browser coverage for frontend flows without a running dev server dependency.
-```
-
-### Relevant Files
-
-- `tests/e2e/` — browser E2E test files
-- `tests/integration/` — API integration test files
-- `tests/support/` — shared fixtures, factories, helpers
-- `tests/support/factories/user.factory.ts` — test user factory
-- `tests/support/factories/tenant.factory.ts` — test tenant factory
-- `docker-compose.yml` — test environment reference
-
-### Dependent Files
-
-- No production files are modified or created in this task
-
-### Related ADRs
-
-- [ADR-002: Monolithic Modular Architecture with Logical Multi-Tenant Isolation and JWT RBAC](../adrs/adr-002-monolith-jwt-rbac.md) — defines the security model that all tests validate
+- [ ] 15.1 Implement page route structure and redirect logic for authenticated users
+- [ ] 15.2 Implement Hero section with primary and secondary CTAs
+- [ ] 15.3 Implement Social Proof section
+- [ ] 15.4 Implement Problem → Solution section
+- [ ] 15.5 Implement Features section
+- [ ] 15.6 Implement How It Works section
+- [ ] 15.7 Implement Benefits section
+- [ ] 15.8 Implement Pricing section with region detection and currency toggle
+- [ ] 15.9 Implement Live Simulation section with animations
+- [ ] 15.10 Implement Final CTA section
+- [ ] 15.11 Implement persistent header with Log In link
 
 ## Deliverables
 
-- E2E tool choice justified in a comment at the top of the test suite file
-- Test files in `tests/e2e/`, `tests/integration/`, and `tests/support/` only
-- Authentication & security integration tests
-- Quote-to-booking full-flow integration test
-- Billing & idempotency integration tests
-- Soft-delete integration tests
-- RBAC enforcement tests for all three roles
-- Feature-flag gating test
-- Browser E2E tests for three frontend scenarios
-- No production code created or modified **(REQUIRED)**
+- Public landing page accessible at root route
+- All 9 sections implemented in the specified order
+- Pricing with exact plans, prices, and copy as specified — no deviations
+- Region-based currency detection with BRL/USD toggle
+- Live simulation section with animations
+- Subscriber login link routing to T13 login screen
+- Authenticated user redirect to dashboard
+- Mobile-first, fully responsive across all breakpoints
+- Unit and component tests (REQUIRED)
 
 ## Tests
 
-- Integration tests:
-  - [ ] Full auth lifecycle: login → access protected endpoint → simulate token expiry → refresh → retry original request → logout — all steps succeed
-  - [ ] Reuse detection: logout → attempt refresh with revoked token → all sessions revoked → HTTP 401 returned
-  - [ ] Cross-tenant: authenticate as tenant A → `GET /api/v1/clients` for tenant B resource → HTTP 403 returned
-  - [ ] CORS: request from non-allowlisted origin returns HTTP 4xx rejection
-  - [ ] Rate limiting: exceed auth endpoint threshold → HTTP 429 returned before global threshold
-  - [ ] Quote-to-booking: `POST /services` → `POST /pricing-rules` → `POST /clients` → `POST /quotes` → `POST /quotes/:id/send` → `PUT /quotes/:id` (accepted) → verify booking exists → verify invoice created → verify notification enqueued → verify audit log has entries for all transitions
-  - [ ] Idempotency: `POST /api/v1/payments` with same `idempotency_key` twice → only one `Payment` record in DB → `payment.received` event emitted exactly once
-  - [ ] Soft delete: create client → soft-delete client → `GET /api/v1/clients` does not include it → `GET /api/v1/clients/:id` returns 404 → `withDeleted=true` retrieves it
-  - [ ] RBAC `staff`: `POST /api/v1/bookings` → HTTP 403; `POST /api/v1/availability` → HTTP 201
-  - [ ] RBAC `supervisor`: `GET /api/v1/tenants/me` → HTTP 403; `GET /api/v1/clients` → HTTP 200
-  - [ ] RBAC `tenant_admin`: all endpoints return non-403 responses
-  - [ ] Feature flag `sms_notifications` disabled → `booking.confirmed` event → SMS notification NOT dispatched → email notification dispatched
-- Browser E2E tests:
-  - [ ] Login → navigate to clients → create client → create quote for client → send quote → create booking → complete booking → dashboard shows updated confirmed booking count
-  - [ ] Token refresh: simulate access token expiry mid-session → page continues to work without login redirect
-  - [ ] Role-based UI: authenticate as `staff` → Quote send button not visible → Booking complete button not visible
-- Test coverage target: >=80% of test scenarios passing
-- All tests must pass against Docker Compose environment with seed data
+- [ ] Authenticated user visiting the landing page is redirected to the dashboard
+- [ ] Unauthenticated user sees the full landing page
+- [ ] Pricing section displays BRL prices when locale is pt-BR
+- [ ] Pricing section displays USD prices as default for unknown locale
+- [ ] Currency toggle switches between BRL and USD correctly
+- [ ] Growth plan card is visually distinct and carries "Most Popular" badge
+- [ ] Scale plan card carries "Best Value" badge
+- [ ] All three pricing cards include a CTA button
+- [ ] Log in link routes to the login screen
+- [ ] Primary CTA "Start Free" is present and visible in Hero and Final CTA sections
+- [ ] Live simulation section renders without errors
 
 ## Success Criteria
 
-- All tests passing against the local Docker Compose environment with seed data from task_02
-- No production code was created or modified
-- Test files exist only inside `tests/e2e/`, `tests/integration/`, and `tests/support/`
-- The chosen E2E tool is justified in a comment at the top of the suite
-- Full quote-to-booking-to-invoice flow verified end-to-end
-- RBAC correctly enforced for all three roles across all tested endpoints
+- All tests passing
+- Full landing page renders correctly on mobile, tablet, and desktop
+- Pricing is EXACTLY as specified — no price changes, no plan renames, no invented features
+- All sections present and in the specified order
+- Design system followed strictly throughout
+- No backend changes were made

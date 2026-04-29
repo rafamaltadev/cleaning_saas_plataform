@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Billing"
 type: backend
 complexity: high
@@ -76,11 +76,11 @@ Implements the `Payment` and `Invoice` entities with migrations, idempotency-key
 
 ## Subtasks
 
-- [ ] 11.1 Create `Payment` and `Invoice` entities and migrations
-- [ ] 11.2 Implement idempotency-key check on `POST /api/v1/payments`
-- [ ] 11.3 Subscribe to `booking.completed` event and generate an invoice atomically (invoice + payment linkage + audit log in one transaction)
-- [ ] 11.4 Implement sequential tenant-scoped invoice number generation (`INV-0001`, `INV-0002`, ...)
-- [ ] 11.5 Implement billing endpoints with role guards, pagination, DTO mapping, and `payment.received` event emission
+- [x] 11.1 Create `Payment` and `Invoice` entities and migrations
+- [x] 11.2 Implement idempotency-key check on `POST /api/v1/payments`
+- [x] 11.3 Subscribe to `booking.completed` event and generate an invoice atomically (invoice + payment linkage + audit log in one transaction)
+- [x] 11.4 Implement sequential tenant-scoped invoice number generation (`INV-0001`, `INV-0002`, ...)
+- [x] 11.5 Implement billing endpoints with role guards, pagination, DTO mapping, and `payment.received` event emission
 
 ## Implementation Details
 

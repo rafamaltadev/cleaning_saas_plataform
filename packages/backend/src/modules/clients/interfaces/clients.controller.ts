@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ClientsService } from '../application/clients.service';
 import { CreateClientDto } from '../domain/create-client.dto';
 import { UpdateClientDto } from '../domain/update-client.dto';
@@ -20,6 +21,8 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthUser } from '../../../common/interfaces/auth-user.interface';
 
+@ApiTags('clients')
+@ApiBearerAuth()
 @Controller('v1/clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('supervisor', 'tenant_admin')
@@ -27,6 +30,10 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List clients' })
+  @ApiResponse({ status: 200, description: 'Paginated client list' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   getAll(
     @Req() req: Request & { user?: AuthUser },
     @Query() query: PaginationQueryDto,
@@ -35,6 +42,11 @@ export class ClientsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a client' })
+  @ApiResponse({ status: 201, type: ClientResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Req() req: Request & { user?: AuthUser },
     @Body() dto: CreateClientDto,
@@ -43,6 +55,11 @@ export class ClientsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a client' })
+  @ApiResponse({ status: 200, type: ClientResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   update(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,

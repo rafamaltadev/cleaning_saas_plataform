@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { BookingService } from '../application/booking.service';
 import { CreateBookingDto } from '../validation/create-booking.dto';
 import { UpdateBookingDto } from '../validation/update-booking.dto';
@@ -20,6 +21,8 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthUser } from '../../../common/interfaces/auth-user.interface';
 
+@ApiTags('bookings')
+@ApiBearerAuth()
 @Controller('v1/bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('supervisor', 'tenant_admin')
@@ -27,6 +30,10 @@ export class BookingsController {
   constructor(private readonly bookingService: BookingService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List bookings' })
+  @ApiResponse({ status: 200, description: 'Paginated booking list' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   findAll(
     @Req() req: Request & { user?: AuthUser },
     @Query() query: PaginationQueryDto,
@@ -35,6 +42,10 @@ export class BookingsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a booking by ID' })
+  @ApiResponse({ status: 200, type: BookingResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   findById(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,
@@ -43,6 +54,11 @@ export class BookingsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a booking from an accepted quote' })
+  @ApiResponse({ status: 201, type: BookingResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error or invalid quote status' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Req() req: Request & { user?: AuthUser },
     @Body() dto: CreateBookingDto,
@@ -51,6 +67,11 @@ export class BookingsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a booking' })
+  @ApiResponse({ status: 200, type: BookingResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   update(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,
@@ -60,6 +81,11 @@ export class BookingsController {
   }
 
   @Post(':id/complete')
+  @ApiOperation({ summary: 'Mark a booking as completed' })
+  @ApiResponse({ status: 201, type: BookingResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid booking status' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   complete(
     @Req() req: Request & { user?: AuthUser },
     @Param('id') id: string,

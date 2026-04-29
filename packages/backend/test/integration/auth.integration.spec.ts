@@ -75,7 +75,10 @@ async function buildTestApp(
     imports: [
       ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true, load: [testConfig] }),
       JwtModule.register({}),
-      ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
+      ThrottlerModule.forRoot([
+        { name: 'default', ttl: 60000, limit: 100 },
+        { name: 'auth', ttl: 60000, limit: 2 },
+      ]),
     ],
     controllers: [AuthController, TestProtectedController],
     providers: [
