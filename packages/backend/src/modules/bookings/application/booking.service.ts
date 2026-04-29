@@ -6,7 +6,6 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, IsNull } from 'typeorm';
 import { BookingRepository } from '../infrastructure/booking.repository';
-import { AuditLogService } from '../../audit-log/application/audit-log.service';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Booking, BookingStatus } from '../domain/booking.entity';
 import { BookingResponseDto } from '../domain/booking-response.dto';
@@ -14,7 +13,6 @@ import { CreateBookingDto } from '../validation/create-booking.dto';
 import { UpdateBookingDto } from '../validation/update-booking.dto';
 import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
 import { Quote } from '../../quotes/domain/quote.entity';
-import { AuditLog } from '../../audit-log/domain/audit-log.entity';
 
 const TERMINAL_STATUSES: BookingStatus[] = ['completed', 'cancelled'];
 
@@ -22,7 +20,6 @@ const TERMINAL_STATUSES: BookingStatus[] = ['completed', 'cancelled'];
 export class BookingService {
   constructor(
     private readonly bookingRepository: BookingRepository,
-    private readonly auditLogService: AuditLogService,
     private readonly domainEventBus: DomainEventBus,
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -84,25 +81,21 @@ export class BookingService {
       newBooking.idempotency_key = dto.idempotency_key;
       newBooking.deleted_at = null;
       booking = await manager.save(Booking, newBooking);
-
-      const auditEntry = new AuditLog();
-      auditEntry.tenant_id = tenantId;
-      auditEntry.user_id = actorId;
-      auditEntry.action = 'create';
-      auditEntry.resource_type = 'booking';
-      auditEntry.resource_id = booking.id;
-      auditEntry.old_values = { quote_status: 'sent' };
-      auditEntry.new_values = { status: 'confirmed', quote_status: 'accepted' };
-      await manager.save(AuditLog, auditEntry);
     });
 
     this.domainEventBus.emit('booking.confirmed', {
       bookingId: booking!.id,
       tenantId,
+      userId: actorId,
+      oldValues: { quote_status: 'sent' },
+      newValues: { status: 'confirmed', quote_status: 'accepted' },
     });
     this.domainEventBus.emit('quote.accepted', {
       quoteId: dto.quote_id,
       tenantId,
+      userId: actorId,
+      oldValues: { status: 'sent' },
+      newValues: { status: 'accepted' },
     });
 
     return BookingResponseDto.from(booking!);
@@ -133,6 +126,7 @@ export class BookingService {
     actorId: string,
     dto: UpdateBookingDto,
   ): Promise<BookingResponseDto> {
+    void actorId;
     const booking = await this.bookingRepository.findById(id, tenantId);
     if (!booking) {
       throw new NotFoundException({ code: 'BOOKING_NOT_FOUND', message: 'Booking not found' });
@@ -144,24 +138,12 @@ export class BookingService {
       });
     }
 
-    const oldStatus = booking.status;
-
     if (dto.scheduled_start) booking.scheduled_start = new Date(dto.scheduled_start);
     if (dto.scheduled_end) booking.scheduled_end = new Date(dto.scheduled_end);
     if (dto.assigned_team !== undefined) booking.assigned_team = dto.assigned_team;
     if (dto.status) booking.status = dto.status as BookingStatus;
 
     const saved = await this.bookingRepository.save(booking);
-
-    await this.auditLogService.emit({
-      tenant_id: tenantId,
-      user_id: actorId,
-      action: 'update',
-      resource_type: 'booking',
-      resource_id: id,
-      old_values: { status: oldStatus },
-      new_values: { status: saved.status },
-    });
 
     return BookingResponseDto.from(saved);
   }
@@ -186,17 +168,13 @@ export class BookingService {
     booking.status = 'completed';
     const saved = await this.bookingRepository.save(booking);
 
-    await this.auditLogService.emit({
-      tenant_id: tenantId,
-      user_id: actorId,
-      action: 'complete',
-      resource_type: 'booking',
-      resource_id: id,
-      old_values: { status: oldStatus },
-      new_values: { status: 'completed' },
+    this.domainEventBus.emit('booking.completed', {
+      bookingId: id,
+      tenantId,
+      userId: actorId,
+      oldValues: { status: oldStatus },
+      newValues: { status: 'completed' },
     });
-
-    this.domainEventBus.emit('booking.completed', { bookingId: id, tenantId });
 
     return BookingResponseDto.from(saved);
   }

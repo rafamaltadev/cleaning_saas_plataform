@@ -4,7 +4,6 @@ import { QuoteRepository } from '../infrastructure/quote.repository';
 import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { PricingRuleRepository } from '../../services/infrastructure/pricing-rule.repository';
 import { PricingService } from '../../services/application/pricing.service';
-import { AuditLogService } from '../../audit-log/application/audit-log.service';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Quote } from '../domain/quote.entity';
 import { QuoteResponseDto } from '../domain/quote-response.dto';
@@ -52,7 +51,6 @@ describe('QuoteService', () => {
   let serviceRepoMock: jest.Mocked<Pick<ServiceRepository, 'findById'>>;
   let pricingRuleRepoMock: jest.Mocked<Pick<PricingRuleRepository, 'findById'>>;
   let pricingServiceMock: jest.Mocked<Pick<PricingService, 'calculate'>>;
-  let auditMock: jest.Mocked<Pick<AuditLogService, 'emit'>>;
   let eventBusMock: jest.Mocked<Pick<DomainEventBus, 'emit'>>;
   let dataSourceMock: { transaction: jest.Mock };
 
@@ -67,7 +65,6 @@ describe('QuoteService', () => {
     serviceRepoMock = { findById: jest.fn() };
     pricingRuleRepoMock = { findById: jest.fn() };
     pricingServiceMock = { calculate: jest.fn() };
-    auditMock = { emit: jest.fn().mockResolvedValue(undefined) };
     eventBusMock = { emit: jest.fn() };
     dataSourceMock = {
       transaction: jest.fn().mockImplementation(async (fn: (m: typeof mockManager) => Promise<void>) => {
@@ -80,7 +77,6 @@ describe('QuoteService', () => {
       serviceRepoMock as unknown as ServiceRepository,
       pricingRuleRepoMock as unknown as PricingRuleRepository,
       pricingServiceMock as unknown as PricingService,
-      auditMock as unknown as AuditLogService,
       eventBusMock as unknown as DomainEventBus,
       dataSourceMock as unknown as DataSource,
     );
@@ -153,15 +149,21 @@ describe('QuoteService', () => {
       );
     });
 
-    it('emits audit log with action create', async () => {
+    it('emits quote.created with all required audit fields', async () => {
       serviceRepoMock.findById.mockResolvedValue(makeService());
       pricingServiceMock.calculate.mockReturnValue(1000);
       quoteRepoMock.save.mockResolvedValue(makeQuote());
 
       await service.create('tenant-uuid', 'actor-uuid', dto);
 
-      expect(auditMock.emit).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'create', resource_type: 'quote' }),
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'quote.created',
+        expect.objectContaining({
+          quoteId: 'quote-uuid',
+          tenantId: 'tenant-uuid',
+          userId: 'actor-uuid',
+          newValues: expect.objectContaining({ status: 'draft' }),
+        }),
       );
     });
 
@@ -253,6 +255,23 @@ describe('QuoteService', () => {
       );
     });
 
+    it('emits quote.sent with all required audit fields', async () => {
+      quoteRepoMock.findById.mockResolvedValue(makeQuote({ status: 'draft' }));
+
+      await service.send('quote-uuid', 'tenant-uuid', 'actor-uuid', ['quotes.send']);
+
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'quote.sent',
+        expect.objectContaining({
+          quoteId: 'quote-uuid',
+          tenantId: 'tenant-uuid',
+          userId: 'actor-uuid',
+          oldValues: { status: 'draft' },
+          newValues: { status: 'sent' },
+        }),
+      );
+    });
+
     it('wraps status update in a database transaction', async () => {
       quoteRepoMock.findById.mockResolvedValue(makeQuote({ status: 'draft' }));
 
@@ -271,6 +290,23 @@ describe('QuoteService', () => {
       expect(eventBusMock.emit).toHaveBeenCalledWith(
         'quote.accepted',
         expect.objectContaining({ quoteId: 'quote-uuid' }),
+      );
+    });
+
+    it('emits quote.accepted with all required audit fields', async () => {
+      quoteRepoMock.findById.mockResolvedValue(makeQuote({ status: 'sent' }));
+
+      await service.acceptQuote('quote-uuid', 'tenant-uuid', 'actor-uuid');
+
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'quote.accepted',
+        expect.objectContaining({
+          quoteId: 'quote-uuid',
+          tenantId: 'tenant-uuid',
+          userId: 'actor-uuid',
+          oldValues: { status: 'sent' },
+          newValues: { status: 'accepted' },
+        }),
       );
     });
 
@@ -309,6 +345,26 @@ describe('QuoteService', () => {
       expect(eventBusMock.emit).toHaveBeenCalledWith(
         'quote.expired',
         expect.objectContaining({ quoteId: 'quote-uuid' }),
+      );
+    });
+
+    it('emits quote.expired with all required audit fields', async () => {
+      const expiredQuote = makeQuote({
+        status: 'sent',
+        valid_until: new Date(Date.now() - 1000),
+      });
+      quoteRepoMock.findById.mockResolvedValue(expiredQuote);
+
+      await service.findById('quote-uuid', 'tenant-uuid', 'actor-uuid');
+
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'quote.expired',
+        expect.objectContaining({
+          quoteId: 'quote-uuid',
+          userId: 'actor-uuid',
+          oldValues: { status: 'sent' },
+          newValues: { status: 'expired' },
+        }),
       );
     });
 

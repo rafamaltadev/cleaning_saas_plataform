@@ -10,7 +10,6 @@ import { QuoteRepository } from '../infrastructure/quote.repository';
 import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { PricingRuleRepository } from '../../services/infrastructure/pricing-rule.repository';
 import { PricingService } from '../../services/application/pricing.service';
-import { AuditLogService } from '../../audit-log/application/audit-log.service';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Quote, QuoteStatus } from '../domain/quote.entity';
 import { QuoteResponseDto } from '../domain/quote-response.dto';
@@ -33,7 +32,6 @@ export class QuoteService {
     private readonly serviceRepository: ServiceRepository,
     private readonly pricingRuleRepository: PricingRuleRepository,
     private readonly pricingService: PricingService,
-    private readonly auditLogService: AuditLogService,
     private readonly domainEventBus: DomainEventBus,
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -59,16 +57,13 @@ export class QuoteService {
       quote.status = 'expired';
       await manager.save(Quote, quote);
     });
-    await this.auditLogService.emit({
-      tenant_id: quote.tenant_id,
-      user_id: actorId,
-      action: 'expire',
-      resource_type: 'quote',
-      resource_id: quote.id,
-      old_values: { status: oldStatus },
-      new_values: { status: 'expired' },
+    this.domainEventBus.emit('quote.expired', {
+      quoteId: quote.id,
+      tenantId: quote.tenant_id,
+      userId: actorId,
+      oldValues: { status: oldStatus },
+      newValues: { status: 'expired' },
     });
-    this.domainEventBus.emit('quote.expired', { quoteId: quote.id, tenantId: quote.tenant_id });
   }
 
   async create(
@@ -123,19 +118,15 @@ export class QuoteService {
       deleted_at: null,
     });
 
-    await this.auditLogService.emit({
-      tenant_id: tenantId,
-      user_id: actorId,
-      action: 'create',
-      resource_type: 'quote',
-      resource_id: quote.id,
-      new_values: {
+    this.domainEventBus.emit('quote.created', {
+      quoteId: quote.id,
+      tenantId,
+      userId: actorId,
+      newValues: {
         status: quote.status,
         estimated_total_cents: quote.estimated_total_cents,
       },
     });
-
-    this.domainEventBus.emit('quote.created', { quoteId: quote.id, tenantId });
 
     return QuoteResponseDto.from(quote);
   }
@@ -178,12 +169,11 @@ export class QuoteService {
     actorId: string,
     dto: UpdateQuoteDto,
   ): Promise<QuoteResponseDto> {
+    void actorId;
     const quote = await this.quoteRepository.findById(id, tenantId);
     if (!quote) {
       throw new NotFoundException({ code: 'QUOTE_NOT_FOUND', message: 'Quote not found' });
     }
-
-    const oldStatus = quote.status;
 
     if (dto.status) {
       this.assertValidTransition(quote.status, dto.status as QuoteStatus);
@@ -195,19 +185,6 @@ export class QuoteService {
     }
 
     const saved = await this.quoteRepository.save(quote);
-
-    await this.auditLogService.emit({
-      tenant_id: tenantId,
-      user_id: actorId,
-      action: 'update',
-      resource_type: 'quote',
-      resource_id: id,
-      old_values: { status: oldStatus },
-      new_values: {
-        status: saved.status,
-        manual_discount_percent: saved.manual_discount_percent,
-      },
-    });
 
     return QuoteResponseDto.from(saved);
   }
@@ -238,17 +215,13 @@ export class QuoteService {
       await manager.save(Quote, quote);
     });
 
-    await this.auditLogService.emit({
-      tenant_id: tenantId,
-      user_id: actorId,
-      action: 'send',
-      resource_type: 'quote',
-      resource_id: id,
-      old_values: { status: oldStatus },
-      new_values: { status: 'sent' },
+    this.domainEventBus.emit('quote.sent', {
+      quoteId: id,
+      tenantId,
+      userId: actorId,
+      oldValues: { status: oldStatus },
+      newValues: { status: 'sent' },
     });
-
-    this.domainEventBus.emit('quote.sent', { quoteId: id, tenantId });
 
     return QuoteResponseDto.from(quote);
   }
@@ -271,17 +244,13 @@ export class QuoteService {
       await manager.save(Quote, quote);
     });
 
-    await this.auditLogService.emit({
-      tenant_id: tenantId,
-      user_id: actorId,
-      action: 'accept',
-      resource_type: 'quote',
-      resource_id: id,
-      old_values: { status: oldStatus },
-      new_values: { status: 'accepted' },
+    this.domainEventBus.emit('quote.accepted', {
+      quoteId: id,
+      tenantId,
+      userId: actorId,
+      oldValues: { status: oldStatus },
+      newValues: { status: 'accepted' },
     });
-
-    this.domainEventBus.emit('quote.accepted', { quoteId: id, tenantId });
 
     return QuoteResponseDto.from(quote);
   }

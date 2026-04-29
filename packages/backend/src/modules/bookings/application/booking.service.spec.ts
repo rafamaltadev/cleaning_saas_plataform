@@ -1,7 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { BookingRepository } from '../infrastructure/booking.repository';
-import { AuditLogService } from '../../audit-log/application/audit-log.service';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Booking } from '../domain/booking.entity';
 import { BookingResponseDto } from '../domain/booking-response.dto';
@@ -40,7 +39,6 @@ describe('BookingService', () => {
   let repoMock: jest.Mocked<
     Pick<BookingRepository, 'findByIdempotencyKey' | 'findById' | 'findPaginated' | 'save'>
   >;
-  let auditMock: jest.Mocked<Pick<AuditLogService, 'emit'>>;
   let eventBusMock: jest.Mocked<Pick<DomainEventBus, 'emit'>>;
   let mockManager: { findOne: jest.Mock; save: jest.Mock };
   let dataSourceMock: { transaction: jest.Mock };
@@ -53,7 +51,6 @@ describe('BookingService', () => {
       findPaginated: jest.fn(),
       save: jest.fn(),
     };
-    auditMock = { emit: jest.fn().mockResolvedValue(undefined) };
     eventBusMock = { emit: jest.fn() };
     dataSourceMock = {
       transaction: jest.fn().mockImplementation(async (fn) => fn(mockManager)),
@@ -61,7 +58,6 @@ describe('BookingService', () => {
 
     service = new BookingService(
       repoMock as unknown as BookingRepository,
-      auditMock as unknown as AuditLogService,
       eventBusMock as unknown as DomainEventBus,
       dataSourceMock as unknown as DataSource,
     );
@@ -82,12 +78,11 @@ describe('BookingService', () => {
     it('proceeds with transaction when idempotency_key is new', async () => {
       repoMock.findByIdempotencyKey.mockResolvedValue(null);
       mockManager.findOne
-        .mockResolvedValueOnce(null) // idempotency check inside tx
-        .mockResolvedValueOnce({ id: 'q', status: 'sent', tenant_id: 'tenant-uuid', deleted_at: null }); // quote
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 'q', status: 'sent', tenant_id: 'tenant-uuid', deleted_at: null });
       mockManager.save
-        .mockResolvedValueOnce(undefined) // quote update
-        .mockResolvedValueOnce(makeBooking()) // booking
-        .mockResolvedValueOnce(undefined); // audit log
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(makeBooking());
 
       const result = await service.create('tenant-uuid', 'actor', defaultDto);
 
@@ -98,7 +93,7 @@ describe('BookingService', () => {
     it('returns existing booking found inside transaction (race condition case)', async () => {
       const existingInTx = makeBooking({ id: 'race-uuid' });
       repoMock.findByIdempotencyKey.mockResolvedValue(null);
-      mockManager.findOne.mockResolvedValueOnce(existingInTx); // idempotency check inside tx returns existing
+      mockManager.findOne.mockResolvedValueOnce(existingInTx);
 
       const result = await service.create('tenant-uuid', 'actor', defaultDto);
 
@@ -111,13 +106,13 @@ describe('BookingService', () => {
     it('rolls back completely if quote save fails — no booking record persists', async () => {
       repoMock.findByIdempotencyKey.mockResolvedValue(null);
       mockManager.findOne
-        .mockResolvedValueOnce(null) // idempotency check
+        .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ id: 'q', status: 'sent', tenant_id: 'tenant-uuid', deleted_at: null });
       mockManager.save.mockRejectedValueOnce(new Error('DB error'));
 
       await expect(service.create('tenant-uuid', 'actor', defaultDto)).rejects.toThrow('DB error');
 
-      expect(mockManager.save).toHaveBeenCalledTimes(1); // only quote save attempted
+      expect(mockManager.save).toHaveBeenCalledTimes(1);
     });
 
     it('throws BadRequestException when quote status is not sent', async () => {
@@ -135,7 +130,7 @@ describe('BookingService', () => {
       repoMock.findByIdempotencyKey.mockResolvedValue(null);
       mockManager.findOne
         .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null); // quote not found
+        .mockResolvedValueOnce(null);
 
       await expect(service.create('tenant-uuid', 'actor', defaultDto)).rejects.toThrow(
         NotFoundException,
@@ -151,8 +146,7 @@ describe('BookingService', () => {
         .mockResolvedValueOnce({ id: 'q', status: 'sent', tenant_id: 'tenant-uuid', deleted_at: null });
       mockManager.save
         .mockResolvedValueOnce(undefined)
-        .mockResolvedValueOnce(makeBooking())
-        .mockResolvedValueOnce(undefined);
+        .mockResolvedValueOnce(makeBooking());
     });
 
     it('emits booking.confirmed after successful creation', async () => {
@@ -164,12 +158,42 @@ describe('BookingService', () => {
       );
     });
 
+    it('emits booking.confirmed with all required audit fields', async () => {
+      await service.create('tenant-uuid', 'actor-uuid', defaultDto);
+
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'booking.confirmed',
+        expect.objectContaining({
+          bookingId: 'booking-uuid',
+          tenantId: 'tenant-uuid',
+          userId: 'actor-uuid',
+          oldValues: expect.objectContaining({ quote_status: 'sent' }),
+          newValues: expect.objectContaining({ status: 'confirmed' }),
+        }),
+      );
+    });
+
     it('emits quote.accepted after successful creation', async () => {
       await service.create('tenant-uuid', 'actor', defaultDto);
 
       expect(eventBusMock.emit).toHaveBeenCalledWith(
         'quote.accepted',
         expect.objectContaining({ quoteId: 'quote-uuid' }),
+      );
+    });
+
+    it('emits quote.accepted with all required audit fields', async () => {
+      await service.create('tenant-uuid', 'actor-uuid', defaultDto);
+
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'quote.accepted',
+        expect.objectContaining({
+          quoteId: 'quote-uuid',
+          tenantId: 'tenant-uuid',
+          userId: 'actor-uuid',
+          oldValues: { status: 'sent' },
+          newValues: { status: 'accepted' },
+        }),
       );
     });
   });
@@ -187,14 +211,21 @@ describe('BookingService', () => {
       );
     });
 
-    it('emits audit log on complete', async () => {
+    it('emits booking.completed with all required audit fields', async () => {
       repoMock.findById.mockResolvedValue(makeBooking({ status: 'confirmed' }));
       repoMock.save.mockResolvedValue(makeBooking({ status: 'completed' }));
 
       await service.complete('booking-uuid', 'tenant-uuid', 'actor-uuid');
 
-      expect(auditMock.emit).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'complete', resource_type: 'booking' }),
+      expect(eventBusMock.emit).toHaveBeenCalledWith(
+        'booking.completed',
+        expect.objectContaining({
+          bookingId: 'booking-uuid',
+          tenantId: 'tenant-uuid',
+          userId: 'actor-uuid',
+          oldValues: { status: 'confirmed' },
+          newValues: { status: 'completed' },
+        }),
       );
     });
 
@@ -281,7 +312,7 @@ describe('BookingService', () => {
   });
 
   describe('update()', () => {
-    it('updates booking and emits audit log', async () => {
+    it('updates booking status and saves', async () => {
       repoMock.findById.mockResolvedValue(makeBooking({ status: 'confirmed' }));
       repoMock.save.mockResolvedValue(makeBooking({ status: 'rescheduled' }));
 
@@ -290,9 +321,7 @@ describe('BookingService', () => {
       });
 
       expect(result.status).toBe('rescheduled');
-      expect(auditMock.emit).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'update', resource_type: 'booking' }),
-      );
+      expect(repoMock.save).toHaveBeenCalled();
     });
 
     it('throws BadRequestException when updating a completed booking', async () => {

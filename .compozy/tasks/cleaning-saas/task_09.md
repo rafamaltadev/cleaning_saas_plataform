@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Domain Events & Audit Log Infrastructure"
 type: backend
 complexity: high
@@ -73,11 +73,11 @@ Implements the in-process domain event bus, wires all existing event emissions f
 
 ## Subtasks
 
-- [ ] 9.1 Implement the domain event bus module with a typed in-process emitter supporting the seven specified event names
-- [ ] 9.2 Refactor event emission calls in task_07 (QuoteService) to use the new bus — no logic changes, only replace direct calls
-- [ ] 9.3 Refactor event emission calls in task_08 (BookingService) to use the new bus — no logic changes, only replace direct calls
-- [ ] 9.4 Implement `AuditLogService` subscribing to all seven domain events and writing to the `audit_logs` table with all required fields
-- [ ] 9.5 Verify `AuditLogService` is never injected into or called directly from any controller or application service
+- [x] 9.1 Implement the domain event bus module with a typed in-process emitter supporting the seven specified event names
+- [x] 9.2 Refactor event emission calls in task_07 (QuoteService) to use the new bus — no logic changes, only replace direct calls
+- [x] 9.3 Refactor event emission calls in task_08 (BookingService) to use the new bus — no logic changes, only replace direct calls
+- [x] 9.4 Implement `AuditLogService` subscribing to all seven domain events and writing to the `audit_logs` table with all required fields
+- [x] 9.5 Verify `AuditLogService` is never injected into or called directly from any controller or application service
 
 ## Implementation Details
 
