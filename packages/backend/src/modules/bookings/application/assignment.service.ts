@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AssignmentRepository } from '../infrastructure/assignment.repository';
 import { AuditLogService } from '../../audit-log/application/audit-log.service';
+import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { AssignmentResponseDto } from '../domain/assignment-response.dto';
 import { CreateAssignmentDto } from '../validation/create-assignment.dto';
 import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
@@ -10,6 +11,7 @@ export class AssignmentService {
   constructor(
     private readonly assignmentRepository: AssignmentRepository,
     private readonly auditLogService: AuditLogService,
+    private readonly domainEventBus: DomainEventBus,
   ) {}
 
   async create(
@@ -37,6 +39,14 @@ export class AssignmentService {
         employee_id: dto.employee_id,
         status: 'assigned',
       },
+    });
+
+    this.domainEventBus.emit('assignment.created', {
+      assignmentId: assignment.id,
+      tenantId,
+      bookingId: dto.booking_id,
+      employeeId: dto.employee_id,
+      userId: actorId,
     });
 
     return AssignmentResponseDto.from(assignment);

@@ -14,6 +14,7 @@ import { ServicesModule } from './modules/services/services.module';
 import { QuotesModule } from './modules/quotes/quotes.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
 
 @Module({
@@ -50,6 +51,7 @@ import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
     QuotesModule,
     BookingsModule,
     AuditLogModule,
+    NotificationsModule,
   ],
   providers: [
     {

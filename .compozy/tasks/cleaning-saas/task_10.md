@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Notifications"
 type: backend
 complexity: high
@@ -82,12 +82,12 @@ Implements the `Notification` entity with migration, an internal sequential noti
 
 ## Subtasks
 
-- [ ] 10.1 Create `Notification` entity and migration
-- [ ] 10.2 Implement the internal sequential notification queue
-- [ ] 10.3 Implement injectable email and SMS adapters with `{{variable}}` interpolation (stubbed for development)
-- [ ] 10.4 Subscribe to the six domain events and enqueue notifications with SPEC-defined payloads and templates
-- [ ] 10.5 Gate SMS dispatch with `FeatureFlagService.isEnabled('sms_notifications', tenantId)`
-- [ ] 10.6 Implement `GET /api/v1/notifications` (paginated, tenant-scoped) and `POST /api/v1/notifications/send` with role guard
+- [x] 10.1 Create `Notification` entity and migration
+- [x] 10.2 Implement the internal sequential notification queue
+- [x] 10.3 Implement injectable email and SMS adapters with `{{variable}}` interpolation (stubbed for development)
+- [x] 10.4 Subscribe to the six domain events and enqueue notifications with SPEC-defined payloads and templates
+- [x] 10.5 Gate SMS dispatch with `FeatureFlagService.isEnabled('sms_notifications', tenantId)`
+- [x] 10.6 Implement `GET /api/v1/notifications` (paginated, tenant-scoped) and `POST /api/v1/notifications/send` with role guard
 
 ## Implementation Details
 
@@ -128,16 +128,16 @@ Reference the TechSpec 'Notifications' section for entity fields, template names
 ## Tests
 
 - Unit tests:
-  - [ ] `quote.sent` event subscription enqueues a notification with template `quote.sent` and the payload variables defined in the SPEC
-  - [ ] `booking.confirmed` event subscription enqueues both an email and an SMS notification
-  - [ ] SMS notification is NOT enqueued when `FeatureFlagService.isEnabled('sms_notifications', tenantId)` returns `false`
-  - [ ] Notification status transitions from `pending` to `sent` on successful adapter dispatch
-  - [ ] Notification status transitions from `pending` to `failed` when the adapter throws
-  - [ ] Replacing the email adapter with a test double does not require changing the queue or subscriber logic
+  - [x] `quote.sent` event subscription enqueues a notification with template `quote.sent` and the payload variables defined in the SPEC
+  - [x] `booking.confirmed` event subscription enqueues both an email and an SMS notification
+  - [x] SMS notification is NOT enqueued when `FeatureFlagService.isEnabled('sms_notifications', tenantId)` returns `false`
+  - [x] Notification status transitions from `pending` to `sent` on successful adapter dispatch
+  - [x] Notification status transitions from `pending` to `failed` when the adapter throws
+  - [x] Replacing the email adapter with a test double does not require changing the queue or subscriber logic
 - Integration tests:
-  - [ ] `GET /api/v1/notifications` does not return notifications belonging to a different tenant
-  - [ ] Soft-deleted notifications do not appear in `GET /api/v1/notifications`
-  - [ ] `GET /api/v1/notifications` pagination meta is accurate
+  - [x] `GET /api/v1/notifications` does not return notifications belonging to a different tenant
+  - [x] Soft-deleted notifications do not appear in `GET /api/v1/notifications`
+  - [x] `GET /api/v1/notifications` pagination meta is accurate
 - Test coverage target: >=80%
 - All tests must pass
 

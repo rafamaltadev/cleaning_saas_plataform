@@ -13,7 +13,7 @@
 | 07 | Quote Flow | completed | high | task_06 |
 | 08 | Booking & Scheduling | completed | high | task_07 |
 | 09 | Domain Events & Audit Log Infrastructure | completed | high | task_08 |
-| 10 | Notifications | pending | high | task_09 |
+| 10 | Notifications | completed | high | task_09 |
 | 11 | Billing | pending | high | task_10 |
 | 12 | Security Baseline, Rate Limiting & OpenAPI | pending | medium | task_11 |
 | 13 | Frontend MVP Part A: Auth, Shell & Client Management | pending | high | task_12 |

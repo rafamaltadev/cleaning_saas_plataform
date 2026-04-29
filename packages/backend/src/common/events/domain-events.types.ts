@@ -5,7 +5,8 @@ export type DomainEventName =
   | 'quote.expired'
   | 'booking.confirmed'
   | 'booking.completed'
-  | 'payment.received';
+  | 'payment.received'
+  | 'assignment.created';
 
 export interface QuoteCreatedPayload {
   quoteId: string;
@@ -61,6 +62,14 @@ export interface PaymentReceivedPayload {
   newValues: Record<string, unknown>;
 }
 
+export interface AssignmentCreatedPayload {
+  assignmentId: string;
+  tenantId: string;
+  bookingId: string;
+  employeeId: string;
+  userId: string;
+}
+
 export interface DomainEventMap {
   'quote.created': QuoteCreatedPayload;
   'quote.sent': QuoteSentPayload;
@@ -69,4 +78,5 @@ export interface DomainEventMap {
   'booking.confirmed': BookingConfirmedPayload;
   'booking.completed': BookingCompletedPayload;
   'payment.received': PaymentReceivedPayload;
+  'assignment.created': AssignmentCreatedPayload;
 }
