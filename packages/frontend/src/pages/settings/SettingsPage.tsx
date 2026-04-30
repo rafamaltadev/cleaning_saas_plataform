@@ -230,7 +230,7 @@ function ServicesSection() {
                   <p className="text-xs text-text-secondary">{service.description}</p>
                 )}
               </div>
-              <Badge variant="neutral">${service.baseRate.toFixed(2)}</Badge>
+              <Badge variant="neutral">{`$${service.baseRate.toFixed(2)}`}</Badge>
             </div>
           ))}
         </div>
