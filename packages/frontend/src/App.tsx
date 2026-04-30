@@ -1,12 +1,42 @@
-import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import LoginPage from './pages/auth/LoginPage';
+import AppShell from './components/layout/AppShell';
+import ProtectedRoute from './components/shared/ProtectedRoute';
+import RoleGuard from './components/shared/RoleGuard';
+import ClientListPage from './pages/clients/ClientListPage';
+import ClientCreatePage from './pages/clients/ClientCreatePage';
+import ClientEditPage from './pages/clients/ClientEditPage';
+import SettingsPage from './pages/settings/SettingsPage';
+import KanbanPage from './pages/kanban/KanbanPage';
 
-function App() {
+export default function App() {
   return (
-    <div>
-      <h1>Cleaning SaaS</h1>
-      <p>Platform is loading...</p>
-    </div>
+    <Provider store={store}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppShell />}>
+              <Route index element={<Navigate to="/kanban" replace />} />
+              <Route path="/kanban" element={<KanbanPage />} />
+              <Route path="/clients" element={<ClientListPage />} />
+              <Route path="/clients/new" element={<ClientCreatePage />} />
+              <Route path="/clients/:id/edit" element={<ClientEditPage />} />
+              <Route
+                path="/settings"
+                element={
+                  <RoleGuard requiredRoles={['tenant_admin', 'supervisor']}>
+                    <SettingsPage />
+                  </RoleGuard>
+                }
+              />
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </Provider>
   );
 }
-
-export default App;

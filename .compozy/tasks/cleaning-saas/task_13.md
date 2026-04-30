@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Frontend MVP Part A: Auth, Shell, Client Management, Settings & Kanban"
 type: feature
 complexity: high
@@ -104,11 +104,11 @@ Implements the authenticated application shell and all Part A screens: login, cl
 
 ## Subtasks
 
-- [ ] 13.1 Implement login screen with auth flow, token storage, and automatic refresh
-- [ ] 13.2 Implement application shell with React Router, protected routes, and role-based access
-- [ ] 13.3 Implement Client list, create, and edit screens with Address forms
-- [ ] 13.4 Implement Settings screen with company profile, business hours, services display, and Stripe placeholder
-- [ ] 13.5 Implement Kanban board with draggable cards mapped to quote/booking statuses
+- [x] 13.1 Implement login screen with auth flow, token storage, and automatic refresh
+- [x] 13.2 Implement application shell with React Router, protected routes, and role-based access
+- [x] 13.3 Implement Client list, create, and edit screens with Address forms
+- [x] 13.4 Implement Settings screen with company profile, business hours, services display, and Stripe placeholder
+- [x] 13.5 Implement Kanban board with draggable cards mapped to quote/booking statuses
 
 ## Deliverables
 
@@ -124,19 +124,19 @@ Implements the authenticated application shell and all Part A screens: login, cl
 ## Tests
 
 - Unit / component tests:
-  - [ ] Login form submits credentials and stores tokens on success
-  - [ ] Failed login displays error message and does not store tokens
-  - [ ] 401 response triggers automatic token refresh and retries the original request
-  - [ ] Failed token refresh redirects to login and clears stored tokens
-  - [ ] Protected routes redirect unauthenticated users to login
-  - [ ] Role-based route protection: staff cannot access supervisor-only routes
-  - [ ] Client list renders paginated results and navigates between pages
-  - [ ] Client create form validates required fields before submitting
-  - [ ] Client edit form pre-populates with existing data
-  - [ ] Settings company profile form loads tenant data and saves changes
-  - [ ] Stripe section renders placeholder state without throwing errors
-  - [ ] Kanban board renders columns with correct cards mapped by status
-  - [ ] Dragging a card between columns triggers the correct API update
+  - [x] Login form submits credentials and stores tokens on success
+  - [x] Failed login displays error message and does not store tokens
+  - [x] 401 response triggers automatic token refresh and retries the original request
+  - [x] Failed token refresh redirects to login and clears stored tokens
+  - [x] Protected routes redirect unauthenticated users to login
+  - [x] Role-based route protection: staff cannot access supervisor-only routes
+  - [x] Client list renders paginated results and navigates between pages
+  - [x] Client create form validates required fields before submitting
+  - [x] Client edit form pre-populates with existing data
+  - [x] Settings company profile form loads tenant data and saves changes
+  - [x] Stripe section renders placeholder state without throwing errors
+  - [x] Kanban board renders columns with correct cards mapped by status
+  - [x] Dragging a card between columns triggers the correct API update
 
 ## Success Criteria
 
