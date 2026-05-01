@@ -70,6 +70,8 @@ export interface Service {
   id: string;
   name: string;
   baseRate: number;
+  base_rate_cents?: number;
+  unit?: 'sqm' | 'hour' | 'flat';
   description?: string;
 }
 
@@ -104,4 +106,84 @@ export interface KanbanCard {
   serviceName: string;
   scheduledDate?: string;
   status: KanbanStatus;
+}
+
+// ── API-aligned types (T14) ─────────────────────────────────────────────────
+
+export type ApiQuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'rejected';
+export type ApiBookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed';
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedApiResult<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
+export interface ApiQuote {
+  id: string;
+  tenant_id: string;
+  client_id: string;
+  service_id: string;
+  pricing_rule_id: string | null;
+  status: ApiQuoteStatus;
+  estimated_total_cents: number;
+  currency: string;
+  valid_until: string;
+  manual_discount_percent: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiBooking {
+  id: string;
+  tenant_id: string;
+  quote_id: string;
+  client_id: string;
+  service_id: string;
+  scheduled_start: string;
+  scheduled_end: string;
+  status: ApiBookingStatus;
+  assigned_team: string | null;
+  idempotency_key: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiPricingRule {
+  id: string;
+  tenant_id: string;
+  service_id: string;
+  min_area: number | null;
+  max_area: number | null;
+  frequency: string;
+  discount_percent: number;
+  price_multiplier: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiNotification {
+  id: string;
+  tenant_id: string;
+  client_id: string | null;
+  booking_id: string | null;
+  quote_id: string | null;
+  type: string;
+  template: string;
+  status: string;
+  sent_at: string | null;
+  payload: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeatureFlags {
+  [key: string]: boolean;
 }

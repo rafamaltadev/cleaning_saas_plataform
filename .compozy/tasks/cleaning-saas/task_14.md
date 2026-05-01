@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Frontend MVP Part B: Quotes, Bookings & Dashboard"
 type: feature
 complexity: high
@@ -93,9 +93,9 @@ Implements all Part B screens: quotes, bookings, and dashboard. Builds on top of
 
 ## Subtasks
 
-- [ ] 14.1 Implement Quote list, create, detail screens and send action
-- [ ] 14.2 Implement Booking list, create, detail screens and complete action
-- [ ] 14.3 Implement Dashboard screen with KPI cards and recent activity
+- [x] 14.1 Implement Quote list, create, detail screens and send action
+- [x] 14.2 Implement Booking list, create, detail screens and complete action
+- [x] 14.3 Implement Dashboard screen with KPI cards and recent activity
 
 ## Deliverables
 
@@ -108,16 +108,16 @@ Implements all Part B screens: quotes, bookings, and dashboard. Builds on top of
 ## Tests
 
 - Unit / component tests:
-  - [ ] Quote list renders paginated results with correct status badges per state
-  - [ ] Quote create form computes estimated total client-side correctly (matching SPEC formula)
-  - [ ] Quote send button is hidden for staff role
-  - [ ] Booking list renders paginated results with correct status badges
-  - [ ] Booking create form generates and sends a unique idempotency_key
-  - [ ] Booking complete button is hidden for staff role
-  - [ ] Dashboard displays correct count for confirmed bookings
-  - [ ] Dashboard displays correct count for open quotes (draft + sent)
-  - [ ] Dashboard renders last 5 notifications in correct order
-  - [ ] Feature-gated UI elements are hidden when the corresponding flag is disabled for the tenant
+  - [x] Quote list renders paginated results with correct status badges per state
+  - [x] Quote create form computes estimated total client-side correctly (matching SPEC formula)
+  - [x] Quote send button is hidden for staff role
+  - [x] Booking list renders paginated results with correct status badges
+  - [x] Booking create form generates and sends a unique idempotency_key
+  - [x] Booking complete button is hidden for staff role
+  - [x] Dashboard displays correct count for confirmed bookings
+  - [x] Dashboard displays correct count for open quotes (draft + sent)
+  - [x] Dashboard renders last 5 notifications in correct order
+  - [x] Feature-gated UI elements are hidden when the corresponding flag is disabled for the tenant
 
 ## Success Criteria
 

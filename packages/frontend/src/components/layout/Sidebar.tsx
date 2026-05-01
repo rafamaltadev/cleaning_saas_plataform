@@ -5,8 +5,11 @@ import { logout } from '../../store/slices/authSlice';
 import { REFRESH_TOKEN_KEY } from '../../api/client';
 
 const NAV_ITEMS = [
-  { to: '/kanban', label: 'Kanban', icon: '⬜' },
+  { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
+  { to: '/quotes', label: 'Quotes', icon: '📋' },
+  { to: '/bookings', label: 'Bookings', icon: '📅' },
   { to: '/clients', label: 'Clients', icon: '👥' },
+  { to: '/kanban', label: 'Kanban', icon: '⬜' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
