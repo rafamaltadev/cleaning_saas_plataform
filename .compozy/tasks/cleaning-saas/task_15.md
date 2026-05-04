@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Public Landing Page & Subscriber Login"
 type: feature
 complexity: high
@@ -177,17 +177,17 @@ Pricing UI requirements:
 
 ## Subtasks
 
-- [ ] 15.1 Implement page route structure and redirect logic for authenticated users
-- [ ] 15.2 Implement Hero section with primary and secondary CTAs
-- [ ] 15.3 Implement Social Proof section
-- [ ] 15.4 Implement Problem → Solution section
-- [ ] 15.5 Implement Features section
-- [ ] 15.6 Implement How It Works section
-- [ ] 15.7 Implement Benefits section
-- [ ] 15.8 Implement Pricing section with region detection and currency toggle
-- [ ] 15.9 Implement Live Simulation section with animations
-- [ ] 15.10 Implement Final CTA section
-- [ ] 15.11 Implement persistent header with Log In link
+- [x] 15.1 Implement page route structure and redirect logic for authenticated users
+- [x] 15.2 Implement Hero section with primary and secondary CTAs
+- [x] 15.3 Implement Social Proof section
+- [x] 15.4 Implement Problem → Solution section
+- [x] 15.5 Implement Features section
+- [x] 15.6 Implement How It Works section
+- [x] 15.7 Implement Benefits section
+- [x] 15.8 Implement Pricing section with region detection and currency toggle
+- [x] 15.9 Implement Live Simulation section with animations
+- [x] 15.10 Implement Final CTA section
+- [x] 15.11 Implement persistent header with Log In link
 
 ## Deliverables
 
@@ -203,17 +203,17 @@ Pricing UI requirements:
 
 ## Tests
 
-- [ ] Authenticated user visiting the landing page is redirected to the dashboard
-- [ ] Unauthenticated user sees the full landing page
-- [ ] Pricing section displays BRL prices when locale is pt-BR
-- [ ] Pricing section displays USD prices as default for unknown locale
-- [ ] Currency toggle switches between BRL and USD correctly
-- [ ] Growth plan card is visually distinct and carries "Most Popular" badge
-- [ ] Scale plan card carries "Best Value" badge
-- [ ] All three pricing cards include a CTA button
-- [ ] Log in link routes to the login screen
-- [ ] Primary CTA "Start Free" is present and visible in Hero and Final CTA sections
-- [ ] Live simulation section renders without errors
+- [x] Authenticated user visiting the landing page is redirected to the dashboard
+- [x] Unauthenticated user sees the full landing page
+- [x] Pricing section displays BRL prices when locale is pt-BR
+- [x] Pricing section displays USD prices as default for unknown locale
+- [x] Currency toggle switches between BRL and USD correctly
+- [x] Growth plan card is visually distinct and carries "Most Popular" badge
+- [x] Scale plan card carries "Best Value" badge
+- [x] All three pricing cards include a CTA button
+- [x] Log in link routes to the login screen
+- [x] Primary CTA "Start Free" is present and visible in Hero and Final CTA sections
+- [x] Live simulation section renders without errors
 
 ## Success Criteria
 

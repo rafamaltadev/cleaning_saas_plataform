@@ -4,7 +4,9 @@ import { store } from './store';
 import LoginPage from './pages/auth/LoginPage';
 import AppShell from './components/layout/AppShell';
 import ProtectedRoute from './components/shared/ProtectedRoute';
+import PublicLandingRoute from './components/shared/PublicLandingRoute';
 import RoleGuard from './components/shared/RoleGuard';
+import LandingPage from './pages/landing/LandingPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ClientListPage from './pages/clients/ClientListPage';
 import ClientCreatePage from './pages/clients/ClientCreatePage';
@@ -23,10 +25,12 @@ export default function App() {
     <Provider store={store}>
       <BrowserRouter>
         <Routes>
+          <Route element={<PublicLandingRoute />}>
+            <Route index element={<LandingPage />} />
+          </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/quotes" element={<QuoteListPage />} />
               <Route path="/quotes/new" element={<QuoteCreatePage />} />
