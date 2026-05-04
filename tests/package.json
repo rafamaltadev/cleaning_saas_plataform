@@ -1,0 +1,23 @@
+{
+  "name": "@cleaning-saas/tests",
+  "version": "0.0.1",
+  "private": true,
+  "description": "T16 — Full system integration and E2E test suite",
+  "scripts": {
+    "test:integration": "jest --config jest.integration.config.js --runInBand --forceExit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.0.0",
+    "axios": "^1.7.9",
+    "jest": "^29.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.0"
+  }
+}
