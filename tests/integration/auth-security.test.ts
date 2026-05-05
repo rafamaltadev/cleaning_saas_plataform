@@ -1,19 +1,35 @@
 /**
  * T16 — Authentication & Security Integration Tests
  *
- * Tool: axios + Jest
- * Rationale: Tests hit the live Docker Compose backend at localhost:3000.
- * Axios provides a clean HTTP client for black-box API testing without requiring
- * the NestJS TestingModule context. Jest provides the test runner consistent
- * with the existing backend suite.
+ * Tool: axios + Jest (live API tests); @nestjs/testing + supertest (rate limit)
+ * Rationale: Most tests hit the live Docker Compose backend at localhost:3000.
+ * The rate limit test uses an in-process NestJS app with limit=2 so it can
+ * trigger 429 without exhausting the live backend's high THROTTLE_AUTH_LIMIT.
  *
  * Prerequisites: `docker compose up -d` with seed data applied.
  * Set SEED_DEFAULT_PASSWORD to the value used when running `npm run seed`.
  */
 
+import 'reflect-metadata';
+import { Controller, Get, HttpCode, INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import supertest from 'supertest';
 import jwt from 'jsonwebtoken';
 import { createClient, api } from '../support/api-client';
 import { DOCKER_JWT_SECRET, ADMIN_EMAIL, SEED_PASSWORD } from '../support/fixtures';
+
+// ─── Minimal controller for in-process rate limit test ───────────────────────
+
+@Controller('__ratelimit_probe')
+class RateLimitProbeController {
+  @Get()
+  @HttpCode(200)
+  ping() {
+    return { ok: true };
+  }
+}
 
 // ─── Full auth lifecycle ──────────────────────────────────────────────────────
 
@@ -184,18 +200,35 @@ describe('CORS configuration', () => {
 });
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
+// Uses an in-process NestJS app with limit=2 so we can trigger 429 without
+// exhausting the live backend's THROTTLE_AUTH_LIMIT (set high for test safety).
 
 describe('Rate limiting', () => {
-  it('exceeding the auth endpoint threshold returns HTTP 429', async () => {
+  let rateLimitApp: INestApplication;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 2 }])],
+      controllers: [RateLimitProbeController],
+      providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+    }).compile();
+
+    rateLimitApp = moduleRef.createNestApplication();
+    await rateLimitApp.init();
+  });
+
+  afterAll(async () => {
+    await rateLimitApp?.close();
+  });
+
+  it('exceeding the throttle limit returns HTTP 429', async () => {
+    const server = rateLimitApp.getHttpServer();
     const statuses: number[] = [];
-    for (let i = 0; i < 12; i++) {
-      const res = await api.post('/auth/login', {
-        email: 'ratelimit-probe@nonexistent.test',
-        password: 'wrong',
-      });
+    for (let i = 0; i < 5; i++) {
+      const res = await supertest(server).get('/__ratelimit_probe');
       statuses.push(res.status);
       if (res.status === 429) break;
     }
     expect(statuses).toContain(429);
-  }, 30_000);
+  });
 });

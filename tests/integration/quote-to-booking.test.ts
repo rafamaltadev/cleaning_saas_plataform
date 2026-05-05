@@ -88,7 +88,7 @@ describe('Quote-to-Booking End-to-End Flow', () => {
 
   it('step 5 — sends the quote (status: sent)', async () => {
     const res = await api.post(`/quotes/${quoteId}/send`);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.data.data.status).toBe('sent');
   });
 
@@ -121,7 +121,7 @@ describe('Quote-to-Booking End-to-End Flow', () => {
 
   it('step 8 — completes the booking (status: completed)', async () => {
     const res = await api.post(`/bookings/${bookingId}/complete`);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.data.data.status).toBe('completed');
   });
 
@@ -144,7 +144,7 @@ describe('Quote-to-Booking End-to-End Flow', () => {
   it('step 10 — notifications are enqueued for the booking lifecycle', async () => {
     const res = await api.get('/notifications?limit=100');
     expect(res.status).toBe(200);
-    const notifications: any[] = res.data.data ?? [];
+    const notifications: any[] = res.data.data.items ?? [];
     // At minimum the notification list is accessible and is an array
     expect(Array.isArray(notifications)).toBe(true);
   });

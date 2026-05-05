@@ -9,4 +9,5 @@ module.exports = {
   testEnvironment: 'node',
   testTimeout: 30000,
   verbose: true,
+  setupFiles: ['<rootDir>/support/load-env.ts'],
 };

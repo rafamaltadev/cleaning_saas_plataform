@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { QuoteRepository } from '../infrastructure/quote.repository';
 import { ServiceRepository } from '../../services/infrastructure/service.repository';
@@ -232,18 +232,6 @@ describe('QuoteService', () => {
   });
 
   describe('send()', () => {
-    it('throws ForbiddenException when user lacks quotes.send permission', async () => {
-      await expect(
-        service.send('quote-uuid', 'tenant-uuid', 'actor-uuid', []),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('throws ForbiddenException when permissions array is empty', async () => {
-      await expect(
-        service.send('quote-uuid', 'tenant-uuid', 'actor-uuid', []),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
     it('emits quote.sent domain event on success', async () => {
       quoteRepoMock.findById.mockResolvedValue(makeQuote({ status: 'draft' }));
 

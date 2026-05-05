@@ -35,7 +35,7 @@ describe('Feature Flags — Notification Behaviour', () => {
   it('GET /notifications is accessible to admin and supervisor', async () => {
     const adminRes = await adminApi.get('/notifications?limit=10');
     expect(adminRes.status).toBe(200);
-    expect(Array.isArray(adminRes.data.data)).toBe(true);
+    expect(Array.isArray(adminRes.data.data.items)).toBe(true);
 
     const supRes = await supervisorApi.get('/notifications?limit=10');
     expect(supRes.status).toBe(200);
@@ -103,6 +103,8 @@ describe('Feature Flags — Notification Behaviour', () => {
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
     const booking = await adminApi.post('/bookings', {
       quote_id: quote.data.data.id,
+      client_id: client.data.data.id,
+      service_id: svc.data.data.id,
       scheduled_start: start.toISOString(),
       scheduled_end: end.toISOString(),
       idempotency_key: `flag-booking-${suffix}`,
@@ -116,7 +118,7 @@ describe('Feature Flags — Notification Behaviour', () => {
     const notifRes = await adminApi.get('/notifications?limit=100');
     expect(notifRes.status).toBe(200);
     // Notifications may exist for this booking or generally
-    expect(Array.isArray(notifRes.data.data)).toBe(true);
+    expect(Array.isArray(notifRes.data.data.items)).toBe(true);
   });
 
   // ─── SMS suppression via feature flag (documented pending) ─────────────────

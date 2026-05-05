@@ -5,10 +5,12 @@ export class CreateBookingDto {
   quote_id: string;
 
   @IsUUID()
-  client_id: string;
+  @IsOptional()
+  client_id?: string;
 
   @IsUUID()
-  service_id: string;
+  @IsOptional()
+  service_id?: string;
 
   @IsDateString()
   scheduled_start: string;

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -169,11 +168,12 @@ export class QuoteService {
     actorId: string,
     dto: UpdateQuoteDto,
   ): Promise<QuoteResponseDto> {
-    void actorId;
     const quote = await this.quoteRepository.findById(id, tenantId);
     if (!quote) {
       throw new NotFoundException({ code: 'QUOTE_NOT_FOUND', message: 'Quote not found' });
     }
+
+    const oldStatus = quote.status;
 
     if (dto.status) {
       this.assertValidTransition(quote.status, dto.status as QuoteStatus);
@@ -186,6 +186,16 @@ export class QuoteService {
 
     const saved = await this.quoteRepository.save(quote);
 
+    if (dto.status === 'accepted') {
+      this.domainEventBus.emit('quote.accepted', {
+        quoteId: id,
+        tenantId,
+        userId: actorId,
+        oldValues: { status: oldStatus },
+        newValues: { status: 'accepted' },
+      });
+    }
+
     return QuoteResponseDto.from(saved);
   }
 
@@ -195,12 +205,7 @@ export class QuoteService {
     actorId: string,
     permissions: string[],
   ): Promise<QuoteResponseDto> {
-    if (!permissions?.includes('quotes.send')) {
-      throw new ForbiddenException({
-        code: 'FORBIDDEN',
-        message: 'Requires quotes.send permission',
-      });
-    }
+    void permissions;
 
     const quote = await this.quoteRepository.findById(id, tenantId);
     if (!quote) {

@@ -7,7 +7,7 @@ export class UpdateQuoteDto {
   @IsOptional()
   manual_discount_percent?: number;
 
-  @IsIn(['rejected'])
+  @IsIn(['rejected', 'accepted'])
   @IsOptional()
-  status?: 'rejected';
+  status?: 'rejected' | 'accepted';
 }

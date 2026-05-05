@@ -39,6 +39,7 @@ export class BookingService {
     }
 
     let booking: Booking | undefined;
+    let wasTransitioned = false;
 
     await this.dataSource.transaction(async (manager) => {
       const existingInTx = await manager.findOne(Booking, {
@@ -59,21 +60,24 @@ export class BookingService {
       if (!quote) {
         throw new NotFoundException({ code: 'QUOTE_NOT_FOUND', message: 'Quote not found' });
       }
-      if (quote.status !== 'sent') {
+      if (!['sent', 'accepted'].includes(quote.status)) {
         throw new BadRequestException({
           code: 'INVALID_QUOTE_STATUS',
-          message: `Quote must be in 'sent' status to create a booking`,
+          message: `Quote must be in 'sent' or 'accepted' status to create a booking`,
         });
       }
 
-      quote.status = 'accepted';
-      await manager.save(Quote, quote);
+      wasTransitioned = quote.status === 'sent';
+      if (wasTransitioned) {
+        quote.status = 'accepted';
+        await manager.save(Quote, quote);
+      }
 
       const newBooking = new Booking();
       newBooking.tenant_id = tenantId;
       newBooking.quote_id = dto.quote_id;
-      newBooking.client_id = dto.client_id;
-      newBooking.service_id = dto.service_id;
+      newBooking.client_id = dto.client_id ?? quote.client_id;
+      newBooking.service_id = dto.service_id ?? quote.service_id;
       newBooking.scheduled_start = new Date(dto.scheduled_start);
       newBooking.scheduled_end = new Date(dto.scheduled_end);
       newBooking.status = 'confirmed';
@@ -90,13 +94,15 @@ export class BookingService {
       oldValues: { quote_status: 'sent' },
       newValues: { status: 'confirmed', quote_status: 'accepted' },
     });
-    this.domainEventBus.emit('quote.accepted', {
-      quoteId: dto.quote_id,
-      tenantId,
-      userId: actorId,
-      oldValues: { status: 'sent' },
-      newValues: { status: 'accepted' },
-    });
+    if (wasTransitioned) {
+      this.domainEventBus.emit('quote.accepted', {
+        quoteId: dto.quote_id,
+        tenantId,
+        userId: actorId,
+        oldValues: { status: 'sent' },
+        newValues: { status: 'accepted' },
+      });
+    }
 
     return BookingResponseDto.from(booking!);
   }

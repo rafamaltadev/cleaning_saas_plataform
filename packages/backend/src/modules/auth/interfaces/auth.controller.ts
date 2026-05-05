@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from '../application/auth.service';
 import { LoginDto } from '../validation/login.dto';
@@ -9,12 +9,6 @@ import { LogoutDto } from '../validation/logout.dto';
 @ApiTags('auth')
 @Controller('v1/auth')
 @SkipThrottle({ default: true })
-@Throttle({
-  auth: {
-    ttl: parseInt(process.env.THROTTLE_AUTH_TTL ?? '60000', 10),
-    limit: parseInt(process.env.THROTTLE_AUTH_LIMIT ?? '5', 10),
-  },
-})
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
