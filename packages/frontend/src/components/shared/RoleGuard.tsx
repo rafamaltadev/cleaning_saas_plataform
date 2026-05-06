@@ -13,7 +13,7 @@ export default function RoleGuard({ requiredRoles, children }: RoleGuardProps) {
   const user = useSelector((state: RootState) => state.auth.user);
 
   if (!user || !requiredRoles.includes(user.role)) {
-    return <Navigate to="/kanban" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

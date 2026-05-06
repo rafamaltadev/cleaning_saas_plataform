@@ -3,9 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
-import AddressForm from './AddressForm';
 import { getClient, updateClient } from '../../api/clients';
-import type { Address } from '../../types';
 
 interface FormErrors {
   name?: string;
@@ -19,7 +17,6 @@ export default function ClientEditPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState<Partial<Address>>({});
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -32,19 +29,16 @@ export default function ClientEditPage() {
         setName(client.name);
         setEmail(client.email);
         setPhone(client.phone ?? '');
-        if (client.addresses?.[0]) {
-          setAddress(client.addresses[0]);
-        }
       })
-      .catch(() => setErrors({ general: 'Failed to load client.' }))
+      .catch(() => setErrors({ general: 'Erro ao carregar cliente.' }))
       .finally(() => setLoadingData(false));
   }, [id]);
 
   function validate(): boolean {
     const next: FormErrors = {};
-    if (!name.trim()) next.name = 'Name is required';
-    if (!email.trim()) next.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Enter a valid email';
+    if (!name.trim()) next.name = 'Nome é obrigatório';
+    if (!email.trim()) next.email = 'E-mail é obrigatório';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Insira um e-mail válido';
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -59,17 +53,10 @@ export default function ClientEditPage() {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
-        address: address.street ? {
-          street: address.street,
-          city: address.city ?? '',
-          state: address.state ?? '',
-          zipCode: address.zipCode ?? '',
-          country: address.country ?? '',
-        } : undefined,
       });
       navigate('/clients');
     } catch {
-      setErrors({ general: 'Failed to update client. Please try again.' });
+      setErrors({ general: 'Erro ao atualizar cliente. Tente novamente.' });
     } finally {
       setLoading(false);
     }
@@ -78,7 +65,7 @@ export default function ClientEditPage() {
   if (loadingData) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-text-muted">Loading client data…</p>
+        <p className="text-text-muted">Carregando dados do cliente…</p>
       </div>
     );
   }
@@ -86,22 +73,22 @@ export default function ClientEditPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Edit Client</h1>
-        <p className="text-text-secondary text-sm mt-1">Update client information</p>
+        <h1 className="text-2xl font-bold text-text-primary">Editar Cliente</h1>
+        <p className="text-text-secondary text-sm mt-1">Atualize as informações do cliente</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Edit client form">
-        <Card title="Client Details">
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Editar cliente">
+        <Card title="Dados do Cliente">
           <div className="space-y-3">
             <Input
-              label="Name"
+              label="Nome"
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={errors.name}
               required
             />
             <Input
-              label="Email"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -109,7 +96,7 @@ export default function ClientEditPage() {
               required
             />
             <Input
-              label="Phone (optional)"
+              label="Telefone (opcional)"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -117,18 +104,14 @@ export default function ClientEditPage() {
           </div>
         </Card>
 
-        <Card>
-          <AddressForm value={address} onChange={setAddress} />
-        </Card>
-
         {errors.general && (
           <p className="text-sm text-error" role="alert">{errors.general}</p>
         )}
 
         <div className="flex gap-3">
-          <Button type="submit" loading={loading}>Save Changes</Button>
+          <Button type="submit" loading={loading}>Salvar Alterações</Button>
           <Button type="button" variant="ghost" onClick={() => navigate('/clients')}>
-            Cancel
+            Cancelar
           </Button>
         </div>
       </form>

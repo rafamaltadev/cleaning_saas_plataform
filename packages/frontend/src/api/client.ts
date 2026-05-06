@@ -57,18 +57,18 @@ apiClient.interceptors.response.use(
         const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
         if (!storedRefreshToken) throw new Error('No refresh token');
 
-        const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
+        const { data } = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
           '/api/v1/auth/refresh',
           { refreshToken: storedRefreshToken },
         );
 
-        store.dispatch(setAccessToken(data.accessToken));
-        localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+        store.dispatch(setAccessToken(data.data.accessToken));
+        localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refreshToken);
 
-        onRefreshed(data.accessToken);
+        onRefreshed(data.data.accessToken);
         isRefreshing = false;
 
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
         return apiClient(originalRequest);
       } catch {
         isRefreshing = false;
@@ -76,7 +76,6 @@ apiClient.interceptors.response.use(
 
         store.dispatch(logout());
         localStorage.removeItem(REFRESH_TOKEN_KEY);
-        window.location.href = '/login';
         return Promise.reject(error);
       }
     }

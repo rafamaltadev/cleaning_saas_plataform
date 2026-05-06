@@ -33,6 +33,7 @@ module.exports = {
         lg: '16px',
         xl: '24px',
         '2xl': '32px',
+        sidebar: '260px',
       },
       maxWidth: {
         container: '1200px',

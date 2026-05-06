@@ -6,11 +6,11 @@ import { REFRESH_TOKEN_KEY } from '../../api/client';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
-  { to: '/quotes', label: 'Quotes', icon: '📋' },
-  { to: '/bookings', label: 'Bookings', icon: '📅' },
-  { to: '/clients', label: 'Clients', icon: '👥' },
+  { to: '/quotes', label: 'Orçamentos', icon: '📋' },
+  { to: '/bookings', label: 'Agendamentos', icon: '📅' },
+  { to: '/clients', label: 'Clientes', icon: '👥' },
   { to: '/kanban', label: 'Kanban', icon: '⬜' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/settings', label: 'Configurações', icon: '⚙️' },
 ];
 
 export default function Sidebar() {
@@ -52,7 +52,7 @@ export default function Sidebar() {
       <div className="px-3 pb-4 border-t border-border pt-4">
         {user && (
           <div className="px-3 py-2 mb-2">
-            <p className="text-xs text-text-muted">Logged in as</p>
+            <p className="text-xs text-text-muted">Logado como</p>
             <p className="text-sm text-text-primary font-medium truncate">{user.email}</p>
             <p className="text-xs text-text-secondary capitalize">{user.role.replace('_', ' ')}</p>
           </div>
@@ -61,7 +61,7 @@ export default function Sidebar() {
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded text-sm font-medium text-text-secondary hover:text-error hover:bg-error/10 transition-all duration-200"
         >
-          <span>🚪</span> Sign out
+          <span>🚪</span> Sair
         </button>
       </div>
     </aside>

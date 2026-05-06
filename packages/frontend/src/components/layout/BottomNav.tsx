@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Home', icon: '🏠' },
-  { to: '/quotes', label: 'Quotes', icon: '📋' },
-  { to: '/bookings', label: 'Bookings', icon: '📅' },
-  { to: '/clients', label: 'Clients', icon: '👥' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/dashboard', label: 'Início', icon: '🏠' },
+  { to: '/quotes', label: 'Orçamentos', icon: '📋' },
+  { to: '/bookings', label: 'Agendamentos', icon: '📅' },
+  { to: '/clients', label: 'Clientes', icon: '👥' },
+  { to: '/settings', label: 'Configurações', icon: '⚙️' },
 ];
 
 export default function BottomNav() {

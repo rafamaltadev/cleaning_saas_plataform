@@ -4,12 +4,14 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import AddressForm from './AddressForm';
-import { createClient } from '../../api/clients';
+import { createClient, createAddress } from '../../api/clients';
 import type { Address } from '../../types';
+import type { AxiosError } from 'axios';
 
 interface FormErrors {
   name?: string;
   email?: string;
+  phone?: string;
   general?: string;
 }
 
@@ -24,9 +26,10 @@ export default function ClientCreatePage() {
 
   function validate(): boolean {
     const next: FormErrors = {};
-    if (!name.trim()) next.name = 'Name is required';
-    if (!email.trim()) next.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Enter a valid email';
+    if (!name.trim()) next.name = 'Nome é obrigatório';
+    if (!email.trim()) next.email = 'E-mail é obrigatório';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Insira um e-mail válido';
+    if (!phone.trim()) next.phone = 'Telefone é obrigatório';
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -37,21 +40,31 @@ export default function ClientCreatePage() {
 
     setLoading(true);
     try {
-      await createClient({
+      const client = await createClient({
         name: name.trim(),
         email: email.trim(),
-        phone: phone.trim() || undefined,
-        address: address.street ? {
-          street: address.street,
+        phone: phone.trim(),
+        preferred_language: 'pt-BR',
+      });
+
+      const hasAddress = !!(address.street || address.city || address.state || address.zipCode || address.country);
+      if (hasAddress) {
+        await createAddress({
+          client_id: client.id,
+          street: address.street ?? '',
           city: address.city ?? '',
           state: address.state ?? '',
-          zipCode: address.zipCode ?? '',
+          postal_code: address.zipCode ?? '',
           country: address.country ?? '',
-        } : undefined,
-      });
+        });
+      }
+
       navigate('/clients');
-    } catch {
-      setErrors({ general: 'Failed to create client. Please try again.' });
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string | string[] }>;
+      const msg = axiosErr.response?.data?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao criar cliente. Tente novamente.');
+      setErrors({ general: detail });
     } finally {
       setLoading(false);
     }
@@ -60,41 +73,43 @@ export default function ClientCreatePage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">New Client</h1>
-        <p className="text-text-secondary text-sm mt-1">Add a new client to your account</p>
+        <h1 className="text-2xl font-bold text-text-primary">Novo Cliente</h1>
+        <p className="text-text-secondary text-sm mt-1">Adicione um novo cliente à sua conta</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Create client form">
-        <Card title="Client Details">
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Criar cliente">
+        <Card title="Dados do Cliente">
           <div className="space-y-3">
             <Input
-              label="Name"
+              label="Nome"
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={errors.name}
-              placeholder="Jane Doe"
+              placeholder="Maria Silva"
               required
             />
             <Input
-              label="Email"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
-              placeholder="jane@example.com"
+              placeholder="maria@exemplo.com"
               required
             />
             <Input
-              label="Phone (optional)"
+              label="Telefone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 555 000 0000"
+              error={errors.phone}
+              placeholder="+55 11 99999-0000"
+              required
             />
           </div>
         </Card>
 
-        <Card>
+        <Card title="Endereço">
           <AddressForm value={address} onChange={setAddress} />
         </Card>
 
@@ -103,9 +118,9 @@ export default function ClientCreatePage() {
         )}
 
         <div className="flex gap-3">
-          <Button type="submit" loading={loading}>Create Client</Button>
+          <Button type="submit" loading={loading}>Criar Cliente</Button>
           <Button type="button" variant="ghost" onClick={() => navigate('/clients')}>
-            Cancel
+            Cancelar
           </Button>
         </div>
       </form>

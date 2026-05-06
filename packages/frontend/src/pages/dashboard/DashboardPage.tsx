@@ -50,10 +50,10 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Painel</h1>
         {user && (
           <p className="text-text-secondary text-sm mt-1">
-            Welcome back, <span className="text-text-primary font-medium">{user.name}</span>
+            Bem-vindo(a) de volta, <span className="text-text-primary font-medium">{user.name}</span>
           </p>
         )}
       </div>
@@ -62,42 +62,42 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Card>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Confirmed Bookings</span>
+            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Agendamentos Confirmados</span>
             {loadingKpi ? (
-              <span className="text-text-muted text-sm">Loading…</span>
+              <span className="text-text-muted text-sm">Carregando…</span>
             ) : (
               <span className="text-3xl font-bold text-success" data-testid="kpi-confirmed-bookings">
                 {kpi.confirmedBookings}
               </span>
             )}
             <Button variant="ghost" size="sm" className="self-start mt-1 -ml-2" onClick={() => navigate('/bookings')}>
-              View bookings →
+              Ver agendamentos →
             </Button>
           </div>
         </Card>
 
         <Card>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Open Quotes</span>
+            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Orçamentos em Aberto</span>
             {loadingKpi ? (
-              <span className="text-text-muted text-sm">Loading…</span>
+              <span className="text-text-muted text-sm">Carregando…</span>
             ) : (
               <span className="text-3xl font-bold text-warning" data-testid="kpi-open-quotes">
                 {kpi.openQuotes}
               </span>
             )}
             <Button variant="ghost" size="sm" className="self-start mt-1 -ml-2" onClick={() => navigate('/quotes')}>
-              View quotes →
+              Ver orçamentos →
             </Button>
           </div>
         </Card>
 
         <Card className="sm:col-span-2 lg:col-span-1">
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Quick Actions</span>
+            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Ações Rápidas</span>
             <div className="flex flex-col gap-2 mt-2">
-              <Button size="sm" onClick={() => navigate('/quotes/new')}>New Quote</Button>
-              <Button size="sm" variant="secondary" onClick={() => navigate('/bookings/new')}>New Booking</Button>
+              <Button size="sm" onClick={() => navigate('/quotes/new')}>Novo Orçamento</Button>
+              <Button size="sm" variant="secondary" onClick={() => navigate('/bookings/new')}>Novo Agendamento</Button>
             </div>
           </div>
         </Card>
@@ -106,11 +106,11 @@ export default function DashboardPage() {
       {/* Notifications widget — feature-gated */}
       {flags['notifications_enabled'] && (
         <div data-testid="notifications-widget">
-          <h2 className="text-lg font-semibold text-text-primary mb-3">Recent Notifications</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-3">Notificações Recentes</h2>
           {loadingNotif ? (
-            <p className="text-text-muted text-sm">Loading…</p>
+            <p className="text-text-muted text-sm">Carregando…</p>
           ) : notifications.length === 0 ? (
-            <p className="text-text-muted text-sm">No notifications yet.</p>
+            <p className="text-text-muted text-sm">Nenhuma notificação ainda.</p>
           ) : (
             <div className="space-y-2">
               {notifications.map((n) => (

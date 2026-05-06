@@ -14,12 +14,12 @@ import { getBookings, updateBookingStatus } from '../../api/bookings';
 import type { KanbanCard, KanbanStatus, QuoteStatus, BookingStatus } from '../../types';
 
 const COLUMNS: { id: KanbanStatus; label: string }[] = [
-  { id: 'new_lead', label: 'New Lead' },
-  { id: 'contacted', label: 'Contacted' },
-  { id: 'quote_sent', label: 'Quote Sent' },
-  { id: 'booking_confirmed', label: 'Booking Confirmed' },
-  { id: 'completed', label: 'Completed' },
-  { id: 'cancelled', label: 'Cancelled' },
+  { id: 'new_lead', label: 'Novo Lead' },
+  { id: 'contacted', label: 'Contatado' },
+  { id: 'quote_sent', label: 'Orçamento Enviado' },
+  { id: 'booking_confirmed', label: 'Agendamento Confirmado' },
+  { id: 'completed', label: 'Concluído' },
+  { id: 'cancelled', label: 'Cancelado' },
 ];
 
 const QUOTE_STATUSES: KanbanStatus[] = ['new_lead', 'contacted', 'quote_sent'];
@@ -139,7 +139,7 @@ export default function KanbanPage() {
         }));
         setCards([...quoteCards, ...bookingCards]);
       })
-      .catch(() => setError('Failed to load kanban data.'))
+      .catch(() => setError('Erro ao carregar dados do kanban.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -173,14 +173,14 @@ export default function KanbanPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-text-muted">Loading board…</p>
+        <p className="text-text-muted">Carregando quadro…</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary mb-6">Kanban Board</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">Quadro Kanban</h1>
 
       {error && <p className="text-error text-sm mb-4">{error}</p>}
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
+import type { AxiosError } from 'axios';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
@@ -9,10 +10,10 @@ import type { Tenant, BusinessHours, Service } from '../../types';
 type Tab = 'profile' | 'hours' | 'services' | 'payment';
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'profile', label: 'Company Profile' },
-  { id: 'hours', label: 'Business Hours' },
-  { id: 'services', label: 'Services & Pricing' },
-  { id: 'payment', label: 'Payment' },
+  { id: 'profile', label: 'Perfil da Empresa' },
+  { id: 'hours', label: 'Horário de Funcionamento' },
+  { id: 'services', label: 'Serviços e Preços' },
+  { id: 'payment', label: 'Pagamento' },
 ];
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -23,7 +24,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">Configurações</h1>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar tabs */}
@@ -77,7 +78,7 @@ function ProfileSection() {
         setTimezone(t.timezone);
         setCurrency(t.currency);
       })
-      .catch(() => setError('Failed to load company profile.'))
+      .catch(() => setError('Erro ao carregar perfil da empresa.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -87,52 +88,54 @@ function ProfileSection() {
     setSaving(true);
     setError('');
     try {
-      await updateTenant({ name, email, timezone, currency });
+      await updateTenant({ name, timezone, currency });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setError('Failed to save changes.');
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string | string[] }>;
+      const msg = axiosErr.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar alterações.'));
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) return <p className="text-text-muted text-sm">Loading…</p>;
+  if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
 
   return (
-    <Card title="Company Profile">
-      <form onSubmit={handleSave} className="space-y-3" aria-label="Company profile form">
+    <Card title="Perfil da Empresa">
+      <form onSubmit={handleSave} className="space-y-3" aria-label="Perfil da empresa">
         <Input
-          label="Company Name"
+          label="Nome da Empresa"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
         <Input
-          label="Email"
+          label="E-mail"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <Input
-          label="Timezone"
+          label="Fuso Horário"
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          placeholder="America/New_York"
+          placeholder="America/Sao_Paulo"
         />
         <Input
-          label="Currency"
+          label="Moeda"
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
-          placeholder="USD"
+          placeholder="BRL"
         />
 
         {error && <p className="text-sm text-error" role="alert">{error}</p>}
-        {saved && <p className="text-sm text-success">Changes saved!</p>}
+        {saved && <p className="text-sm text-success">Alterações salvas!</p>}
 
         <div className="flex gap-3 pt-2">
-          <Button type="submit" loading={saving}>Save Changes</Button>
+          <Button type="submit" loading={saving}>Salvar Alterações</Button>
         </div>
       </form>
     </Card>
@@ -154,7 +157,7 @@ function BusinessHoursSection() {
   }
 
   return (
-    <Card title="Business Hours">
+    <Card title="Horário de Funcionamento">
       <div className="space-y-2">
         {DAYS.map((day) => {
           const dayHours = hours[day];
@@ -168,7 +171,7 @@ function BusinessHoursSection() {
                   onChange={(e) => updateDay(day, 'closed', e.target.checked)}
                   className="rounded border-border"
                 />
-                Closed
+                Fechado
               </label>
               {!dayHours?.closed && (
                 <div className="flex items-center gap-2 text-sm">
@@ -192,7 +195,7 @@ function BusinessHoursSection() {
         })}
       </div>
       <div className="mt-4">
-        <Button type="button">Save Hours</Button>
+        <Button type="button">Salvar Horários</Button>
       </div>
     </Card>
   );
@@ -205,21 +208,29 @@ function ServicesSection() {
 
   useEffect(() => {
     getServices()
-      .then(setServices)
-      .catch(() => setError('Failed to load services.'))
+      .then((result) => {
+        const raw = result as unknown;
+        const items: Service[] = Array.isArray(raw)
+          ? (raw as Service[])
+          : Array.isArray((raw as { data?: Service[] }).data)
+          ? (raw as { data: Service[] }).data
+          : [];
+        setServices(items);
+      })
+      .catch(() => setError('Erro ao carregar serviços.'))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-text-muted text-sm">Loading…</p>;
+  if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
   if (error) return <p className="text-error text-sm">{error}</p>;
 
   return (
-    <Card title="Services & Pricing">
+    <Card title="Serviços e Preços">
       <p className="text-xs text-text-secondary mb-4">
-        Services are managed in the Services module. This is a read-only view.
+        Os serviços são gerenciados no módulo de Serviços. Esta é uma visualização somente leitura.
       </p>
       {services.length === 0 ? (
-        <p className="text-text-muted text-sm">No services configured.</p>
+        <p className="text-text-muted text-sm">Nenhum serviço configurado.</p>
       ) : (
         <div className="space-y-2">
           {services.map((service) => (
@@ -241,18 +252,18 @@ function ServicesSection() {
 
 function PaymentSection() {
   return (
-    <Card title="Payment Integration">
+    <Card title="Integração de Pagamento">
       <div className="flex flex-col items-center justify-center py-10 text-center" aria-label="Stripe placeholder">
         <div className="w-16 h-16 rounded-full bg-surface-alt flex items-center justify-center mb-4">
           <span className="text-3xl">💳</span>
         </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">Stripe Integration</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">Integração com Stripe</h3>
         <p className="text-text-secondary text-sm mb-6 max-w-sm">
-          Connect your Stripe account to accept online payments from clients.
-          This feature is coming soon.
+          Conecte sua conta Stripe para aceitar pagamentos online de clientes.
+          Esta funcionalidade estará disponível em breve.
         </p>
         <Button variant="secondary" disabled>
-          Coming Soon
+          Em Breve
         </Button>
       </div>
     </Card>

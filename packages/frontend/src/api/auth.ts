@@ -1,15 +1,14 @@
 import axios from 'axios';
-import type { AuthTokens, User } from '../types';
+import type { AuthTokens } from '../types';
 
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
-  const { data } = await axios.post<LoginResponse>('/api/v1/auth/login', { email, password });
-  return data;
+  const { data } = await axios.post<{ data: LoginResponse }>('/api/v1/auth/login', { email, password });
+  return data.data;
 }
 
 export async function refreshToken(token: string): Promise<AuthTokens> {

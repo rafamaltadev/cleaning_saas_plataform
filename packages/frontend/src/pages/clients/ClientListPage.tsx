@@ -22,11 +22,11 @@ export default function ClientListPage() {
     setLoading(true);
     setError('');
     try {
-      const result = await getClients({ page, limit: PAGE_SIZE, search, status: statusFilter || undefined });
+      const result = await getClients({ page, limit: PAGE_SIZE, search: search || undefined, status: statusFilter || undefined });
       setClients(result.data);
       setTotal(result.total);
     } catch {
-      setError('Failed to load clients.');
+      setError('Erro ao carregar clientes.');
     } finally {
       setLoading(false);
     }
@@ -41,13 +41,13 @@ export default function ClientListPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Clients</h1>
-        <Button onClick={() => navigate('/clients/new')}>+ New Client</Button>
+        <h1 className="text-2xl font-bold text-text-primary">Clientes</h1>
+        <Button onClick={() => navigate('/clients/new')}>+ Novo Cliente</Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <Input
-          placeholder="Search by name or email…"
+          placeholder="Buscar por nome ou e-mail…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="sm:max-w-xs"
@@ -59,34 +59,34 @@ export default function ClientListPage() {
           className="h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           aria-label="Filter by status"
         >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="">Todos os status</option>
+          <option value="active">Ativo</option>
+          <option value="inactive">Inativo</option>
         </select>
       </div>
 
-      {error && <p className="text-error text-sm mb-4">{error}</p>}
+      {error && <p className="text-error text-sm mb-4" role="alert">{error}</p>}
 
       {/* Desktop table */}
       <div className="hidden sm:block bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full" aria-label="Clients table">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Email</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Phone</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Nome</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">E-mail</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Telefone</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">Actions</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">Ações</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-text-muted text-sm">Loading…</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-text-muted text-sm">Carregando…</td>
               </tr>
             ) : clients.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-text-muted text-sm">No clients found.</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-text-muted text-sm">Nenhum cliente encontrado.</td>
               </tr>
             ) : (
               clients.map((client) => (
@@ -96,7 +96,7 @@ export default function ClientListPage() {
                   <td className="px-4 py-3 text-sm text-text-secondary">{client.phone ?? '—'}</td>
                   <td className="px-4 py-3">
                     <Badge variant={client.status === 'active' ? 'success' : 'neutral'}>
-                      {client.status}
+                      {client.status === 'active' ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -105,7 +105,7 @@ export default function ClientListPage() {
                       size="sm"
                       onClick={() => navigate(`/clients/${client.id}/edit`)}
                     >
-                      Edit
+                      Editar
                     </Button>
                   </td>
                 </tr>
@@ -118,9 +118,9 @@ export default function ClientListPage() {
       {/* Mobile cards */}
       <div className="sm:hidden space-y-3">
         {loading ? (
-          <p className="text-center text-text-muted text-sm py-8">Loading…</p>
+          <p className="text-center text-text-muted text-sm py-8">Carregando…</p>
         ) : clients.length === 0 ? (
-          <p className="text-center text-text-muted text-sm py-8">No clients found.</p>
+          <p className="text-center text-text-muted text-sm py-8">Nenhum cliente encontrado.</p>
         ) : (
           clients.map((client) => (
             <div key={client.id} className="bg-surface border border-border rounded-lg p-4">
@@ -136,7 +136,7 @@ export default function ClientListPage() {
               </div>
               <div className="mt-3 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/clients/${client.id}/edit`)}>
-                  Edit
+                  Editar
                 </Button>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function ClientListPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-text-secondary">
-            Page {page} of {totalPages} — {total} total
+            Página {page} de {totalPages} — {total} no total
           </p>
           <div className="flex gap-2">
             <Button
@@ -155,18 +155,18 @@ export default function ClientListPage() {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              aria-label="Previous page"
+              aria-label="Página anterior"
             >
-              ← Prev
+              ← Anterior
             </Button>
             <Button
               variant="secondary"
               size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
-              aria-label="Next page"
+              aria-label="Próxima página"
             >
-              Next →
+              Próximo →
             </Button>
           </div>
         </div>
