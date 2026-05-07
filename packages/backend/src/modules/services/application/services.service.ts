@@ -32,6 +32,17 @@ export class ServicesService {
     return ServiceResponseDto.from(service);
   }
 
+  async findOne(tenantId: string, serviceId: string): Promise<ServiceResponseDto> {
+    const service = await this.serviceRepository.findById(serviceId, tenantId);
+    if (!service) {
+      throw new NotFoundException({
+        code: 'SERVICE_NOT_FOUND',
+        message: 'Service not found',
+      });
+    }
+    return ServiceResponseDto.from(service);
+  }
+
   async update(
     tenantId: string,
     serviceId: string,
@@ -47,5 +58,16 @@ export class ServicesService {
     Object.assign(existing, dto);
     const saved = await this.serviceRepository.save(existing);
     return ServiceResponseDto.from(saved);
+  }
+
+  async remove(tenantId: string, serviceId: string): Promise<void> {
+    const existing = await this.serviceRepository.findById(serviceId, tenantId);
+    if (!existing) {
+      throw new NotFoundException({
+        code: 'SERVICE_NOT_FOUND',
+        message: 'Service not found',
+      });
+    }
+    await this.serviceRepository.softDelete(serviceId);
   }
 }

@@ -116,11 +116,9 @@ export default function ServiceFormPage() {
 
       const rulePayload = {
         service_id: serviceId,
-        frequency: 'once',
+        frequency: 'one_time' as const,
         discount_percent,
         price_multiplier,
-        min_area: null,
-        max_area: null,
       };
 
       if (existingRule) {

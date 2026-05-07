@@ -63,8 +63,11 @@ function ProfileSection() {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [timezone, setTimezone] = useState('');
-  const [currency, setCurrency] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -76,8 +79,6 @@ function ProfileSection() {
         setTenant(t);
         setName(t.name);
         setEmail(t.email);
-        setTimezone(t.timezone);
-        setCurrency(t.currency);
       })
       .catch(() => setError('Erro ao carregar perfil da empresa.'))
       .finally(() => setLoading(false));
@@ -89,7 +90,7 @@ function ProfileSection() {
     setSaving(true);
     setError('');
     try {
-      await updateTenant({ name, timezone, currency });
+      await updateTenant({ name });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -119,18 +120,56 @@ function ProfileSection() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <Input
-          label="Fuso Horário"
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-          placeholder="America/Sao_Paulo"
-        />
-        <Input
-          label="Moeda"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
-          placeholder="BRL"
-        />
+        <div className="space-y-1">
+          <Input
+            label="Telefone"
+            type="text"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+55 11 99999-9999"
+          />
+          <p className="text-xs text-text-muted">Em breve</p>
+        </div>
+        <div className="space-y-1">
+          <Input
+            label="Endereço"
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Rua, número, cidade"
+          />
+          <p className="text-xs text-text-muted">Em breve</p>
+        </div>
+        <div className="space-y-1">
+          <Input
+            label="Instagram"
+            type="text"
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+            placeholder="@usuario"
+          />
+          <p className="text-xs text-text-muted">Em breve</p>
+        </div>
+        <div className="space-y-1">
+          <Input
+            label="Facebook"
+            type="text"
+            value={facebook}
+            onChange={(e) => setFacebook(e.target.value)}
+            placeholder="facebook.com/pagina"
+          />
+          <p className="text-xs text-text-muted">Em breve</p>
+        </div>
+        <div className="space-y-1">
+          <Input
+            label="WhatsApp"
+            type="text"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            placeholder="+55 11 99999-9999"
+          />
+          <p className="text-xs text-text-muted">Em breve</p>
+        </div>
 
         {error && <p className="text-sm text-error" role="alert">{error}</p>}
         {saved && <p className="text-sm text-success">Alterações salvas!</p>}
@@ -242,7 +281,11 @@ function ServicesSection() {
                   <p className="text-xs text-text-secondary">{service.description}</p>
                 )}
               </div>
-              <Badge variant="neutral">{`$${service.baseRate.toFixed(2)}`}</Badge>
+              <Badge variant="neutral">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                  (service.base_rate_cents ?? Math.round((service.baseRate ?? 0) * 100)) / 100
+                )}
+              </Badge>
             </div>
           ))}
         </div>
