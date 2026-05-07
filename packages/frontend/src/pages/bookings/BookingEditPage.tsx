@@ -9,11 +9,15 @@ import { apiClient } from '../../api/client';
 import type { ApiBooking, ApiQuote } from '../../types';
 
 function toDatetimeLocal(isoString: string): string {
-  return isoString.slice(0, 16);
+  const d = new Date(isoString);
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
 }
 
 function nowDatetimeLocal(): string {
-  return new Date().toISOString().slice(0, 16);
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
 }
 
 function quoteLabel(q: ApiQuote): string {
@@ -69,8 +73,8 @@ export default function BookingEditPage() {
     }
     if (isExpiredQuote) return;
 
-    const now = new Date().toISOString().slice(0, 16);
-    if (scheduledStart < now) {
+    const nowLocal = nowDatetimeLocal();
+    if (scheduledStart < nowLocal) {
       setError('O início do agendamento deve ser a partir de agora.');
       return;
     }

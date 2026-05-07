@@ -17,7 +17,8 @@ import { ClientsService } from '../application/clients.service';
 import { CreateClientDto } from '../domain/create-client.dto';
 import { UpdateClientDto } from '../domain/update-client.dto';
 import { ClientResponseDto } from '../domain/client-response.dto';
-import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../../common/dto/pagination.dto';
+import { ListClientsQueryDto } from '../domain/list-clients-query.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -38,7 +39,7 @@ export class ClientsController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   getAll(
     @Req() req: Request & { user?: AuthUser },
-    @Query() query: PaginationQueryDto,
+    @Query() query: ListClientsQueryDto,
   ): Promise<PaginatedResult<ClientResponseDto>> {
     return this.clientsService.findAll(req.user!.tenantId, query);
   }

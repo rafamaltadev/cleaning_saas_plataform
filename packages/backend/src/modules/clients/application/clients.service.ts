@@ -8,7 +8,8 @@ import { AuditLogService } from '../../audit-log/application/audit-log.service';
 import { ClientResponseDto } from '../domain/client-response.dto';
 import { CreateClientDto } from '../domain/create-client.dto';
 import { UpdateClientDto } from '../domain/update-client.dto';
-import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../../common/dto/pagination.dto';
+import { ListClientsQueryDto } from '../domain/list-clients-query.dto';
 
 @Injectable()
 export class ClientsService {
@@ -19,7 +20,7 @@ export class ClientsService {
 
   async findAll(
     tenantId: string,
-    query: PaginationQueryDto,
+    query: ListClientsQueryDto,
   ): Promise<PaginatedResult<ClientResponseDto>> {
     const result = await this.clientRepository.findPaginated(tenantId, query);
     return {

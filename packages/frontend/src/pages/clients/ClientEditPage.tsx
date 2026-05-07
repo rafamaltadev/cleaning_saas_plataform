@@ -73,35 +73,43 @@ export default function ClientEditPage() {
     if (!validate() || !id) return;
 
     setLoading(true);
+
     try {
       await updateClient(id, {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
       });
+    } catch {
+      setErrors({ general: 'Erro ao atualizar cliente. Tente novamente.' });
+      setLoading(false);
+      return;
+    }
 
-      const hasAddress = !!(address.street || address.city || address.state || address.zipCode || address.country);
-      if (hasAddress) {
-        const addrPayload = {
-          street: address.street ?? '',
-          city: address.city ?? '',
-          state: address.state ?? '',
-          postal_code: address.zipCode ?? '',
-          country: address.country ?? '',
-        };
+    const hasAddress = !!(address.street || address.city || address.state || address.zipCode || address.country);
+    if (hasAddress) {
+      const addrPayload = {
+        street: address.street ?? '',
+        city: address.city ?? '',
+        state: address.state ?? '',
+        postal_code: address.zipCode ?? '',
+        country: address.country ?? '',
+      };
+      try {
         if (addressId) {
           await apiClient.put(`/addresses/${addressId}`, addrPayload);
         } else {
           await createAddress({ client_id: id, ...addrPayload });
         }
+      } catch {
+        setErrors({ general: 'Cliente atualizado, mas erro ao salvar endereço. Tente novamente.' });
+        setLoading(false);
+        return;
       }
-
-      navigate('/clients');
-    } catch {
-      setErrors({ general: 'Erro ao atualizar cliente. Tente novamente.' });
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
+    navigate('/clients');
   }
 
   if (loadingData) {
