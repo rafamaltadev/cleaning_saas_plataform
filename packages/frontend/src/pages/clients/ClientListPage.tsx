@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Input from '../../components/ui/Input';
-import { getClients } from '../../api/clients';
+import { getClients, deleteClient } from '../../api/clients';
 import type { Client } from '../../types';
 
 const PAGE_SIZE = 10;
@@ -37,6 +37,16 @@ export default function ClientListPage() {
   }, [fetchClients]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  async function handleDelete(client: Client) {
+    if (!window.confirm(`Excluir o cliente "${client.name}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await deleteClient(client.id);
+      void fetchClients();
+    } catch {
+      setError('Erro ao excluir cliente. Tente novamente.');
+    }
+  }
 
   return (
     <div>
@@ -100,13 +110,22 @@ export default function ClientListPage() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/clients/${client.id}/edit`)}
-                    >
-                      Editar
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/clients/${client.id}/edit`)}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => void handleDelete(client)}
+                      >
+                        Excluir
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -134,9 +153,12 @@ export default function ClientListPage() {
                   {client.status}
                 </Badge>
               </div>
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex justify-end gap-2">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/clients/${client.id}/edit`)}>
                   Editar
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => void handleDelete(client)}>
+                  Excluir
                 </Button>
               </div>
             </div>

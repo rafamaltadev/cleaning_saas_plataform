@@ -12,6 +12,6 @@ export async function updateTenant(payload: Partial<Tenant>): Promise<Tenant> {
 }
 
 export async function getServices(): Promise<Service[]> {
-  const { data } = await apiClient.get<Service[]>('/services');
-  return data;
+  const { data } = await apiClient.get<{ data: Service[] }>('/services');
+  return data.data;
 }

@@ -130,7 +130,7 @@ export default function QuoteListPage() {
                     <Badge variant={quoteBadgeVariant(quote.status)}>{QUOTE_STATUS_LABELS[quote.status] ?? quote.status}</Badge>
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency }).format(quote.estimated_total_cents / 100)}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: quote.currency || 'BRL' }).format(quote.estimated_total_cents / 100)}
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">
                     {new Date(quote.valid_until).toLocaleDateString()}
@@ -171,7 +171,7 @@ export default function QuoteListPage() {
                 <div>
                   <p className="text-xs font-mono text-text-secondary">{quote.id.slice(0, 12)}…</p>
                   <p className="text-sm font-medium text-text-primary mt-0.5">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency }).format(quote.estimated_total_cents / 100)}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: quote.currency || 'BRL' }).format(quote.estimated_total_cents / 100)}
                   </p>
                   <p className="text-xs text-text-muted mt-0.5">Válido: {new Date(quote.valid_until).toLocaleDateString()}</p>
                 </div>
@@ -179,7 +179,7 @@ export default function QuoteListPage() {
               </div>
               <div className="mt-3 flex gap-2 justify-end">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}`)}>
-                  View
+                  Ver
                 </Button>
                 {canSend && quote.status === 'draft' && (
                   <Button
@@ -187,9 +187,9 @@ export default function QuoteListPage() {
                     size="sm"
                     loading={sending === quote.id}
                     onClick={() => handleSend(quote.id)}
-                    aria-label={`Send quote ${quote.id}`}
+                    aria-label={`Enviar orçamento ${quote.id}`}
                   >
-                    Send
+                    Enviar
                   </Button>
                 )}
               </div>

@@ -31,17 +31,17 @@ export default function BookingCreatePage() {
   useEffect(() => {
     listQuotes({ page: 1, limit: 100, status: 'accepted' })
       .then((res) => setQuotes(res.items))
-      .catch(() => setError('Failed to load accepted quotes.'));
+      .catch(() => setError('Erro ao carregar orçamentos aceitos.'));
   }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!quoteId || !scheduledStart || !scheduledEnd) {
-      setError('Quote, scheduled start, and scheduled end are required.');
+      setError('Orçamento, início e fim do agendamento são obrigatórios.');
       return;
     }
     if (!selectedQuote) {
-      setError('Selected quote not found.');
+      setError('Orçamento selecionado não encontrado.');
       return;
     }
 
@@ -59,7 +59,7 @@ export default function BookingCreatePage() {
       });
       navigate(`/bookings/${created.id}`);
     } catch {
-      setError('Failed to create booking. Please try again.');
+      setError('Erro ao criar agendamento. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -68,36 +68,36 @@ export default function BookingCreatePage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">New Booking</h1>
-        <p className="text-text-secondary text-sm mt-1">Schedule a booking from an accepted quote</p>
+        <h1 className="text-2xl font-bold text-text-primary">Novo Agendamento</h1>
+        <p className="text-text-secondary text-sm mt-1">Agendar a partir de um orçamento aceito</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Create booking form">
-        <Card title="Booking Details">
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Criar agendamento">
+        <Card title="Detalhes do Agendamento">
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="quote-select">
-                Accepted Quote <span className="text-error">*</span>
+                Orçamento aceito <span className="text-error">*</span>
               </label>
               <select
                 id="quote-select"
                 value={quoteId}
                 onChange={(e) => setQuoteId(e.target.value)}
                 className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Select quote"
+                aria-label="Selecionar orçamento"
                 required
               >
-                <option value="">Select an accepted quote…</option>
+                <option value="">Selecione um orçamento aceito…</option>
                 {quotes.map((q) => (
                   <option key={q.id} value={q.id}>
-                    {q.id.slice(0, 12)}… — {new Intl.NumberFormat('en-US', { style: 'currency', currency: q.currency }).format(q.estimated_total_cents / 100)}
+                    {q.id.slice(0, 12)}… — {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: q.currency || 'BRL' }).format(q.estimated_total_cents / 100)}
                   </option>
                 ))}
               </select>
             </div>
 
             <Input
-              label="Scheduled Start"
+              label="Início do agendamento"
               type="datetime-local"
               value={scheduledStart}
               onChange={(e) => setScheduledStart(e.target.value)}
@@ -105,7 +105,7 @@ export default function BookingCreatePage() {
             />
 
             <Input
-              label="Scheduled End"
+              label="Fim do agendamento"
               type="datetime-local"
               value={scheduledEnd}
               onChange={(e) => setScheduledEnd(e.target.value)}
@@ -113,10 +113,10 @@ export default function BookingCreatePage() {
             />
 
             <Input
-              label="Assigned Team (optional)"
+              label="Equipe responsável (opcional)"
               value={assignedTeam}
               onChange={(e) => setAssignedTeam(e.target.value)}
-              placeholder="Team Alpha"
+              placeholder="Ex: Equipe Alpha"
             />
           </div>
         </Card>
@@ -124,8 +124,8 @@ export default function BookingCreatePage() {
         {error && <p className="text-sm text-error" role="alert">{error}</p>}
 
         <div className="flex gap-3">
-          <Button type="submit" loading={loading}>Create Booking</Button>
-          <Button type="button" variant="ghost" onClick={() => navigate('/bookings')}>Cancel</Button>
+          <Button type="submit" loading={loading}>Criar Agendamento</Button>
+          <Button type="button" variant="ghost" onClick={() => navigate('/bookings')}>Cancelar</Button>
         </div>
       </form>
     </div>

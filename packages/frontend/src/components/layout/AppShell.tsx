@@ -6,7 +6,7 @@ import BottomNav from './BottomNav';
 class PageErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch() { this.setState({ hasError: false }); }
+  componentDidCatch() { /* log only — do not reset; user must click "Tentar novamente" */ }
   render() {
     if (this.state.hasError) {
       return (

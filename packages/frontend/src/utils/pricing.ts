@@ -35,8 +35,8 @@ export function calculatePriceCents(params: PriceParams): number {
   return Math.round(price);
 }
 
-export function formatCurrency(cents: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(cents: number, currency = 'BRL'): string {
+  return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

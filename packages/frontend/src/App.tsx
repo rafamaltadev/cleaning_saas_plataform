@@ -19,6 +19,8 @@ import QuoteDetailPage from './pages/quotes/QuoteDetailPage';
 import BookingListPage from './pages/bookings/BookingListPage';
 import BookingCreatePage from './pages/bookings/BookingCreatePage';
 import BookingDetailPage from './pages/bookings/BookingDetailPage';
+import ServiceListPage from './pages/services/ServiceListPage';
+import ServiceFormPage from './pages/services/ServiceFormPage';
 
 export default function App() {
   return (
@@ -42,6 +44,30 @@ export default function App() {
               <Route path="/clients" element={<ClientListPage />} />
               <Route path="/clients/new" element={<ClientCreatePage />} />
               <Route path="/clients/:id/edit" element={<ClientEditPage />} />
+              <Route
+                path="/services"
+                element={
+                  <RoleGuard requiredRoles={['tenant_admin', 'supervisor']}>
+                    <ServiceListPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/services/new"
+                element={
+                  <RoleGuard requiredRoles={['tenant_admin', 'supervisor']}>
+                    <ServiceFormPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/services/:id/edit"
+                element={
+                  <RoleGuard requiredRoles={['tenant_admin', 'supervisor']}>
+                    <ServiceFormPage />
+                  </RoleGuard>
+                }
+              />
               <Route
                 path="/settings"
                 element={

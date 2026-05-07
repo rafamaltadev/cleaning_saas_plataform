@@ -52,3 +52,7 @@ export async function updateClient(id: string, payload: Partial<CreateClientPayl
 export async function createAddress(payload: AddressPayload): Promise<void> {
   await apiClient.post('/addresses', payload);
 }
+
+export async function deleteClient(id: string): Promise<void> {
+  await apiClient.delete(`/clients/${id}`);
+}

@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: '/quotes', label: 'Orçamentos', icon: '📋' },
   { to: '/bookings', label: 'Agendamentos', icon: '📅' },
   { to: '/clients', label: 'Clientes', icon: '👥' },
+  { to: '/services', label: 'Serviços', icon: '🔧' },
   { to: '/settings', label: 'Configurações', icon: '⚙️' },
 ];
 
