@@ -6,8 +6,8 @@ export async function getQuotes(): Promise<PaginatedApiResult<ApiQuote>> {
   return data.data;
 }
 
-export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<Quote> {
-  const { data } = await apiClient.put<{ data: Quote }>(`/quotes/${id}`, { status });
+export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<ApiQuote> {
+  const { data } = await apiClient.put<{ data: ApiQuote }>(`/quotes/${id}`, { status });
   return data.data;
 }
 
