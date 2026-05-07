@@ -9,9 +9,10 @@ import {
 } from '@dnd-kit/core';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import Badge from '../../components/ui/Badge';
-import { getQuotes, updateQuoteStatus } from '../../api/quotes';
-import { getBookings, updateBookingStatus } from '../../api/bookings';
-import type { KanbanCard, KanbanStatus, QuoteStatus, BookingStatus } from '../../types';
+import { getQuotes } from '../../api/quotes';
+import { getBookings, completeBooking } from '../../api/bookings';
+import { apiClient } from '../../api/client';
+import type { KanbanCard, KanbanStatus } from '../../types';
 
 const COLUMNS: { id: KanbanStatus; label: string }[] = [
   { id: 'new_lead', label: 'Novo Lead' },
@@ -22,8 +23,35 @@ const COLUMNS: { id: KanbanStatus; label: string }[] = [
   { id: 'cancelled', label: 'Cancelado' },
 ];
 
-const QUOTE_STATUSES: KanbanStatus[] = ['new_lead', 'contacted', 'quote_sent'];
-const BOOKING_STATUSES: KanbanStatus[] = ['booking_confirmed', 'completed', 'cancelled'];
+const STATUS_LABELS: Record<KanbanStatus, string> = {
+  new_lead: 'Novo Lead',
+  contacted: 'Contatado',
+  quote_sent: 'Orçamento Enviado',
+  booking_confirmed: 'Agendamento Confirmado',
+  completed: 'Concluído',
+  cancelled: 'Cancelado',
+};
+
+function apiQuoteStatusToKanban(status: string): KanbanStatus {
+  switch (status) {
+    case 'draft': return 'new_lead';
+    case 'sent': return 'quote_sent';
+    case 'accepted': return 'booking_confirmed';
+    case 'rejected':
+    case 'expired': return 'cancelled';
+    default: return 'new_lead';
+  }
+}
+
+function apiBookingStatusToKanban(status: string): KanbanStatus {
+  switch (status) {
+    case 'confirmed':
+    case 'rescheduled': return 'booking_confirmed';
+    case 'completed': return 'completed';
+    case 'cancelled': return 'cancelled';
+    default: return 'booking_confirmed';
+  }
+}
 
 function statusBadgeVariant(status: KanbanStatus) {
   if (status === 'completed') return 'success' as const;
@@ -32,8 +60,8 @@ function statusBadgeVariant(status: KanbanStatus) {
   return 'neutral' as const;
 }
 
-function statusLabel(status: KanbanStatus): string {
-  return status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+function formatBRL(cents: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
 }
 
 interface KanbanCardProps {
@@ -65,11 +93,11 @@ function KanbanCardItem({ card }: KanbanCardProps) {
       <p className="text-xs text-text-secondary mt-0.5 truncate">{card.serviceName}</p>
       {card.scheduledDate && (
         <p className="text-xs text-text-muted mt-1">
-          {new Date(card.scheduledDate).toLocaleDateString()}
+          {new Date(card.scheduledDate).toLocaleDateString('pt-BR')}
         </p>
       )}
       <div className="mt-2">
-        <Badge variant={statusBadgeVariant(card.status)}>{statusLabel(card.status)}</Badge>
+        <Badge variant={statusBadgeVariant(card.status)}>{STATUS_LABELS[card.status]}</Badge>
       </div>
     </div>
   );
@@ -120,22 +148,22 @@ export default function KanbanPage() {
 
   useEffect(() => {
     Promise.all([getQuotes(), getBookings()])
-      .then(([quotes, bookings]) => {
-        const quoteCards: KanbanCard[] = quotes.map((q) => ({
+      .then(([quotesResult, bookingsResult]) => {
+        const quoteCards: KanbanCard[] = quotesResult.items.map((q) => ({
           id: `quote-${q.id}`,
           type: 'quote',
-          clientName: q.clientName,
-          serviceName: q.serviceName,
-          scheduledDate: q.scheduledDate,
-          status: q.status,
+          clientName: q.client_id.slice(0, 8) + '…',
+          serviceName: formatBRL(q.estimated_total_cents),
+          scheduledDate: q.valid_until,
+          status: apiQuoteStatusToKanban(q.status),
         }));
-        const bookingCards: KanbanCard[] = bookings.map((b) => ({
+        const bookingCards: KanbanCard[] = bookingsResult.items.map((b) => ({
           id: `booking-${b.id}`,
           type: 'booking',
-          clientName: b.clientName,
-          serviceName: b.serviceName,
-          scheduledDate: b.scheduledDate,
-          status: b.status,
+          clientName: b.client_id.slice(0, 8) + '…',
+          serviceName: b.service_id.slice(0, 8) + '…',
+          scheduledDate: b.scheduled_start,
+          status: apiBookingStatusToKanban(b.status),
         }));
         setCards([...quoteCards, ...bookingCards]);
       })
@@ -158,10 +186,19 @@ export default function KanbanPage() {
 
     try {
       const rawId = cardId.replace(/^(quote|booking)-/, '');
-      if (card.type === 'quote' && QUOTE_STATUSES.includes(newStatus)) {
-        await updateQuoteStatus(rawId, newStatus as QuoteStatus);
-      } else if (card.type === 'booking' && BOOKING_STATUSES.includes(newStatus)) {
-        await updateBookingStatus(rawId, newStatus as BookingStatus);
+      if (card.type === 'quote') {
+        let apiStatus: string | null = null;
+        if (newStatus === 'cancelled') apiStatus = 'rejected';
+        else if (newStatus === 'booking_confirmed') apiStatus = 'accepted';
+        if (apiStatus) {
+          await apiClient.put(`/quotes/${rawId}`, { status: apiStatus });
+        }
+      } else if (card.type === 'booking') {
+        if (newStatus === 'completed') {
+          await completeBooking(rawId);
+        } else if (newStatus === 'cancelled') {
+          await apiClient.put(`/bookings/${rawId}`, { status: 'cancelled' });
+        }
       }
     } catch {
       setCards((prev) =>

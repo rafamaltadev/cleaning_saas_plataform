@@ -6,6 +6,7 @@ import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import { getBookingById, completeBooking } from '../../api/bookings';
 import { getClient } from '../../api/clients';
+import { apiClient } from '../../api/client';
 import type { RootState } from '../../store';
 import type { ApiBooking, ApiBookingStatus } from '../../types';
 
@@ -38,6 +39,7 @@ export default function BookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [completing, setCompleting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -65,6 +67,20 @@ export default function BookingDetailPage() {
     }
   }
 
+  async function handleCancel() {
+    if (!id) return;
+    if (!window.confirm('Cancelar este agendamento? Esta ação não pode ser desfeita.')) return;
+    setCancelling(true);
+    try {
+      const { data } = await apiClient.put<{ data: ApiBooking }>(`/bookings/${id}`, { status: 'cancelled' });
+      setBooking(data.data);
+    } catch {
+      setError('Erro ao cancelar agendamento.');
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
   if (error && !booking) return <p className="text-error text-sm">{error}</p>;
   if (!booking) return null;
@@ -80,15 +96,27 @@ export default function BookingDetailPage() {
           <Badge variant={bookingBadgeVariant(booking.status)}>
             {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
           </Badge>
-          {canComplete && booking.status === 'confirmed' && (
-            <Button
-              variant="primary"
-              loading={completing}
-              onClick={handleComplete}
-              aria-label="Concluir agendamento"
-            >
-              Concluir Agendamento
-            </Button>
+          {booking.status === 'confirmed' && (
+            <>
+              {canComplete && (
+                <Button
+                  variant="primary"
+                  loading={completing}
+                  onClick={handleComplete}
+                  aria-label="Concluir agendamento"
+                >
+                  Concluir Agendamento
+                </Button>
+              )}
+              <Button
+                variant="danger"
+                loading={cancelling}
+                onClick={handleCancel}
+                aria-label="Cancelar agendamento"
+              >
+                Cancelar Agendamento
+              </Button>
+            </>
           )}
           <Button variant="ghost" onClick={() => navigate('/bookings')}>Voltar</Button>
         </div>
