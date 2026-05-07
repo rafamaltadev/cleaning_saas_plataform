@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Put,
@@ -41,6 +43,19 @@ export class ClientsController {
     return this.clientsService.findAll(req.user!.tenantId, query);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a client by ID' })
+  @ApiResponse({ status: 200, type: ClientResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  getOne(
+    @Req() req: Request & { user?: AuthUser },
+    @Param('id') id: string,
+  ): Promise<ClientResponseDto> {
+    return this.clientsService.findOne(req.user!.tenantId, id);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a client' })
   @ApiResponse({ status: 201, type: ClientResponseDto })
@@ -52,6 +67,20 @@ export class ClientsController {
     @Body() dto: CreateClientDto,
   ): Promise<ClientResponseDto> {
     return this.clientsService.create(req.user!.tenantId, req.user!.userId, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a client' })
+  @ApiResponse({ status: 204, description: 'Deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  remove(
+    @Req() req: Request & { user?: AuthUser },
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.clientsService.remove(req.user!.tenantId, id);
   }
 
   @Put(':id')

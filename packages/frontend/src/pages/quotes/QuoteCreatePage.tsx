@@ -79,8 +79,8 @@ export default function QuoteCreatePage() {
         area_sqm: selectedService?.unit === 'sqm' && typeof areaSqm === 'number' ? areaSqm : undefined,
         duration_hours: selectedService?.unit === 'hour' && typeof durationHours === 'number' ? durationHours : undefined,
       };
-      const created = await createQuote(payload);
-      navigate(`/quotes/${created.id}`);
+      await createQuote(payload);
+      navigate('/quotes');
     } catch {
       setError('Erro ao criar orçamento. Tente novamente.');
     } finally {

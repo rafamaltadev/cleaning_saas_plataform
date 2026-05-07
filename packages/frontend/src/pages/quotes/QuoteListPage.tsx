@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import { listQuotes, sendQuote, deleteQuote } from '../../api/quotes';
+import { listQuotes, sendQuote, deleteQuote, updateQuoteStatus } from '../../api/quotes';
 import { hasPermission } from '../../utils/permissions';
 import type { RootState } from '../../store';
 import type { ApiQuote, ApiQuoteStatus } from '../../types';
@@ -40,6 +40,8 @@ export default function QuoteListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sending, setSending] = useState<string | null>(null);
+  const [accepting, setAccepting] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -81,6 +83,30 @@ export default function QuoteListPage() {
       setRefreshKey((k) => k + 1);
     } catch {
       setError('Erro ao excluir orçamento. Tente novamente.');
+    }
+  }
+
+  async function handleAccept(id: string) {
+    setAccepting(id);
+    try {
+      await updateQuoteStatus(id, 'accepted');
+      setRefreshKey((k) => k + 1);
+    } catch {
+      setError('Erro ao aceitar orçamento.');
+    } finally {
+      setAccepting(null);
+    }
+  }
+
+  async function handleReject(id: string) {
+    setRejecting(id);
+    try {
+      await updateQuoteStatus(id, 'rejected');
+      setRefreshKey((k) => k + 1);
+    } catch {
+      setError('Erro ao rejeitar orçamento.');
+    } finally {
+      setRejecting(null);
     }
   }
 
@@ -153,34 +179,78 @@ export default function QuoteListPage() {
                       Ver
                     </Button>
                     {quote.status === 'draft' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/quotes/${quote.id}/edit`)}
-                      >
-                        Editar
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                          Editar
+                        </Button>
+                        {canSend && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            loading={sending === quote.id}
+                            onClick={() => handleSend(quote.id)}
+                            aria-label={`Enviar orçamento ${quote.id}`}
+                          >
+                            Enviar
+                          </Button>
+                        )}
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => void handleDelete(quote.id)}
+                          aria-label={`Excluir orçamento ${quote.id}`}
+                        >
+                          Excluir
+                        </Button>
+                      </>
                     )}
-                    {canSend && quote.status === 'draft' && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        loading={sending === quote.id}
-                        onClick={() => handleSend(quote.id)}
-                        aria-label={`Send quote ${quote.id}`}
-                      >
-                        Enviar
-                      </Button>
+                    {quote.status === 'sent' && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                          Editar
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          loading={accepting === quote.id}
+                          onClick={() => handleAccept(quote.id)}
+                          aria-label={`Aceitar orçamento ${quote.id}`}
+                        >
+                          Aceitar
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          loading={rejecting === quote.id}
+                          onClick={() => handleReject(quote.id)}
+                          aria-label={`Rejeitar orçamento ${quote.id}`}
+                        >
+                          Rejeitar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => void handleDelete(quote.id)}
+                          aria-label={`Excluir orçamento ${quote.id}`}
+                        >
+                          Excluir
+                        </Button>
+                      </>
                     )}
-                    {quote.status === 'draft' && (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => void handleDelete(quote.id)}
-                        aria-label={`Excluir orçamento ${quote.id}`}
-                      >
-                        Excluir
-                      </Button>
+                    {(quote.status === 'accepted' || quote.status === 'rejected') && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                          Editar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => void handleDelete(quote.id)}
+                          aria-label={`Excluir orçamento ${quote.id}`}
+                        >
+                          Excluir
+                        </Button>
+                      </>
                     )}
                   </td>
                 </tr>
@@ -215,34 +285,78 @@ export default function QuoteListPage() {
                   Ver
                 </Button>
                 {quote.status === 'draft' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/quotes/${quote.id}/edit`)}
-                  >
-                    Editar
-                  </Button>
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                      Editar
+                    </Button>
+                    {canSend && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={sending === quote.id}
+                        onClick={() => handleSend(quote.id)}
+                        aria-label={`Enviar orçamento ${quote.id}`}
+                      >
+                        Enviar
+                      </Button>
+                    )}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => void handleDelete(quote.id)}
+                      aria-label={`Excluir orçamento ${quote.id}`}
+                    >
+                      Excluir
+                    </Button>
+                  </>
                 )}
-                {canSend && quote.status === 'draft' && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    loading={sending === quote.id}
-                    onClick={() => handleSend(quote.id)}
-                    aria-label={`Enviar orçamento ${quote.id}`}
-                  >
-                    Enviar
-                  </Button>
+                {quote.status === 'sent' && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                      Editar
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      loading={accepting === quote.id}
+                      onClick={() => handleAccept(quote.id)}
+                      aria-label={`Aceitar orçamento ${quote.id}`}
+                    >
+                      Aceitar
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={rejecting === quote.id}
+                      onClick={() => handleReject(quote.id)}
+                      aria-label={`Rejeitar orçamento ${quote.id}`}
+                    >
+                      Rejeitar
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => void handleDelete(quote.id)}
+                      aria-label={`Excluir orçamento ${quote.id}`}
+                    >
+                      Excluir
+                    </Button>
+                  </>
                 )}
-                {quote.status === 'draft' && (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => void handleDelete(quote.id)}
-                    aria-label={`Excluir orçamento ${quote.id}`}
-                  >
-                    Excluir
-                  </Button>
+                {(quote.status === 'accepted' || quote.status === 'rejected') && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                      Editar
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => void handleDelete(quote.id)}
+                      aria-label={`Excluir orçamento ${quote.id}`}
+                    >
+                      Excluir
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

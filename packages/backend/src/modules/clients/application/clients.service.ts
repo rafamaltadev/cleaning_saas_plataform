@@ -61,6 +61,28 @@ export class ClientsService {
     return ClientResponseDto.from(client);
   }
 
+  async findOne(tenantId: string, clientId: string): Promise<ClientResponseDto> {
+    const client = await this.clientRepository.findById(clientId, tenantId);
+    if (!client) {
+      throw new NotFoundException({
+        code: 'CLIENT_NOT_FOUND',
+        message: 'Client not found',
+      });
+    }
+    return ClientResponseDto.from(client);
+  }
+
+  async remove(tenantId: string, clientId: string): Promise<void> {
+    const existing = await this.clientRepository.findById(clientId, tenantId);
+    if (!existing) {
+      throw new NotFoundException({
+        code: 'CLIENT_NOT_FOUND',
+        message: 'Client not found',
+      });
+    }
+    await this.clientRepository.softDelete(clientId);
+  }
+
   async update(
     tenantId: string,
     actorId: string,
