@@ -15,7 +15,8 @@ import { BookingService } from '../application/booking.service';
 import { CreateBookingDto } from '../validation/create-booking.dto';
 import { UpdateBookingDto } from '../validation/update-booking.dto';
 import { BookingResponseDto } from '../domain/booking-response.dto';
-import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../../common/dto/pagination.dto';
+import { ListBookingsQueryDto } from '../validation/list-bookings-query.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -36,7 +37,7 @@ export class BookingsController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   findAll(
     @Req() req: Request & { user?: AuthUser },
-    @Query() query: PaginationQueryDto,
+    @Query() query: ListBookingsQueryDto,
   ): Promise<PaginatedResult<BookingResponseDto>> {
     return this.bookingService.findAll(req.user!.tenantId, query);
   }

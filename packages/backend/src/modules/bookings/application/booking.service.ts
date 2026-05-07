@@ -11,7 +11,8 @@ import { Booking, BookingStatus } from '../domain/booking.entity';
 import { BookingResponseDto } from '../domain/booking-response.dto';
 import { CreateBookingDto } from '../validation/create-booking.dto';
 import { UpdateBookingDto } from '../validation/update-booking.dto';
-import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../../common/dto/pagination.dto';
+import { ListBookingsQueryDto } from '../validation/list-bookings-query.dto';
 import { Quote } from '../../quotes/domain/quote.entity';
 
 const TERMINAL_STATUSES: BookingStatus[] = ['completed', 'cancelled'];
@@ -109,7 +110,7 @@ export class BookingService {
 
   async findAll(
     tenantId: string,
-    query: PaginationQueryDto,
+    query: ListBookingsQueryDto,
   ): Promise<PaginatedResult<BookingResponseDto>> {
     const result = await this.bookingRepository.findPaginated(tenantId, query);
     return {

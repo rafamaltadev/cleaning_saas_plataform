@@ -5,8 +5,16 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import { getBookingById, completeBooking } from '../../api/bookings';
+import { getClient } from '../../api/clients';
 import type { RootState } from '../../store';
 import type { ApiBooking, ApiBookingStatus } from '../../types';
+
+const BOOKING_STATUS_LABELS: Record<ApiBookingStatus, string> = {
+  confirmed: 'Confirmado',
+  completed: 'Concluído',
+  cancelled: 'Cancelado',
+  rescheduled: 'Reagendado',
+};
 
 function bookingBadgeVariant(status: ApiBookingStatus) {
   switch (status) {
@@ -26,6 +34,7 @@ export default function BookingDetailPage() {
   const canComplete = user?.role && (COMPLETE_ROLES as readonly string[]).includes(user.role);
 
   const [booking, setBooking] = useState<ApiBooking | null>(null);
+  const [clientName, setClientName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [completing, setCompleting] = useState(false);
@@ -33,8 +42,13 @@ export default function BookingDetailPage() {
   useEffect(() => {
     if (!id) return;
     getBookingById(id)
-      .then(setBooking)
-      .catch(() => setError('Failed to load booking.'))
+      .then((b) => {
+        setBooking(b);
+        getClient(b.client_id)
+          .then((c) => setClientName(c.name))
+          .catch(() => setClientName(null));
+      })
+      .catch(() => setError('Erro ao carregar agendamento.'))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -45,13 +59,13 @@ export default function BookingDetailPage() {
       const updated = await completeBooking(id);
       setBooking(updated);
     } catch {
-      setError('Failed to complete booking.');
+      setError('Erro ao concluir agendamento.');
     } finally {
       setCompleting(false);
     }
   }
 
-  if (loading) return <p className="text-text-muted text-sm">Loading…</p>;
+  if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
   if (error && !booking) return <p className="text-error text-sm">{error}</p>;
   if (!booking) return null;
 
@@ -59,69 +73,86 @@ export default function BookingDetailPage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Booking Detail</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Detalhes do Agendamento</h1>
           <p className="text-text-secondary text-sm mt-1 font-mono">{booking.id}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant={bookingBadgeVariant(booking.status)}>{booking.status}</Badge>
+          <Badge variant={bookingBadgeVariant(booking.status)}>
+            {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
+          </Badge>
           {canComplete && booking.status === 'confirmed' && (
-            <Button variant="primary" loading={completing} onClick={handleComplete} aria-label="Complete booking">
-              Complete Booking
+            <Button
+              variant="primary"
+              loading={completing}
+              onClick={handleComplete}
+              aria-label="Concluir agendamento"
+            >
+              Concluir Agendamento
             </Button>
           )}
-          <Button variant="ghost" onClick={() => navigate('/bookings')}>Back</Button>
+          <Button variant="ghost" onClick={() => navigate('/bookings')}>Voltar</Button>
         </div>
       </div>
 
       {error && <p className="text-error text-sm mb-4" role="alert">{error}</p>}
 
       <div className="space-y-4 max-w-2xl">
-        <Card title="Booking Information">
+        <Card title="Informações do Agendamento">
           <dl className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Status</dt>
-              <dd><Badge variant={bookingBadgeVariant(booking.status)}>{booking.status}</Badge></dd>
+              <dd>
+                <Badge variant={bookingBadgeVariant(booking.status)}>
+                  {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
+                </Badge>
+              </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Scheduled Start</dt>
-              <dd className="text-sm text-text-primary">{new Date(booking.scheduled_start).toLocaleString()}</dd>
+              <dt className="text-sm text-text-secondary">Início Agendado</dt>
+              <dd className="text-sm text-text-primary">
+                {new Date(booking.scheduled_start).toLocaleString('pt-BR')}
+              </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Scheduled End</dt>
-              <dd className="text-sm text-text-primary">{new Date(booking.scheduled_end).toLocaleString()}</dd>
+              <dt className="text-sm text-text-secondary">Término Agendado</dt>
+              <dd className="text-sm text-text-primary">
+                {new Date(booking.scheduled_end).toLocaleString('pt-BR')}
+              </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Assigned Team</dt>
+              <dt className="text-sm text-text-secondary">Equipe Responsável</dt>
               <dd className="text-sm text-text-primary">{booking.assigned_team ?? '—'}</dd>
             </div>
           </dl>
         </Card>
 
-        <Card title="Reference IDs">
+        <Card title="Identificadores">
           <dl className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Booking ID</dt>
+              <dt className="text-sm text-text-secondary">ID do Agendamento</dt>
               <dd className="text-xs font-mono text-text-primary break-all">{booking.id}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Quote ID</dt>
+              <dt className="text-sm text-text-secondary">ID do Orçamento</dt>
               <dd className="text-xs font-mono text-text-primary break-all">{booking.quote_id}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Client ID</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{booking.client_id}</dd>
+              <dt className="text-sm text-text-secondary">Cliente</dt>
+              <dd className="text-sm text-text-primary">
+                {clientName === null
+                  ? <span className="text-xs font-mono break-all">{booking.client_id}</span>
+                  : clientName}
+              </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Service ID</dt>
+              <dt className="text-sm text-text-secondary">ID do Serviço</dt>
               <dd className="text-xs font-mono text-text-primary break-all">{booking.service_id}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Idempotency Key</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{booking.idempotency_key}</dd>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Created At</dt>
-              <dd className="text-sm text-text-primary">{new Date(booking.created_at).toLocaleString()}</dd>
+              <dt className="text-sm text-text-secondary">Criado em</dt>
+              <dd className="text-sm text-text-primary">
+                {new Date(booking.created_at).toLocaleString('pt-BR')}
+              </dd>
             </div>
           </dl>
         </Card>
