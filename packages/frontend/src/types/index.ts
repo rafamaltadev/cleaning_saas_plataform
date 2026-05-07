@@ -139,6 +139,9 @@ export interface ApiQuote {
   created_by: string;
   created_at: string;
   updated_at: string;
+  client_name?: string;
+  service_name?: string;
+  pricing_rule_name?: string;
 }
 
 export interface ApiBooking {
@@ -154,6 +157,8 @@ export interface ApiBooking {
   idempotency_key: string;
   created_at: string;
   updated_at: string;
+  client_name?: string;
+  service_name?: string;
 }
 
 export interface ApiPricingRule {

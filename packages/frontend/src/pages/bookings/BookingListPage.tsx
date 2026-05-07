@@ -104,7 +104,7 @@ export default function BookingListPage() {
         <table className="w-full" aria-label="Bookings table">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">ID</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Cliente</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Início Agendado</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Equipe</th>
@@ -123,7 +123,10 @@ export default function BookingListPage() {
             ) : (
               bookings.map((booking) => (
                 <tr key={booking.id} className="border-b border-border last:border-0 hover:bg-surface-alt transition-colors">
-                  <td className="px-4 py-3 text-sm text-text-primary font-mono">{booking.id.slice(0, 8)}…</td>
+                  <td className="px-4 py-3">
+                    <p className="text-sm text-text-primary">{booking.client_name ?? booking.client_id.slice(0, 8) + '…'}</p>
+                    {booking.service_name && <p className="text-xs text-text-muted mt-0.5">{booking.service_name}</p>}
+                  </td>
                   <td className="px-4 py-3">
                     <Badge variant={bookingBadgeVariant(booking.status)}>{BOOKING_STATUS_LABELS[booking.status] ?? booking.status}</Badge>
                   </td>
@@ -165,19 +168,20 @@ export default function BookingListPage() {
             <div key={booking.id} className="bg-surface border border-border rounded-lg p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-xs font-mono text-text-secondary">{booking.id.slice(0, 12)}…</p>
-                  <p className="text-sm font-medium text-text-primary mt-0.5">
+                  <p className="text-sm font-medium text-text-primary">{booking.client_name ?? booking.client_id.slice(0, 12) + '…'}</p>
+                  {booking.service_name && <p className="text-xs text-text-muted mt-0.5">{booking.service_name}</p>}
+                  <p className="text-sm text-text-secondary mt-0.5">
                     {new Date(booking.scheduled_start).toLocaleString()}
                   </p>
                   {booking.assigned_team && (
                     <p className="text-xs text-text-muted mt-0.5">Equipe: {booking.assigned_team}</p>
                   )}
                 </div>
-                <Badge variant={bookingBadgeVariant(booking.status)}>{booking.status}</Badge>
+                <Badge variant={bookingBadgeVariant(booking.status)}>{BOOKING_STATUS_LABELS[booking.status] ?? booking.status}</Badge>
               </div>
               <div className="mt-3 flex gap-2 justify-end">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
-                  View
+                  Ver
                 </Button>
                 {canComplete && booking.status === 'confirmed' && (
                   <Button
@@ -185,9 +189,9 @@ export default function BookingListPage() {
                     size="sm"
                     loading={completing === booking.id}
                     onClick={() => handleComplete(booking.id)}
-                    aria-label={`Complete booking ${booking.id}`}
+                    aria-label={`Concluir agendamento ${booking.id}`}
                   >
-                    Complete
+                    Concluir
                   </Button>
                 )}
               </div>

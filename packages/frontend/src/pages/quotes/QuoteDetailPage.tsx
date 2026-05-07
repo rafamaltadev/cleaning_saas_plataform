@@ -175,17 +175,23 @@ export default function QuoteDetailPage() {
               <dd className="text-xs font-mono text-text-primary break-all">{quote.id}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">ID do Cliente</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{quote.client_id}</dd>
+              <dt className="text-sm text-text-secondary">Cliente</dt>
+              <dd className="text-sm text-text-primary break-all">
+                {quote.client_name ?? <span className="font-mono text-xs">{quote.client_id}</span>}
+              </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">ID do Serviço</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{quote.service_id}</dd>
+              <dt className="text-sm text-text-secondary">Serviço</dt>
+              <dd className="text-sm text-text-primary break-all">
+                {quote.service_name ?? <span className="font-mono text-xs">{quote.service_id}</span>}
+              </dd>
             </div>
-            {quote.pricing_rule_id && (
+            {(quote.pricing_rule_id || quote.pricing_rule_name) && (
               <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                <dt className="text-sm text-text-secondary">ID da Regra de Preço</dt>
-                <dd className="text-xs font-mono text-text-primary break-all">{quote.pricing_rule_id}</dd>
+                <dt className="text-sm text-text-secondary">Regra de Preço</dt>
+                <dd className="text-sm text-text-primary break-all">
+                  {quote.pricing_rule_name ?? <span className="font-mono text-xs">{quote.pricing_rule_id}</span>}
+                </dd>
               </div>
             )}
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">

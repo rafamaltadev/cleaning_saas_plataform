@@ -1,5 +1,11 @@
 import { Quote } from './quote.entity';
 
+interface QuoteContext {
+  clientName?: string;
+  serviceName?: string;
+  pricingRuleName?: string;
+}
+
 export class QuoteResponseDto {
   id: string;
   tenant_id: string;
@@ -14,8 +20,11 @@ export class QuoteResponseDto {
   created_by: string;
   created_at: Date;
   updated_at: Date;
+  client_name?: string;
+  service_name?: string;
+  pricing_rule_name?: string;
 
-  static from(quote: Quote): QuoteResponseDto {
+  static from(quote: Quote, context?: QuoteContext): QuoteResponseDto {
     const dto = new QuoteResponseDto();
     dto.id = quote.id;
     dto.tenant_id = quote.tenant_id;
@@ -30,6 +39,9 @@ export class QuoteResponseDto {
     dto.created_by = quote.created_by;
     dto.created_at = quote.created_at;
     dto.updated_at = quote.updated_at;
+    if (context?.clientName) dto.client_name = context.clientName;
+    if (context?.serviceName) dto.service_name = context.serviceName;
+    if (context?.pricingRuleName) dto.pricing_rule_name = context.pricingRuleName;
     return dto;
   }
 }

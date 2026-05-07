@@ -152,16 +152,16 @@ export default function KanbanPage() {
         const quoteCards: KanbanCard[] = quotesResult.items.map((q) => ({
           id: `quote-${q.id}`,
           type: 'quote',
-          clientName: q.client_id.slice(0, 8) + '…',
-          serviceName: formatBRL(q.estimated_total_cents),
+          clientName: q.client_name ?? q.client_id.slice(0, 8) + '…',
+          serviceName: q.service_name ?? formatBRL(q.estimated_total_cents),
           scheduledDate: q.valid_until,
           status: apiQuoteStatusToKanban(q.status),
         }));
         const bookingCards: KanbanCard[] = bookingsResult.items.map((b) => ({
           id: `booking-${b.id}`,
           type: 'booking',
-          clientName: b.client_id.slice(0, 8) + '…',
-          serviceName: b.service_id.slice(0, 8) + '…',
+          clientName: b.client_name ?? b.client_id.slice(0, 8) + '…',
+          serviceName: b.service_name ?? b.service_id.slice(0, 8) + '…',
           scheduledDate: b.scheduled_start,
           status: apiBookingStatusToKanban(b.status),
         }));

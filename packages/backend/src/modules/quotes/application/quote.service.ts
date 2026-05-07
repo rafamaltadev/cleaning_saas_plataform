@@ -6,6 +6,7 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { QuoteRepository } from '../infrastructure/quote.repository';
+import { ClientRepository } from '../../clients/infrastructure/client.repository';
 import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { PricingRuleRepository } from '../../services/infrastructure/pricing-rule.repository';
 import { PricingService } from '../../services/application/pricing.service';
@@ -29,6 +30,7 @@ const VALID_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
 export class QuoteService {
   constructor(
     private readonly quoteRepository: QuoteRepository,
+    private readonly clientRepository: ClientRepository,
     private readonly serviceRepository: ServiceRepository,
     private readonly pricingRuleRepository: PricingRuleRepository,
     private readonly pricingService: PricingService,
@@ -36,6 +38,26 @@ export class QuoteService {
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
+
+  private async resolveQuoteContext(
+    clientId: string,
+    serviceId: string,
+    pricingRuleId: string | null,
+    tenantId: string,
+  ): Promise<{ clientName?: string; serviceName?: string; pricingRuleName?: string }> {
+    const [client, service] = await Promise.all([
+      this.clientRepository.findById(clientId, tenantId).catch(() => null),
+      this.serviceRepository.findById(serviceId, tenantId).catch(() => null),
+    ]);
+    let pricingRuleName: string | undefined;
+    if (pricingRuleId) {
+      const rule = await this.pricingRuleRepository.findById(pricingRuleId, tenantId).catch(() => null);
+      if (rule) {
+        pricingRuleName = `${rule.frequency} — ${rule.discount_percent}% desc — ${rule.price_multiplier}×`;
+      }
+    }
+    return { clientName: client?.name, serviceName: service?.name, pricingRuleName };
+  }
 
   private assertValidTransition(from: QuoteStatus, to: QuoteStatus): void {
     if (!VALID_TRANSITIONS[from].includes(to)) {
@@ -142,10 +164,16 @@ export class QuoteService {
       await this.applyLazyExpiration(quote, actorId);
     }
 
-    return {
-      items: result.items.map(QuoteResponseDto.from),
-      meta: result.meta,
-    };
+    const items = await Promise.all(
+      result.items.map(async (quote) => {
+        const context = await this.resolveQuoteContext(
+          quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId,
+        );
+        return QuoteResponseDto.from(quote, context);
+      }),
+    );
+
+    return { items, meta: result.meta };
   }
 
   async findById(
@@ -160,7 +188,10 @@ export class QuoteService {
 
     await this.applyLazyExpiration(quote, actorId);
 
-    return QuoteResponseDto.from(quote);
+    const context = await this.resolveQuoteContext(
+      quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId,
+    );
+    return QuoteResponseDto.from(quote, context);
   }
 
   async update(

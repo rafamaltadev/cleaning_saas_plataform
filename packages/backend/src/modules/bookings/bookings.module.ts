@@ -14,12 +14,16 @@ import { AvailabilityController } from './interfaces/availability.controller';
 import { AssignmentsController } from './interfaces/assignments.controller';
 import { AuthModule } from '../auth/auth.module';
 import { AuditLogModule } from '../audit-log/audit-log.module';
+import { ClientsModule } from '../clients/clients.module';
+import { ServicesModule } from '../services/services.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booking, Availability, Assignment]),
     AuthModule,
     AuditLogModule,
+    ClientsModule,
+    ServicesModule,
   ],
   providers: [
     BookingRepository,

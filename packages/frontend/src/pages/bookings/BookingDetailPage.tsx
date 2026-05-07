@@ -5,7 +5,6 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import { getBookingById, completeBooking } from '../../api/bookings';
-import { getClient } from '../../api/clients';
 import { apiClient } from '../../api/client';
 import type { RootState } from '../../store';
 import type { ApiBooking, ApiBookingStatus } from '../../types';
@@ -35,7 +34,6 @@ export default function BookingDetailPage() {
   const canComplete = user?.role && (COMPLETE_ROLES as readonly string[]).includes(user.role);
 
   const [booking, setBooking] = useState<ApiBooking | null>(null);
-  const [clientName, setClientName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [completing, setCompleting] = useState(false);
@@ -44,12 +42,7 @@ export default function BookingDetailPage() {
   useEffect(() => {
     if (!id) return;
     getBookingById(id)
-      .then((b) => {
-        setBooking(b);
-        getClient(b.client_id)
-          .then((c) => setClientName(c.name))
-          .catch(() => setClientName(null));
-      })
+      .then(setBooking)
       .catch(() => setError('Erro ao carregar agendamento.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -166,15 +159,15 @@ export default function BookingDetailPage() {
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Cliente</dt>
-              <dd className="text-sm text-text-primary">
-                {clientName === null
-                  ? <span className="text-xs font-mono break-all">{booking.client_id}</span>
-                  : clientName}
+              <dd className="text-sm text-text-primary break-all">
+                {booking.client_name ?? <span className="text-xs font-mono">{booking.client_id}</span>}
               </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">ID do Serviço</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{booking.service_id}</dd>
+              <dt className="text-sm text-text-secondary">Serviço</dt>
+              <dd className="text-sm text-text-primary break-all">
+                {booking.service_name ?? <span className="text-xs font-mono">{booking.service_id}</span>}
+              </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Criado em</dt>

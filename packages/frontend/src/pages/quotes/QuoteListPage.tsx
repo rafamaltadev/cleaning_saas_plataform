@@ -116,7 +116,7 @@ export default function QuoteListPage() {
         <table className="w-full" aria-label="Quotes table">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">ID</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Cliente</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Total</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Válido até</th>
@@ -135,7 +135,10 @@ export default function QuoteListPage() {
             ) : (
               quotes.map((quote) => (
                 <tr key={quote.id} className="border-b border-border last:border-0 hover:bg-surface-alt transition-colors">
-                  <td className="px-4 py-3 text-sm text-text-primary font-mono">{quote.id.slice(0, 8)}…</td>
+                  <td className="px-4 py-3">
+                    <p className="text-sm text-text-primary">{quote.client_name ?? quote.client_id.slice(0, 8) + '…'}</p>
+                    {quote.service_name && <p className="text-xs text-text-muted mt-0.5">{quote.service_name}</p>}
+                  </td>
                   <td className="px-4 py-3">
                     <Badge variant={quoteBadgeVariant(quote.status)}>{QUOTE_STATUS_LABELS[quote.status] ?? quote.status}</Badge>
                   </td>
@@ -198,13 +201,14 @@ export default function QuoteListPage() {
             <div key={quote.id} className="bg-surface border border-border rounded-lg p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-xs font-mono text-text-secondary">{quote.id.slice(0, 12)}…</p>
-                  <p className="text-sm font-medium text-text-primary mt-0.5">
+                  <p className="text-sm font-medium text-text-primary">{quote.client_name ?? quote.client_id.slice(0, 12) + '…'}</p>
+                  {quote.service_name && <p className="text-xs text-text-muted mt-0.5">{quote.service_name}</p>}
+                  <p className="text-sm text-text-primary mt-0.5">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: quote.currency || 'BRL' }).format(quote.estimated_total_cents / 100)}
                   </p>
                   <p className="text-xs text-text-muted mt-0.5">Válido: {new Date(quote.valid_until).toLocaleDateString()}</p>
                 </div>
-                <Badge variant={quoteBadgeVariant(quote.status)}>{quote.status}</Badge>
+                <Badge variant={quoteBadgeVariant(quote.status)}>{QUOTE_STATUS_LABELS[quote.status] ?? quote.status}</Badge>
               </div>
               <div className="mt-3 flex gap-2 justify-end flex-wrap">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}`)}>

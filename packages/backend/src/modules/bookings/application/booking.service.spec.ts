@@ -1,6 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { BookingRepository } from '../infrastructure/booking.repository';
+import { ClientRepository } from '../../clients/infrastructure/client.repository';
+import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Booking } from '../domain/booking.entity';
 import { BookingResponseDto } from '../domain/booking-response.dto';
@@ -58,6 +60,8 @@ describe('BookingService', () => {
 
     service = new BookingService(
       repoMock as unknown as BookingRepository,
+      {} as unknown as ClientRepository,
+      {} as unknown as ServiceRepository,
       eventBusMock as unknown as DomainEventBus,
       dataSourceMock as unknown as DataSource,
     );

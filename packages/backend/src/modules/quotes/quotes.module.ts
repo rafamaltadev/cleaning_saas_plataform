@@ -5,12 +5,14 @@ import { QuoteRepository } from './infrastructure/quote.repository';
 import { QuoteService } from './application/quote.service';
 import { QuotesController } from './interfaces/quotes.controller';
 import { ServicesModule } from '../services/services.module';
+import { ClientsModule } from '../clients/clients.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Quote]),
     ServicesModule,
+    ClientsModule,
     AuthModule,
   ],
   providers: [QuoteRepository, QuoteService],

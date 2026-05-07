@@ -6,6 +6,8 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, IsNull } from 'typeorm';
 import { BookingRepository } from '../infrastructure/booking.repository';
+import { ClientRepository } from '../../clients/infrastructure/client.repository';
+import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Booking, BookingStatus } from '../domain/booking.entity';
 import { BookingResponseDto } from '../domain/booking-response.dto';
@@ -21,10 +23,24 @@ const TERMINAL_STATUSES: BookingStatus[] = ['completed', 'cancelled'];
 export class BookingService {
   constructor(
     private readonly bookingRepository: BookingRepository,
+    private readonly clientRepository: ClientRepository,
+    private readonly serviceRepository: ServiceRepository,
     private readonly domainEventBus: DomainEventBus,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
+
+  private async resolveBookingContext(
+    clientId: string,
+    serviceId: string,
+    tenantId: string,
+  ): Promise<{ clientName?: string; serviceName?: string }> {
+    const [client, service] = await Promise.all([
+      this.clientRepository.findById(clientId, tenantId).catch(() => null),
+      this.serviceRepository.findById(serviceId, tenantId).catch(() => null),
+    ]);
+    return { clientName: client?.name, serviceName: service?.name };
+  }
 
   async create(
     tenantId: string,
@@ -113,10 +129,15 @@ export class BookingService {
     query: ListBookingsQueryDto,
   ): Promise<PaginatedResult<BookingResponseDto>> {
     const result = await this.bookingRepository.findPaginated(tenantId, query);
-    return {
-      items: result.items.map(BookingResponseDto.from),
-      meta: result.meta,
-    };
+    const items = await Promise.all(
+      result.items.map(async (booking) => {
+        const context = await this.resolveBookingContext(
+          booking.client_id, booking.service_id, tenantId,
+        );
+        return BookingResponseDto.from(booking, context);
+      }),
+    );
+    return { items, meta: result.meta };
   }
 
   async findById(id: string, tenantId: string): Promise<BookingResponseDto> {
@@ -124,7 +145,10 @@ export class BookingService {
     if (!booking) {
       throw new NotFoundException({ code: 'BOOKING_NOT_FOUND', message: 'Booking not found' });
     }
-    return BookingResponseDto.from(booking);
+    const context = await this.resolveBookingContext(
+      booking.client_id, booking.service_id, tenantId,
+    );
+    return BookingResponseDto.from(booking, context);
   }
 
   async update(
