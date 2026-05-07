@@ -20,6 +20,7 @@ import QuoteEditPage from './pages/quotes/QuoteEditPage';
 import BookingListPage from './pages/bookings/BookingListPage';
 import BookingCreatePage from './pages/bookings/BookingCreatePage';
 import BookingDetailPage from './pages/bookings/BookingDetailPage';
+import BookingEditPage from './pages/bookings/BookingEditPage';
 import ServiceListPage from './pages/services/ServiceListPage';
 import ServiceFormPage from './pages/services/ServiceFormPage';
 
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/bookings" element={<BookingListPage />} />
               <Route path="/bookings/new" element={<BookingCreatePage />} />
               <Route path="/bookings/:id" element={<BookingDetailPage />} />
+              <Route path="/bookings/:id/edit" element={<BookingEditPage />} />
               <Route path="/kanban" element={<KanbanPage />} />
               <Route path="/clients" element={<ClientListPage />} />
               <Route path="/clients/new" element={<ClientCreatePage />} />

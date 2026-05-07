@@ -32,6 +32,8 @@ const STATUS_LABELS: Record<KanbanStatus, string> = {
   cancelled: 'Cancelado',
 };
 
+const CARDS_PER_PAGE = 5;
+
 function apiQuoteStatusToKanban(status: string): KanbanStatus {
   switch (status) {
     case 'draft': return 'new_lead';
@@ -64,11 +66,9 @@ function formatBRL(cents: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
 }
 
-interface KanbanCardProps {
-  card: KanbanCard;
-}
+interface KanbanCardItemProps { card: KanbanCard }
 
-function KanbanCardItem({ card }: KanbanCardProps) {
+function KanbanCardItem({ card }: KanbanCardItemProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: { card },
@@ -110,14 +110,18 @@ interface KanbanColumnProps {
 
 function KanbanColumn({ column, cards }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
+  const [visibleCount, setVisibleCount] = useState(CARDS_PER_PAGE);
+
+  const visibleCards = cards.slice(0, visibleCount);
+  const hasMore = cards.length > visibleCount;
 
   return (
-    <div className="flex flex-col min-w-[200px] w-full lg:w-48 xl:w-56 shrink-0">
+    <div className="flex flex-col min-w-[160px] shrink-0 lg:min-w-0">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+        <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wide truncate pr-1">
           {column.label}
         </h3>
-        <span className="text-xs text-text-muted bg-surface-alt px-1.5 py-0.5 rounded">
+        <span className="text-xs text-text-muted bg-surface-alt px-1.5 py-0.5 rounded shrink-0">
           {cards.length}
         </span>
       </div>
@@ -128,10 +132,18 @@ function KanbanColumn({ column, cards }: KanbanColumnProps) {
         }`}
         data-testid={`kanban-column-${column.id}`}
       >
-        {cards.map((card) => (
+        {visibleCards.map((card) => (
           <KanbanCardItem key={card.id} card={card} />
         ))}
       </div>
+      {hasMore && (
+        <button
+          onClick={() => setVisibleCount((n) => n + CARDS_PER_PAGE)}
+          className="mt-2 text-xs text-primary hover:underline text-center py-1"
+        >
+          Ver Mais ({cards.length - visibleCount})
+        </button>
+      )}
     </div>
   );
 }
@@ -167,7 +179,7 @@ export default function KanbanPage() {
         }));
         setCards([...quoteCards, ...bookingCards]);
       })
-      .catch(() => setError('Erro ao carregar dados do kanban.'))
+      .catch(() => setError('Erro ao carregar dados do fluxo de trabalho.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -210,20 +222,21 @@ export default function KanbanPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-text-muted">Carregando quadro…</p>
+        <p className="text-text-muted">Carregando…</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary mb-6">Quadro Kanban</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">Fluxo de Trabalho</h1>
 
       {error && <p className="text-error text-sm mb-4">{error}</p>}
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div
-          className="flex gap-4 overflow-x-auto pb-4"
+          className="flex gap-3 overflow-x-auto lg:grid lg:overflow-x-visible pb-4"
+          style={{ gridTemplateColumns: `repeat(${COLUMNS.length}, minmax(0, 1fr))` }}
           data-testid="kanban-board"
         >
           {COLUMNS.map((column) => (

@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { to: '/bookings', label: 'Agendamentos', icon: '📅' },
   { to: '/clients', label: 'Clientes', icon: '👥' },
   { to: '/services', label: 'Serviços', icon: '🔧' },
-  { to: '/kanban', label: 'Kanban', icon: '⬜' },
+  { to: '/kanban', label: 'Fluxo de Trabalho', icon: '⬜' },
   { to: '/settings', label: 'Configurações', icon: '⚙️' },
 ];
 

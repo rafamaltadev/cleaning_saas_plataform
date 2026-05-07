@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.schema';
@@ -59,6 +60,7 @@ import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
         },
       ],
     }),
+    ScheduleModule.forRoot(),
     SharedModule,
     AuthModule,
     TenantModule,

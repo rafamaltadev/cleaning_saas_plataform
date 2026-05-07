@@ -32,6 +32,8 @@ export class QuoteRepository extends TenantScopedRepository<Quote> {
 
     if (sort) {
       qb.orderBy(`entity.${sort}`, (order?.toUpperCase() ?? 'ASC') as 'ASC' | 'DESC');
+    } else {
+      qb.orderBy('entity.created_at', 'DESC');
     }
 
     const [items, total] = await qb

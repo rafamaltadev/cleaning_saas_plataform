@@ -1,17 +1,15 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, type FormEvent } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
-import { createBooking } from '../../api/bookings';
+import { getBookingById } from '../../api/bookings';
 import { listQuotes } from '../../api/quotes';
-import type { ApiQuote, ApiBooking } from '../../types';
+import { apiClient } from '../../api/client';
+import type { ApiBooking, ApiQuote } from '../../types';
 
-function generateIdempotencyKey(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+function toDatetimeLocal(isoString: string): string {
+  return isoString.slice(0, 16);
 }
 
 function nowDatetimeLocal(): string {
@@ -27,15 +25,18 @@ function quoteLabel(q: ApiQuote): string {
   return `${name} — ${total}${suffix}`;
 }
 
-export default function BookingCreatePage() {
+export default function BookingEditPage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const idempotencyKey = useRef(generateIdempotencyKey());
 
+  const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [quotes, setQuotes] = useState<ApiQuote[]>([]);
   const [quoteId, setQuoteId] = useState('');
   const [scheduledStart, setScheduledStart] = useState('');
   const [scheduledEnd, setScheduledEnd] = useState('');
   const [assignedTeam, setAssignedTeam] = useState('');
+
+  const [loadingData, setLoadingData] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,56 +44,85 @@ export default function BookingCreatePage() {
   const isExpiredQuote = selectedQuote?.status === 'expired';
 
   useEffect(() => {
-    listQuotes({ page: 1, limit: 100 })
-      .then((res) => setQuotes(res.items))
-      .catch(() => setError('Erro ao carregar orçamentos.'));
-  }, []);
+    if (!id) return;
+    Promise.all([
+      getBookingById(id),
+      listQuotes({ page: 1, limit: 100 }),
+    ])
+      .then(([b, quotesRes]) => {
+        setBooking(b);
+        setQuotes(quotesRes.items);
+        setQuoteId(b.quote_id);
+        setScheduledStart(toDatetimeLocal(b.scheduled_start));
+        setScheduledEnd(toDatetimeLocal(b.scheduled_end));
+        setAssignedTeam(b.assigned_team ?? '');
+      })
+      .catch(() => setError('Erro ao carregar agendamento.'))
+      .finally(() => setLoadingData(false));
+  }, [id]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!quoteId || !scheduledStart || !scheduledEnd) {
-      setError('Orçamento, início e fim do agendamento são obrigatórios.');
-      return;
-    }
-    if (!selectedQuote) {
-      setError('Orçamento selecionado não encontrado.');
+    if (!id || !scheduledStart || !scheduledEnd) {
+      setError('Início e fim do agendamento são obrigatórios.');
       return;
     }
     if (isExpiredQuote) return;
 
+    const now = new Date().toISOString().slice(0, 16);
+    if (scheduledStart < now) {
+      setError('O início do agendamento deve ser a partir de agora.');
+      return;
+    }
+    if (scheduledEnd < scheduledStart) {
+      setError('O término deve ser igual ou posterior ao início.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      const created: ApiBooking = await createBooking({
-        quote_id: quoteId,
-        client_id: selectedQuote.client_id,
-        service_id: selectedQuote.service_id,
+      await apiClient.put(`/bookings/${id}`, {
+        quote_id: quoteId !== booking?.quote_id ? quoteId : undefined,
         scheduled_start: new Date(scheduledStart).toISOString(),
         scheduled_end: new Date(scheduledEnd).toISOString(),
         assigned_team: assignedTeam.trim() || undefined,
-        idempotency_key: idempotencyKey.current,
       });
-      navigate(`/bookings/${created.id}`);
+      navigate(`/bookings/${id}`);
     } catch {
-      setError('Erro ao criar agendamento. Tente novamente.');
+      setError('Erro ao salvar agendamento. Tente novamente.');
     } finally {
       setLoading(false);
     }
   }
 
+  if (loadingData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-text-muted text-sm">Carregando agendamento…</p>
+      </div>
+    );
+  }
+
+  if (error && !booking) {
+    return <p className="text-error text-sm">{error}</p>;
+  }
+
+  if (!booking) return null;
+
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Novo Agendamento</h1>
-        <p className="text-text-secondary text-sm mt-1">Agendar a partir de um orçamento aceito</p>
+        <h1 className="text-2xl font-bold text-text-primary">Editar Agendamento</h1>
+        <p className="text-text-secondary text-sm mt-1 font-mono">{booking.id}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Criar agendamento">
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Editar agendamento">
         <Card title="Detalhes do Agendamento">
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="quote-select">
-                Orçamento <span className="text-error">*</span>
+                Orçamento
               </label>
               <select
                 id="quote-select"
@@ -100,9 +130,8 @@ export default function BookingCreatePage() {
                 onChange={(e) => setQuoteId(e.target.value)}
                 className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Selecionar orçamento"
-                required
               >
-                <option value="">Selecione um orçamento…</option>
+                <option value="">Nenhum orçamento…</option>
                 {quotes.map((q) => (
                   <option key={q.id} value={q.id}>
                     {quoteLabel(q)}
@@ -113,12 +142,12 @@ export default function BookingCreatePage() {
 
             {isExpiredQuote && (
               <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded px-3 py-2" role="alert">
-                Este orçamento está expirado. Edite a validade do orçamento antes de criar o agendamento.
+                Este orçamento está expirado. Edite a validade do orçamento antes de salvar o agendamento.
               </p>
             )}
 
             <Input
-              label="Início do agendamento"
+              label="Início do agendamento *"
               type="datetime-local"
               value={scheduledStart}
               min={nowDatetimeLocal()}
@@ -127,7 +156,7 @@ export default function BookingCreatePage() {
             />
 
             <Input
-              label="Fim do agendamento"
+              label="Término do agendamento *"
               type="datetime-local"
               value={scheduledEnd}
               min={scheduledStart || nowDatetimeLocal()}
@@ -136,7 +165,7 @@ export default function BookingCreatePage() {
             />
 
             <Input
-              label="Equipe responsável (opcional)"
+              label="Equipe Responsável (opcional)"
               value={assignedTeam}
               onChange={(e) => setAssignedTeam(e.target.value)}
               placeholder="Ex: Equipe Alpha"
@@ -148,9 +177,11 @@ export default function BookingCreatePage() {
 
         <div className="flex gap-3">
           <Button type="submit" loading={loading} disabled={isExpiredQuote}>
-            Criar Agendamento
+            Salvar Alterações
           </Button>
-          <Button type="button" variant="ghost" onClick={() => navigate('/bookings')}>Cancelar</Button>
+          <Button type="button" variant="ghost" onClick={() => navigate(`/bookings/${id}`)}>
+            Cancelar
+          </Button>
         </div>
       </form>
     </div>

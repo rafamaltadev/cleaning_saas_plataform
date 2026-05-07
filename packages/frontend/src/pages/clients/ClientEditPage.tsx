@@ -3,7 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
-import { getClient, updateClient } from '../../api/clients';
+import AddressForm from './AddressForm';
+import { getClient, updateClient, createAddress } from '../../api/clients';
+import { apiClient } from '../../api/client';
+import type { Address } from '../../types';
 
 interface FormErrors {
   name?: string;
@@ -17,6 +20,8 @@ export default function ClientEditPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState<Partial<Address>>({});
+  const [addressId, setAddressId] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -25,10 +30,30 @@ export default function ClientEditPage() {
     if (!id) return;
     setLoadingData(true);
     getClient(id)
-      .then((client) => {
+      .then(async (client) => {
         setName(client.name);
         setEmail(client.email);
         setPhone(client.phone ?? '');
+
+        const existingAddressId = (client as unknown as { address_id?: string | null }).address_id;
+        if (existingAddressId) {
+          setAddressId(existingAddressId);
+          try {
+            const { data } = await apiClient.get<{ data: { id: string; street: string; city: string; state: string; postal_code: string; country: string } }>(
+              `/addresses/${existingAddressId}`,
+            );
+            setAddress({
+              id: data.data.id,
+              street: data.data.street,
+              city: data.data.city,
+              state: data.data.state,
+              zipCode: data.data.postal_code,
+              country: data.data.country,
+            });
+          } catch {
+            // address not found, start empty
+          }
+        }
       })
       .catch(() => setErrors({ general: 'Erro ao carregar cliente.' }))
       .finally(() => setLoadingData(false));
@@ -54,6 +79,23 @@ export default function ClientEditPage() {
         email: email.trim(),
         phone: phone.trim() || undefined,
       });
+
+      const hasAddress = !!(address.street || address.city || address.state || address.zipCode || address.country);
+      if (hasAddress) {
+        const addrPayload = {
+          street: address.street ?? '',
+          city: address.city ?? '',
+          state: address.state ?? '',
+          postal_code: address.zipCode ?? '',
+          country: address.country ?? '',
+        };
+        if (addressId) {
+          await apiClient.put(`/addresses/${addressId}`, addrPayload);
+        } else {
+          await createAddress({ client_id: id, ...addrPayload });
+        }
+      }
+
       navigate('/clients');
     } catch {
       setErrors({ general: 'Erro ao atualizar cliente. Tente novamente.' });
@@ -102,6 +144,10 @@ export default function ClientEditPage() {
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
+        </Card>
+
+        <Card title="Endereço">
+          <AddressForm value={address} onChange={setAddress} />
         </Card>
 
         {errors.general && (

@@ -1,6 +1,10 @@
-import { IsDateString, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UpdateBookingDto {
+  @IsUUID()
+  @IsOptional()
+  quote_id?: string;
+
   @IsDateString()
   @IsOptional()
   scheduled_start?: string;

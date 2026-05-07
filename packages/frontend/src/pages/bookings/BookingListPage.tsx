@@ -138,6 +138,9 @@ export default function BookingListPage() {
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
                       Ver
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}/edit`)}>
+                      Editar
+                    </Button>
                     {canComplete && booking.status === 'confirmed' && (
                       <Button
                         variant="secondary"
@@ -182,6 +185,9 @@ export default function BookingListPage() {
               <div className="mt-3 flex gap-2 justify-end">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
                   Ver
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}/edit`)}>
+                  Editar
                 </Button>
                 {canComplete && booking.status === 'confirmed' && (
                   <Button

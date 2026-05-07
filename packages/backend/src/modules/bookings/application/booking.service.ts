@@ -169,6 +169,7 @@ export class BookingService {
       });
     }
 
+    if (dto.quote_id) booking.quote_id = dto.quote_id;
     if (dto.scheduled_start) booking.scheduled_start = new Date(dto.scheduled_start);
     if (dto.scheduled_end) booking.scheduled_end = new Date(dto.scheduled_end);
     if (dto.assigned_team !== undefined) booking.assigned_team = dto.assigned_team;
@@ -176,7 +177,10 @@ export class BookingService {
 
     const saved = await this.bookingRepository.save(booking);
 
-    return BookingResponseDto.from(saved);
+    const context = await this.resolveBookingContext(
+      saved.client_id, saved.service_id, tenantId,
+    );
+    return BookingResponseDto.from(saved, context);
   }
 
   async complete(

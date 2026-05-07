@@ -211,9 +211,45 @@ export class QuoteService {
       this.assertValidTransition(quote.status, dto.status as QuoteStatus);
       quote.status = dto.status as QuoteStatus;
     }
+    if (dto.client_id) quote.client_id = dto.client_id;
+    if (dto.currency) quote.currency = dto.currency;
+    if (dto.valid_until) quote.valid_until = new Date(dto.valid_until);
 
-    if (dto.manual_discount_percent != null) {
-      quote.manual_discount_percent = dto.manual_discount_percent;
+    const hasPricingChange =
+      dto.service_id != null ||
+      dto.pricing_rule_id !== undefined ||
+      dto.area_sqm != null ||
+      dto.duration_hours != null ||
+      dto.manual_discount_percent != null;
+
+    if (hasPricingChange) {
+      const serviceId = dto.service_id ?? quote.service_id;
+      const service = await this.serviceRepository.findById(serviceId, tenantId);
+      if (!service) {
+        throw new NotFoundException({ code: 'SERVICE_NOT_FOUND', message: 'Service not found' });
+      }
+
+      const pricingRuleId =
+        dto.pricing_rule_id !== undefined ? dto.pricing_rule_id : quote.pricing_rule_id;
+      let pricingRule = null;
+      if (pricingRuleId) {
+        pricingRule = await this.pricingRuleRepository.findById(pricingRuleId, tenantId).catch(() => null);
+      }
+
+      const manualDiscount = dto.manual_discount_percent ?? quote.manual_discount_percent;
+      quote.estimated_total_cents = this.pricingService.calculate({
+        unit: service.unit,
+        base_rate_cents: service.base_rate_cents,
+        area_sqm: dto.area_sqm,
+        duration_hours: dto.duration_hours,
+        price_multiplier: pricingRule ? Number(pricingRule.price_multiplier) : 1,
+        discount_percent: pricingRule?.discount_percent ?? 0,
+        manual_discount_percent: manualDiscount,
+      });
+
+      if (dto.service_id) quote.service_id = dto.service_id;
+      if (dto.pricing_rule_id !== undefined) quote.pricing_rule_id = dto.pricing_rule_id ?? null;
+      quote.manual_discount_percent = manualDiscount;
     }
 
     const saved = await this.quoteRepository.save(quote);
@@ -228,7 +264,10 @@ export class QuoteService {
       });
     }
 
-    return QuoteResponseDto.from(saved);
+    const context = await this.resolveQuoteContext(
+      saved.client_id, saved.service_id, saved.pricing_rule_id, tenantId,
+    );
+    return QuoteResponseDto.from(saved, context);
   }
 
   async send(
