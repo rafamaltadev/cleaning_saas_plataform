@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import { listQuotes, sendQuote } from '../../api/quotes';
+import { listQuotes, sendQuote, deleteQuote } from '../../api/quotes';
 import { hasPermission } from '../../utils/permissions';
 import type { RootState } from '../../store';
 import type { ApiQuote, ApiQuoteStatus } from '../../types';
@@ -74,6 +74,16 @@ export default function QuoteListPage() {
     }
   }
 
+  async function handleDelete(id: string) {
+    if (!window.confirm('Excluir este orçamento? Esta ação não pode ser desfeita.')) return;
+    try {
+      await deleteQuote(id);
+      setRefreshKey((k) => k + 1);
+    } catch {
+      setError('Erro ao excluir orçamento. Tente novamente.');
+    }
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -139,6 +149,15 @@ export default function QuoteListPage() {
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}`)}>
                       Ver
                     </Button>
+                    {quote.status === 'draft' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/quotes/${quote.id}/edit`)}
+                      >
+                        Editar
+                      </Button>
+                    )}
                     {canSend && quote.status === 'draft' && (
                       <Button
                         variant="secondary"
@@ -148,6 +167,16 @@ export default function QuoteListPage() {
                         aria-label={`Send quote ${quote.id}`}
                       >
                         Enviar
+                      </Button>
+                    )}
+                    {quote.status === 'draft' && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => void handleDelete(quote.id)}
+                        aria-label={`Excluir orçamento ${quote.id}`}
+                      >
+                        Excluir
                       </Button>
                     )}
                   </td>
@@ -177,10 +206,19 @@ export default function QuoteListPage() {
                 </div>
                 <Badge variant={quoteBadgeVariant(quote.status)}>{quote.status}</Badge>
               </div>
-              <div className="mt-3 flex gap-2 justify-end">
+              <div className="mt-3 flex gap-2 justify-end flex-wrap">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}`)}>
                   Ver
                 </Button>
+                {quote.status === 'draft' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/quotes/${quote.id}/edit`)}
+                  >
+                    Editar
+                  </Button>
+                )}
                 {canSend && quote.status === 'draft' && (
                   <Button
                     variant="secondary"
@@ -190,6 +228,16 @@ export default function QuoteListPage() {
                     aria-label={`Enviar orçamento ${quote.id}`}
                   >
                     Enviar
+                  </Button>
+                )}
+                {quote.status === 'draft' && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => void handleDelete(quote.id)}
+                    aria-label={`Excluir orçamento ${quote.id}`}
+                  >
+                    Excluir
                   </Button>
                 )}
               </div>

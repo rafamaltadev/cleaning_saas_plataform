@@ -14,7 +14,8 @@ import { Quote, QuoteStatus } from '../domain/quote.entity';
 import { QuoteResponseDto } from '../domain/quote-response.dto';
 import { CreateQuoteDto } from '../validation/create-quote.dto';
 import { UpdateQuoteDto } from '../validation/update-quote.dto';
-import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../../common/dto/pagination.dto';
+import { ListQuotesQueryDto } from '../validation/list-quotes-query.dto';
 
 const VALID_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
   draft: ['sent'],
@@ -133,7 +134,7 @@ export class QuoteService {
   async findAll(
     tenantId: string,
     actorId: string,
-    query: PaginationQueryDto,
+    query: ListQuotesQueryDto,
   ): Promise<PaginatedResult<QuoteResponseDto>> {
     const result = await this.quoteRepository.findPaginated(tenantId, query);
 
@@ -229,6 +230,14 @@ export class QuoteService {
     });
 
     return QuoteResponseDto.from(quote);
+  }
+
+  async remove(id: string, tenantId: string): Promise<void> {
+    const quote = await this.quoteRepository.findById(id, tenantId);
+    if (!quote) {
+      throw new NotFoundException({ code: 'QUOTE_NOT_FOUND', message: 'Quote not found' });
+    }
+    await this.quoteRepository.softDelete(id);
   }
 
   async acceptQuote(

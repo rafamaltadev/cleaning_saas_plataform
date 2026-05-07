@@ -50,3 +50,7 @@ export async function sendQuote(id: string): Promise<ApiQuote> {
   const { data } = await apiClient.post<{ data: ApiQuote }>(`/quotes/${id}/send`);
   return data.data;
 }
+
+export async function deleteQuote(id: string): Promise<void> {
+  await apiClient.delete(`/quotes/${id}`);
+}

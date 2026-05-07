@@ -16,6 +16,7 @@ import KanbanPage from './pages/kanban/KanbanPage';
 import QuoteListPage from './pages/quotes/QuoteListPage';
 import QuoteCreatePage from './pages/quotes/QuoteCreatePage';
 import QuoteDetailPage from './pages/quotes/QuoteDetailPage';
+import QuoteEditPage from './pages/quotes/QuoteEditPage';
 import BookingListPage from './pages/bookings/BookingListPage';
 import BookingCreatePage from './pages/bookings/BookingCreatePage';
 import BookingDetailPage from './pages/bookings/BookingDetailPage';
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="/quotes" element={<QuoteListPage />} />
               <Route path="/quotes/new" element={<QuoteCreatePage />} />
               <Route path="/quotes/:id" element={<QuoteDetailPage />} />
+              <Route path="/quotes/:id/edit" element={<QuoteEditPage />} />
               <Route path="/bookings" element={<BookingListPage />} />
               <Route path="/bookings/new" element={<BookingCreatePage />} />
               <Route path="/bookings/:id" element={<BookingDetailPage />} />

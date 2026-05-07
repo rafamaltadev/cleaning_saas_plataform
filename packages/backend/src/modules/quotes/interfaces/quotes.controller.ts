@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Put,
@@ -15,7 +17,8 @@ import { QuoteService } from '../application/quote.service';
 import { CreateQuoteDto } from '../validation/create-quote.dto';
 import { UpdateQuoteDto } from '../validation/update-quote.dto';
 import { QuoteResponseDto } from '../domain/quote-response.dto';
-import { PaginatedResult, PaginationQueryDto } from '../../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../../common/dto/pagination.dto';
+import { ListQuotesQueryDto } from '../validation/list-quotes-query.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -36,7 +39,7 @@ export class QuotesController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   findAll(
     @Req() req: Request & { user?: AuthUser },
-    @Query() query: PaginationQueryDto,
+    @Query() query: ListQuotesQueryDto,
   ): Promise<PaginatedResult<QuoteResponseDto>> {
     return this.quoteService.findAll(req.user!.tenantId, req.user!.userId, query);
   }
@@ -65,6 +68,20 @@ export class QuotesController {
     @Body() dto: CreateQuoteDto,
   ): Promise<QuoteResponseDto> {
     return this.quoteService.create(req.user!.tenantId, req.user!.userId, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a quote' })
+  @ApiResponse({ status: 204, description: 'Deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  remove(
+    @Req() req: Request & { user?: AuthUser },
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.quoteService.remove(id, req.user!.tenantId);
   }
 
   @Put(':id')

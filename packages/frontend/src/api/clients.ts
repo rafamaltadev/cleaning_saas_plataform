@@ -35,18 +35,18 @@ export async function getClients(query: ClientsQuery = {}): Promise<PaginatedRes
 }
 
 export async function getClient(id: string): Promise<Client> {
-  const { data } = await apiClient.get<Client>(`/clients/${id}`);
-  return data;
+  const { data } = await apiClient.get<{ data: Client }>(`/clients/${id}`);
+  return data.data;
 }
 
 export async function createClient(payload: CreateClientPayload): Promise<Client> {
-  const { data } = await apiClient.post<Client>('/clients', payload);
-  return data;
+  const { data } = await apiClient.post<{ data: Client }>('/clients', payload);
+  return data.data;
 }
 
 export async function updateClient(id: string, payload: Partial<CreateClientPayload>): Promise<Client> {
-  const { data } = await apiClient.put<Client>(`/clients/${id}`, payload);
-  return data;
+  const { data } = await apiClient.put<{ data: Client }>(`/clients/${id}`, payload);
+  return data.data;
 }
 
 export async function createAddress(payload: AddressPayload): Promise<void> {
