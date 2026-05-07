@@ -34,6 +34,14 @@ export class PricingRulesService {
     return PricingRuleResponseDto.from(rule);
   }
 
+  async findByServiceId(
+    tenantId: string,
+    serviceId: string,
+  ): Promise<PricingRuleResponseDto | null> {
+    const rule = await this.pricingRuleRepository.findByServiceId(serviceId, tenantId);
+    return rule ? PricingRuleResponseDto.from(rule) : null;
+  }
+
   async update(
     tenantId: string,
     ruleId: string,

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -52,6 +53,26 @@ export class PricingRulesController {
     @Body() dto: CreatePricingRuleDto,
   ): Promise<PricingRuleResponseDto> {
     return this.pricingRulesService.create(req.user!.tenantId, dto);
+  }
+
+  @Get('by-service/:serviceId')
+  @ApiOperation({ summary: 'Get pricing rule for a service' })
+  @ApiResponse({ status: 200, type: PricingRuleResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async getByServiceId(
+    @Req() req: Request & { user?: AuthUser },
+    @Param('serviceId') serviceId: string,
+  ): Promise<PricingRuleResponseDto> {
+    const rule = await this.pricingRulesService.findByServiceId(req.user!.tenantId, serviceId);
+    if (!rule) {
+      throw new NotFoundException({
+        code: 'PRICING_RULE_NOT_FOUND',
+        message: 'Pricing rule not found for this service',
+      });
+    }
+    return rule;
   }
 
   @Put(':id')

@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Service, ApiPricingRule, PaginatedApiResult } from '../types';
+import type { Service, ApiPricingRule } from '../types';
 
 export async function getServices(): Promise<Service[]> {
   const { data } = await apiClient.get('/services');
@@ -42,10 +42,14 @@ export async function deleteService(id: string): Promise<void> {
 }
 
 export async function getPricingRuleForService(serviceId: string): Promise<ApiPricingRule | null> {
-  const { data } = await apiClient.get<{ data: PaginatedApiResult<ApiPricingRule> }>('/pricing-rules', {
-    params: { service_id: serviceId, page: 1, limit: 1 },
-  });
-  return data.data.items[0] ?? null;
+  try {
+    const { data } = await apiClient.get<{ data: ApiPricingRule }>(`/pricing-rules/by-service/${serviceId}`);
+    return data.data;
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } }).response?.status;
+    if (status === 404) return null;
+    throw err;
+  }
 }
 
 export async function createPricingRule(payload: CreatePricingRulePayload): Promise<ApiPricingRule> {

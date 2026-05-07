@@ -12,4 +12,11 @@ export class PricingRuleRepository extends TenantScopedRepository<PricingRule> {
   ) {
     super(repo);
   }
+
+  async findByServiceId(serviceId: string, tenantId: string): Promise<PricingRule | null> {
+    return this.buildBaseQuery('entity')
+      .andWhere('entity.service_id = :serviceId', { serviceId })
+      .andWhere('entity.tenant_id = :tenantId', { tenantId })
+      .getOne();
+  }
 }
