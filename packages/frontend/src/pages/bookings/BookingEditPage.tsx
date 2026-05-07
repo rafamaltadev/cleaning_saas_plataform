@@ -39,6 +39,7 @@ export default function BookingEditPage() {
   const [scheduledStart, setScheduledStart] = useState('');
   const [scheduledEnd, setScheduledEnd] = useState('');
   const [assignedTeam, setAssignedTeam] = useState('');
+  const [hasChangedStart, setHasChangedStart] = useState(false);
 
   const [loadingData, setLoadingData] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -73,10 +74,12 @@ export default function BookingEditPage() {
     }
     if (isExpiredQuote) return;
 
-    const nowLocal = nowDatetimeLocal();
-    if (scheduledStart < nowLocal) {
-      setError('O início do agendamento deve ser a partir de agora.');
-      return;
+    if (hasChangedStart) {
+      const nowLocal = nowDatetimeLocal();
+      if (scheduledStart < nowLocal) {
+        setError('O início do agendamento deve ser a partir de agora.');
+        return;
+      }
     }
     if (scheduledEnd < scheduledStart) {
       setError('O término deve ser igual ou posterior ao início.');
@@ -87,7 +90,7 @@ export default function BookingEditPage() {
     setError('');
     try {
       await apiClient.put(`/bookings/${id}`, {
-        quote_id: quoteId !== booking?.quote_id ? quoteId : undefined,
+        quote_id: (quoteId && quoteId !== booking?.quote_id) ? quoteId : undefined,
         scheduled_start: new Date(scheduledStart).toISOString(),
         scheduled_end: new Date(scheduledEnd).toISOString(),
         assigned_team: assignedTeam.trim() || undefined,
@@ -155,7 +158,7 @@ export default function BookingEditPage() {
               type="datetime-local"
               value={scheduledStart}
               min={nowDatetimeLocal()}
-              onChange={(e) => setScheduledStart(e.target.value)}
+              onChange={(e) => { setScheduledStart(e.target.value); setHasChangedStart(true); }}
               required
             />
 

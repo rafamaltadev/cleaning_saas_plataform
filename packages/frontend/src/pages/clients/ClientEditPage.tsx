@@ -89,11 +89,11 @@ export default function ClientEditPage() {
     const hasAddress = !!(address.street || address.city || address.state || address.zipCode || address.country);
     if (hasAddress) {
       const addrPayload = {
-        street: address.street ?? '',
-        city: address.city ?? '',
-        state: address.state ?? '',
-        postal_code: address.zipCode ?? '',
-        country: address.country ?? '',
+        street: address.street || undefined,
+        city: address.city || undefined,
+        state: address.state || undefined,
+        postal_code: address.zipCode || undefined,
+        country: address.country || undefined,
       };
       try {
         if (addressId) {
