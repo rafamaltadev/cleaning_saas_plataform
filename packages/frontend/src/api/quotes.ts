@@ -1,14 +1,14 @@
 import { apiClient } from './client';
 import type { Quote, QuoteStatus, ApiQuote, PaginatedApiResult } from '../types';
 
-export async function getQuotes(): Promise<Quote[]> {
-  const { data } = await apiClient.get<Quote[]>('/quotes');
-  return data;
+export async function getQuotes(): Promise<PaginatedApiResult<ApiQuote>> {
+  const { data } = await apiClient.get<{ data: PaginatedApiResult<ApiQuote> }>('/quotes');
+  return data.data;
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<Quote> {
-  const { data } = await apiClient.put<Quote>(`/quotes/${id}`, { status });
-  return data;
+  const { data } = await apiClient.put<{ data: Quote }>(`/quotes/${id}`, { status });
+  return data.data;
 }
 
 // ── T14 paginated API ────────────────────────────────────────────────────────
@@ -32,21 +32,21 @@ export interface CreateQuotePayload {
 
 export async function listQuotes(query: QuotesQuery = {}): Promise<PaginatedApiResult<ApiQuote>> {
   const params = { page: query.page ?? 1, limit: query.limit ?? 20, ...query };
-  const { data } = await apiClient.get<PaginatedApiResult<ApiQuote>>('/quotes', { params });
-  return data;
+  const { data } = await apiClient.get<{ data: PaginatedApiResult<ApiQuote> }>('/quotes', { params });
+  return data.data;
 }
 
 export async function getQuoteById(id: string): Promise<ApiQuote> {
-  const { data } = await apiClient.get<ApiQuote>(`/quotes/${id}`);
-  return data;
+  const { data } = await apiClient.get<{ data: ApiQuote }>(`/quotes/${id}`);
+  return data.data;
 }
 
 export async function createQuote(payload: CreateQuotePayload): Promise<ApiQuote> {
-  const { data } = await apiClient.post<ApiQuote>('/quotes', payload);
-  return data;
+  const { data } = await apiClient.post<{ data: ApiQuote }>('/quotes', payload);
+  return data.data;
 }
 
 export async function sendQuote(id: string): Promise<ApiQuote> {
-  const { data } = await apiClient.post<ApiQuote>(`/quotes/${id}/send`);
-  return data;
+  const { data } = await apiClient.post<{ data: ApiQuote }>(`/quotes/${id}/send`);
+  return data.data;
 }
