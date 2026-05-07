@@ -44,6 +44,17 @@ export class QuotesController {
     return this.quoteService.findAll(req.user!.tenantId, req.user!.userId, query);
   }
 
+  @Get('available')
+  @ApiOperation({ summary: 'Get available quotes for booking (accepted, no active booking)' })
+  @ApiResponse({ status: 200, type: [QuoteResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  findAvailable(
+    @Req() req: Request & { user?: AuthUser },
+  ): Promise<QuoteResponseDto[]> {
+    return this.quoteService.findAvailable(req.user!.tenantId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a quote by ID' })
   @ApiResponse({ status: 200, type: QuoteResponseDto })

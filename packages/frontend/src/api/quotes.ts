@@ -54,3 +54,8 @@ export async function sendQuote(id: string): Promise<ApiQuote> {
 export async function deleteQuote(id: string): Promise<void> {
   await apiClient.delete(`/quotes/${id}`);
 }
+
+export async function getAvailableQuotes(): Promise<ApiQuote[]> {
+  const { data } = await apiClient.get<{ data: ApiQuote[] }>('/quotes/available');
+  return data.data;
+}

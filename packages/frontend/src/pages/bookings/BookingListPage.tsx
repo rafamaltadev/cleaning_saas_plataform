@@ -138,9 +138,11 @@ export default function BookingListPage() {
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
                       Ver
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}/edit`)}>
-                      Editar
-                    </Button>
+                    {(booking.status === 'confirmed' || booking.status === 'rescheduled') && (
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}/edit`)}>
+                        Editar
+                      </Button>
+                    )}
                     {canComplete && booking.status === 'confirmed' && (
                       <Button
                         variant="secondary"
@@ -186,9 +188,11 @@ export default function BookingListPage() {
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
                   Ver
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}/edit`)}>
-                  Editar
-                </Button>
+                {(booking.status === 'confirmed' || booking.status === 'rescheduled') && (
+                  <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}/edit`)}>
+                    Editar
+                  </Button>
+                )}
                 {canComplete && booking.status === 'confirmed' && (
                   <Button
                     variant="secondary"

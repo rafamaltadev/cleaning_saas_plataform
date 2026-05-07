@@ -12,6 +12,7 @@ import { PricingRuleRepository } from '../../services/infrastructure/pricing-rul
 import { PricingService } from '../../services/application/pricing.service';
 import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Quote, QuoteStatus } from '../domain/quote.entity';
+import { Booking } from '../../bookings/domain/booking.entity';
 import { QuoteResponseDto } from '../domain/quote-response.dto';
 import { CreateQuoteDto } from '../validation/create-quote.dto';
 import { UpdateQuoteDto } from '../validation/update-quote.dto';
@@ -192,6 +193,32 @@ export class QuoteService {
       quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId,
     );
     return QuoteResponseDto.from(quote, context);
+  }
+
+  async findAvailable(tenantId: string): Promise<QuoteResponseDto[]> {
+    const quotes = await this.dataSource
+      .getRepository(Quote)
+      .createQueryBuilder('q')
+      .leftJoin(
+        Booking,
+        'b',
+        'b.quote_id = q.id AND b.status IN (:...activeStatuses) AND b.deleted_at IS NULL',
+        { activeStatuses: ['confirmed', 'rescheduled', 'completed'] },
+      )
+      .where('q.tenant_id = :tenantId', { tenantId })
+      .andWhere('q.status = :status', { status: 'accepted' })
+      .andWhere('q.deleted_at IS NULL')
+      .andWhere('b.id IS NULL')
+      .getMany();
+
+    return Promise.all(
+      quotes.map(async (q) => {
+        const context = await this.resolveQuoteContext(
+          q.client_id, q.service_id, q.pricing_rule_id, tenantId,
+        );
+        return QuoteResponseDto.from(q, context);
+      }),
+    );
   }
 
   async update(

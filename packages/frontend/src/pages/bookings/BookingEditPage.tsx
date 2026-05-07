@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import { getBookingById } from '../../api/bookings';
-import { listQuotes } from '../../api/quotes';
+import { getAvailableQuotes, getQuoteById } from '../../api/quotes';
 import { apiClient } from '../../api/client';
 import type { ApiBooking, ApiQuote } from '../../types';
 
@@ -25,7 +25,7 @@ function quoteLabel(q: ApiQuote): string {
   const total = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: q.currency || 'BRL' }).format(
     q.estimated_total_cents / 100,
   );
-  const suffix = q.status === 'expired' ? ' — Expirado' : q.status === 'accepted' ? ' — Aceito' : '';
+  const suffix = q.status === 'expired' ? ' — Expirado' : '';
   return `${name} — ${total}${suffix}`;
 }
 
@@ -50,13 +50,19 @@ export default function BookingEditPage() {
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([
-      getBookingById(id),
-      listQuotes({ page: 1, limit: 100 }),
-    ])
-      .then(([b, quotesRes]) => {
+    Promise.all([getBookingById(id), getAvailableQuotes()])
+      .then(async ([b, available]) => {
         setBooking(b);
-        setQuotes(quotesRes.items);
+        let allQuotes = available;
+        if (b.quote_id && !available.find((q) => q.id === b.quote_id)) {
+          try {
+            const currentQuote = await getQuoteById(b.quote_id);
+            allQuotes = [currentQuote, ...available];
+          } catch {
+            // keep just available quotes if current quote can't be fetched
+          }
+        }
+        setQuotes(allQuotes);
         setQuoteId(b.quote_id);
         setScheduledStart(toDatetimeLocal(b.scheduled_start));
         setScheduledEnd(toDatetimeLocal(b.scheduled_end));

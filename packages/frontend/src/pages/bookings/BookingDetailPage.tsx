@@ -111,7 +111,9 @@ export default function BookingDetailPage() {
               </Button>
             </>
           )}
-          <Button variant="ghost" onClick={() => navigate(`/bookings/${id}/edit`)}>Editar</Button>
+          {(booking.status === 'confirmed' || booking.status === 'rescheduled') && (
+            <Button variant="ghost" onClick={() => navigate(`/bookings/${id}/edit`)}>Editar</Button>
+          )}
           <Button variant="ghost" onClick={() => navigate('/bookings')}>Voltar</Button>
         </div>
       </div>

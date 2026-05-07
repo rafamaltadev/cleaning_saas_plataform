@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import { createBooking } from '../../api/bookings';
-import { listQuotes } from '../../api/quotes';
+import { getAvailableQuotes } from '../../api/quotes';
 import type { ApiQuote, ApiBooking } from '../../types';
 
 function generateIdempotencyKey(): string {
@@ -25,8 +25,7 @@ function quoteLabel(q: ApiQuote): string {
   const total = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: q.currency || 'BRL' }).format(
     q.estimated_total_cents / 100,
   );
-  const suffix = q.status === 'expired' ? ' — Expirado' : q.status === 'accepted' ? ' — Aceito' : '';
-  return `${name} — ${total}${suffix}`;
+  return `${name} — ${total}`;
 }
 
 export default function BookingCreatePage() {
@@ -42,12 +41,11 @@ export default function BookingCreatePage() {
   const [error, setError] = useState('');
 
   const selectedQuote = quotes.find((q) => q.id === quoteId);
-  const isExpiredQuote = selectedQuote?.status === 'expired';
 
   useEffect(() => {
-    listQuotes({ page: 1, limit: 100 })
-      .then((res) => setQuotes(res.items))
-      .catch(() => setError('Erro ao carregar orçamentos.'));
+    getAvailableQuotes()
+      .then(setQuotes)
+      .catch(() => setError('Erro ao carregar orçamentos disponíveis.'));
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -60,7 +58,6 @@ export default function BookingCreatePage() {
       setError('Orçamento selecionado não encontrado.');
       return;
     }
-    if (isExpiredQuote) return;
 
     setLoading(true);
     setError('');
@@ -94,7 +91,7 @@ export default function BookingCreatePage() {
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="quote-select">
-                Orçamento <span className="text-error">*</span>
+                Orçamento disponível <span className="text-error">*</span>
               </label>
               <select
                 id="quote-select"
@@ -111,13 +108,12 @@ export default function BookingCreatePage() {
                   </option>
                 ))}
               </select>
+              {quotes.length === 0 && !error && (
+                <p className="text-xs text-text-muted mt-1">
+                  Nenhum orçamento aceito disponível. Aceite um orçamento primeiro.
+                </p>
+              )}
             </div>
-
-            {isExpiredQuote && (
-              <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded px-3 py-2" role="alert">
-                Este orçamento está expirado. Edite a validade do orçamento antes de criar o agendamento.
-              </p>
-            )}
 
             <Input
               label="Início do agendamento"
@@ -149,7 +145,7 @@ export default function BookingCreatePage() {
         {error && <p className="text-sm text-error" role="alert">{error}</p>}
 
         <div className="flex gap-3">
-          <Button type="submit" loading={loading} disabled={isExpiredQuote}>
+          <Button type="submit" loading={loading}>
             Criar Agendamento
           </Button>
           <Button type="button" variant="ghost" onClick={() => navigate('/bookings')}>Cancelar</Button>
