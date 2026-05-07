@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
-import { getServices } from '../../api/tenants';
+import { getServices } from '../../api/services';
 import { deleteService } from '../../api/services';
 import type { Service } from '../../types';
 
@@ -73,7 +73,7 @@ export default function ServiceListPage() {
                 <td colSpan={4} className="px-4 py-8 text-center text-text-muted text-sm">Nenhum serviço cadastrado.</td>
               </tr>
             ) : (
-              services.map((service) => (
+              (Array.isArray(services) ? services : []).map((service) => (
                 <tr key={service.id} className="border-b border-border last:border-0 hover:bg-surface-alt transition-colors">
                   <td className="px-4 py-3 text-sm text-text-primary font-medium">{service.name}</td>
                   <td className="px-4 py-3 text-sm text-text-secondary max-w-xs truncate">{service.description ?? '—'}</td>
@@ -110,7 +110,7 @@ export default function ServiceListPage() {
         ) : services.length === 0 ? (
           <p className="text-center text-text-muted text-sm py-8">Nenhum serviço cadastrado.</p>
         ) : (
-          services.map((service) => (
+          (Array.isArray(services) ? services : []).map((service) => (
             <div key={service.id} className="bg-surface border border-border rounded-lg p-4">
               <div className="mb-2">
                 <p className="text-sm font-medium text-text-primary">{service.name}</p>

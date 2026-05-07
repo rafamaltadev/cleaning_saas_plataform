@@ -1,6 +1,11 @@
 import { apiClient } from './client';
 import type { Service, ApiPricingRule, PaginatedApiResult } from '../types';
 
+export async function getServices(): Promise<Service[]> {
+  const { data } = await apiClient.get('/services');
+  return data.data.items;
+}
+
 export interface CreateServicePayload {
   name: string;
   description: string;

@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Tenant, Service } from '../types';
+import type { Tenant } from '../types';
 
 export async function getTenant(): Promise<Tenant> {
   const { data } = await apiClient.get<Tenant>('/tenants/me');
@@ -11,7 +11,3 @@ export async function updateTenant(payload: Partial<Tenant>): Promise<Tenant> {
   return data;
 }
 
-export async function getServices(): Promise<Service[]> {
-  const { data } = await apiClient.get<{ data: Service[] }>('/services');
-  return data.data;
-}

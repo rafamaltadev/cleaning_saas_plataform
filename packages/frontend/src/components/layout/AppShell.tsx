@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 
@@ -26,12 +26,13 @@ class PageErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
 }
 
 export default function AppShell() {
+  const location = useLocation();
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
       <main className="lg:ml-sidebar pb-16 lg:pb-0 min-h-screen">
         <div className="max-w-container mx-auto px-4 py-6 lg:px-6">
-          <PageErrorBoundary>
+          <PageErrorBoundary key={location.pathname}>
             <Outlet />
           </PageErrorBoundary>
         </div>

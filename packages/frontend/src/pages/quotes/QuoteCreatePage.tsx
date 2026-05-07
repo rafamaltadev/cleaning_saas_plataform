@@ -6,7 +6,7 @@ import Card from '../../components/ui/Card';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import { createQuote } from '../../api/quotes';
 import { getClients } from '../../api/clients';
-import { getServices } from '../../api/tenants';
+import { getServices } from '../../api/services';
 import { getPricingRules } from '../../api/pricingRules';
 import { calculatePriceCents, formatCurrency } from '../../utils/pricing';
 import type { Client, Service, ApiPricingRule } from '../../types';
