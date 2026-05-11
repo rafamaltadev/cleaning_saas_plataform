@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsIn,
   IsInt,
@@ -50,4 +51,20 @@ export class UpdateQuoteDto {
   @IsIn(['rejected', 'accepted'])
   @IsOptional()
   status?: 'rejected' | 'accepted';
+
+  @IsOptional()
+  @IsString()
+  service_address?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  use_client_address?: boolean;
+
+  @IsOptional()
+  @IsString()
+  observations?: string;
+
+  @IsOptional()
+  @IsDateString()
+  service_date?: string;
 }

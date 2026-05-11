@@ -3,6 +3,7 @@ import { Booking } from './booking.entity';
 interface BookingContext {
   clientName?: string;
   serviceName?: string;
+  quoteTotalCents?: number;
 }
 
 export class BookingResponseDto {
@@ -16,10 +17,14 @@ export class BookingResponseDto {
   status: string;
   assigned_team: string | null;
   idempotency_key: string;
+  service_address: string | null;
+  use_client_address: boolean;
+  observations: string | null;
   created_at: Date;
   updated_at: Date;
   client_name?: string;
   service_name?: string;
+  quote_total_cents?: number;
 
   static from(booking: Booking, context?: BookingContext): BookingResponseDto {
     const dto = new BookingResponseDto();
@@ -33,10 +38,14 @@ export class BookingResponseDto {
     dto.status = booking.status;
     dto.assigned_team = booking.assigned_team;
     dto.idempotency_key = booking.idempotency_key;
+    dto.service_address = booking.service_address ?? null;
+    dto.use_client_address = booking.use_client_address ?? true;
+    dto.observations = booking.observations ?? null;
     dto.created_at = booking.created_at;
     dto.updated_at = booking.updated_at;
     if (context?.clientName) dto.client_name = context.clientName;
     if (context?.serviceName) dto.service_name = context.serviceName;
+    if (context?.quoteTotalCents !== undefined) dto.quote_total_cents = context.quoteTotalCents;
     return dto;
   }
 }

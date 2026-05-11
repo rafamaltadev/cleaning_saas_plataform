@@ -1,4 +1,4 @@
-import { IsDateString, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UpdateBookingDto {
   @IsUUID()
@@ -20,4 +20,16 @@ export class UpdateBookingDto {
   @IsIn(['rescheduled', 'cancelled'])
   @IsOptional()
   status?: 'rescheduled' | 'cancelled';
+
+  @IsOptional()
+  @IsString()
+  service_address?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  use_client_address?: boolean;
+
+  @IsOptional()
+  @IsString()
+  observations?: string;
 }

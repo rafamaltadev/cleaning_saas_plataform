@@ -40,6 +40,15 @@ export class Booking {
   @Column({ type: 'varchar' })
   idempotency_key: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  service_address: string | null;
+
+  @Column({ type: 'boolean', default: true })
+  use_client_address: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  observations: string | null;
+
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 

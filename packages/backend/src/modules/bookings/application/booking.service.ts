@@ -33,13 +33,24 @@ export class BookingService {
   private async resolveBookingContext(
     clientId: string,
     serviceId: string,
+    quoteId: string,
     tenantId: string,
-  ): Promise<{ clientName?: string; serviceName?: string }> {
+  ): Promise<{ clientName?: string; serviceName?: string; quoteTotalCents?: number }> {
     const [client, service] = await Promise.all([
       this.clientRepository.findById(clientId, tenantId).catch(() => null),
       this.serviceRepository.findById(serviceId, tenantId).catch(() => null),
     ]);
-    return { clientName: client?.name, serviceName: service?.name };
+    const [quoteRow] = await this.dataSource
+      .query(
+        `SELECT estimated_total_cents FROM quotes WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL LIMIT 1`,
+        [quoteId, tenantId],
+      )
+      .catch(() => [null]);
+    const quoteTotalCents: number | undefined =
+      quoteRow?.estimated_total_cents !== undefined
+        ? Number(quoteRow.estimated_total_cents)
+        : undefined;
+    return { clientName: client?.name, serviceName: service?.name, quoteTotalCents };
   }
 
   async create(
@@ -100,6 +111,9 @@ export class BookingService {
       newBooking.status = 'confirmed';
       newBooking.assigned_team = dto.assigned_team ?? null;
       newBooking.idempotency_key = dto.idempotency_key;
+      newBooking.service_address = dto.service_address ?? null;
+      newBooking.use_client_address = dto.use_client_address ?? true;
+      newBooking.observations = dto.observations ?? null;
       newBooking.deleted_at = null;
       booking = await manager.save(Booking, newBooking);
     });
@@ -132,7 +146,7 @@ export class BookingService {
     const items = await Promise.all(
       result.items.map(async (booking) => {
         const context = await this.resolveBookingContext(
-          booking.client_id, booking.service_id, tenantId,
+          booking.client_id, booking.service_id, booking.quote_id, tenantId,
         );
         return BookingResponseDto.from(booking, context);
       }),
@@ -146,7 +160,7 @@ export class BookingService {
       throw new NotFoundException({ code: 'BOOKING_NOT_FOUND', message: 'Booking not found' });
     }
     const context = await this.resolveBookingContext(
-      booking.client_id, booking.service_id, tenantId,
+      booking.client_id, booking.service_id, booking.quote_id, tenantId,
     );
     return BookingResponseDto.from(booking, context);
   }
@@ -174,11 +188,14 @@ export class BookingService {
     if (dto.scheduled_end) booking.scheduled_end = new Date(dto.scheduled_end);
     if (dto.assigned_team !== undefined) booking.assigned_team = dto.assigned_team;
     if (dto.status) booking.status = dto.status as BookingStatus;
+    if (dto.service_address !== undefined) booking.service_address = dto.service_address ?? null;
+    if (dto.use_client_address !== undefined) booking.use_client_address = dto.use_client_address;
+    if (dto.observations !== undefined) booking.observations = dto.observations ?? null;
 
     const saved = await this.bookingRepository.save(booking);
 
     const context = await this.resolveBookingContext(
-      saved.client_id, saved.service_id, tenantId,
+      saved.client_id, saved.service_id, saved.quote_id, tenantId,
     );
     return BookingResponseDto.from(saved, context);
   }

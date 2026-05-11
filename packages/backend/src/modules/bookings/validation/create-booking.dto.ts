@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateBookingDto {
   @IsUUID()
@@ -24,4 +24,16 @@ export class CreateBookingDto {
 
   @IsString()
   idempotency_key: string;
+
+  @IsOptional()
+  @IsString()
+  service_address?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  use_client_address?: boolean;
+
+  @IsOptional()
+  @IsString()
+  observations?: string;
 }

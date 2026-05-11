@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsInt,
   IsNumber,
@@ -41,4 +42,20 @@ export class CreateQuoteDto {
   @Min(0)
   @IsOptional()
   duration_hours?: number;
+
+  @IsOptional()
+  @IsString()
+  service_address?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  use_client_address?: boolean;
+
+  @IsOptional()
+  @IsString()
+  observations?: string;
+
+  @IsOptional()
+  @IsDateString()
+  service_date?: string;
 }

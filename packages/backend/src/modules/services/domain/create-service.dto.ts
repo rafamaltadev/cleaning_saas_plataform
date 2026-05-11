@@ -1,4 +1,6 @@
-import { IsIn, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import {
+  IsBoolean, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateServiceDto {
@@ -17,4 +19,40 @@ export class CreateServiceDto {
 
   @IsIn(['sqm', 'hour', 'flat'])
   unit: 'sqm' | 'hour' | 'flat';
+
+  @IsOptional()
+  @IsUUID()
+  category_id?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  estimated_duration_minutes?: number;
+
+  @IsOptional()
+  @IsIn(['fixed', 'hourly'])
+  billing_type?: 'fixed' | 'hourly';
+
+  @IsOptional()
+  @IsObject()
+  availability?: object;
+
+  @IsOptional()
+  @IsBoolean()
+  materials_included?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  materials_cost_cents?: number;
+
+  @IsOptional()
+  @IsString()
+  observations?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  has_addons?: boolean;
 }
