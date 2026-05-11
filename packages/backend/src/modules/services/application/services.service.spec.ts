@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { ServiceRepository } from '../infrastructure/service.repository';
+import { ServiceCategoryRepository } from '../infrastructure/service-category.repository';
 import { Service } from '../domain/service.entity';
 import { ServiceResponseDto } from '../domain/service-response.dto';
 
@@ -12,6 +13,14 @@ function makeService(overrides: Partial<Service> = {}): Service {
     description: 'Test description',
     base_rate_cents: 1000,
     unit: 'flat',
+    category_id: null,
+    estimated_duration_minutes: null,
+    billing_type: 'fixed',
+    availability: null,
+    materials_included: false,
+    materials_cost_cents: null,
+    observations: null,
+    has_addons: false,
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-06-01'),
     deleted_at: null,
@@ -31,7 +40,7 @@ describe('ServicesService', () => {
       findById: jest.fn(),
       save: jest.fn(),
     };
-    service = new ServicesService(repoMock as unknown as ServiceRepository);
+    service = new ServicesService(repoMock as unknown as ServiceRepository, {} as unknown as ServiceCategoryRepository);
   });
 
   describe('findAll', () => {
