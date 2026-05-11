@@ -17,11 +17,11 @@ export interface CreateClientPayload {
 
 export interface AddressPayload {
   client_id: string;
-  street: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
 }
 
 export async function getClients(query: ClientsQuery = {}): Promise<PaginatedResponse<Client>> {

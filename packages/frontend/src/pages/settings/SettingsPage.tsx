@@ -6,13 +6,15 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { getTenant, updateTenant } from '../../api/tenants';
 import { getServices } from '../../api/services';
-import type { Tenant, BusinessHours, Service } from '../../types';
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../../api/categories';
+import type { Tenant, BusinessHours, Service, ServiceCategory } from '../../types';
 
-type Tab = 'profile' | 'hours' | 'services' | 'payment';
+type Tab = 'profile' | 'hours' | 'categories' | 'services' | 'payment';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Perfil da Empresa' },
   { id: 'hours', label: 'Horário de Funcionamento' },
+  { id: 'categories', label: 'Categorias' },
   { id: 'services', label: 'Serviços e Preços' },
   { id: 'payment', label: 'Pagamento' },
 ];
@@ -51,6 +53,7 @@ export default function SettingsPage() {
         <div className="flex-1 min-w-0">
           {activeTab === 'profile' && <ProfileSection />}
           {activeTab === 'hours' && <BusinessHoursSection />}
+          {activeTab === 'categories' && <CategoriesSection />}
           {activeTab === 'services' && <ServicesSection />}
           {activeTab === 'payment' && <PaymentSection />}
         </div>
@@ -237,6 +240,117 @@ function BusinessHoursSection() {
       <div className="mt-4">
         <Button type="button">Salvar Horários</Button>
       </div>
+    </Card>
+  );
+}
+
+function CategoriesSection() {
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [newName, setNewName] = useState('');
+  const [addingNew, setAddingNew] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  function load() {
+    setLoading(true);
+    getCategories()
+      .then(setCategories)
+      .catch(() => setError('Erro ao carregar categorias.'))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleCreate() {
+    if (!newName.trim()) return;
+    setSaving(true);
+    try {
+      await createCategory(newName.trim());
+      setNewName('');
+      setAddingNew(false);
+      load();
+    } catch { setError('Erro ao criar categoria.'); }
+    finally { setSaving(false); }
+  }
+
+  async function handleUpdate(id: string) {
+    if (!editName.trim()) return;
+    setSaving(true);
+    try {
+      await updateCategory(id, editName.trim());
+      setEditingId(null);
+      load();
+    } catch { setError('Erro ao atualizar categoria.'); }
+    finally { setSaving(false); }
+  }
+
+  async function handleDelete(id: string, name: string) {
+    if (!window.confirm(`Excluir a categoria "${name}"?`)) return;
+    try {
+      await deleteCategory(id);
+      load();
+    } catch { setError('Erro ao excluir categoria.'); }
+  }
+
+  if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
+
+  return (
+    <Card title="Categorias de Serviço">
+      {error && <p className="text-error text-sm mb-3" role="alert">{error}</p>}
+
+      <div className="mb-4">
+        {addingNew ? (
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Nome da categoria"
+              autoFocus
+              className="flex-1 h-9 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate(); if (e.key === 'Escape') setAddingNew(false); }}
+            />
+            <Button size="sm" loading={saving} onClick={handleCreate}>Salvar</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setAddingNew(false); setNewName(''); }}>Cancelar</Button>
+          </div>
+        ) : (
+          <Button size="sm" onClick={() => setAddingNew(true)}>+ Nova Categoria</Button>
+        )}
+      </div>
+
+      {categories.length === 0 ? (
+        <p className="text-text-muted text-sm">Nenhuma categoria cadastrada.</p>
+      ) : (
+        <div className="space-y-1">
+          {categories.map((cat) => (
+            <div key={cat.id} className="flex items-center gap-2 py-2 border-b border-border last:border-0">
+              {editingId === cat.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    autoFocus
+                    className="flex-1 h-8 px-2 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    onKeyDown={(e) => { if (e.key === 'Enter') void handleUpdate(cat.id); if (e.key === 'Escape') setEditingId(null); }}
+                  />
+                  <Button size="sm" loading={saving} onClick={() => handleUpdate(cat.id)}>Salvar</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancelar</Button>
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 text-sm text-text-primary">{cat.name}</span>
+                  <Button size="sm" variant="ghost" onClick={() => { setEditingId(cat.id); setEditName(cat.name); }}>Editar</Button>
+                  <Button size="sm" variant="danger" onClick={() => handleDelete(cat.id, cat.name)}>Excluir</Button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }

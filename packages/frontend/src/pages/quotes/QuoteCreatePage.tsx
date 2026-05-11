@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
@@ -8,8 +8,9 @@ import { createQuote } from '../../api/quotes';
 import { getClients } from '../../api/clients';
 import { getServices } from '../../api/services';
 import { getPricingRules } from '../../api/pricingRules';
+import { getAddonsByService } from '../../api/addons';
 import { calculatePriceCents, formatCurrency } from '../../utils/pricing';
-import type { Client, Service, ApiPricingRule } from '../../types';
+import type { Client, Service, ApiPricingRule, ServiceAddon } from '../../types';
 
 const CURRENCY = 'BRL';
 
@@ -19,6 +20,8 @@ export default function QuoteCreatePage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [pricingRules, setPricingRules] = useState<ApiPricingRule[]>([]);
+  const [addons, setAddons] = useState<ServiceAddon[]>([]);
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
 
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState('');
@@ -27,6 +30,10 @@ export default function QuoteCreatePage() {
   const [manualDiscount, setManualDiscount] = useState(0);
   const [areaSqm, setAreaSqm] = useState<number | ''>('');
   const [durationHours, setDurationHours] = useState<number | ''>('');
+  const [serviceDate, setServiceDate] = useState('');
+  const [useClientAddress, setUseClientAddress] = useState(true);
+  const [serviceAddress, setServiceAddress] = useState('');
+  const [observations, setObservations] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,11 +50,18 @@ export default function QuoteCreatePage() {
     }).catch(() => setError('Erro ao carregar dados do formulário.'));
   }, []);
 
+  useEffect(() => {
+    if (!serviceId) { setAddons([]); setSelectedAddonIds([]); return; }
+    getAddonsByService(serviceId)
+      .then(setAddons)
+      .catch(() => setAddons([]));
+  }, [serviceId]);
+
   const selectedService = services.find((s) => s.id === serviceId);
   const selectedRule = pricingRules.find((r) => r.id === pricingRuleId);
   const filteredRules = pricingRules.filter((r) => !serviceId || r.service_id === serviceId);
 
-  const estimatedTotal = selectedService
+  const subtotal = selectedService
     ? calculatePriceCents({
         unit: selectedService.unit ?? 'flat',
         baseRateCents: selectedService.base_rate_cents ?? Math.round(selectedService.baseRate * 100),
@@ -58,6 +72,18 @@ export default function QuoteCreatePage() {
         manualDiscountPercent: manualDiscount,
       })
     : 0;
+
+  const addonTotal = addons
+    .filter((a) => selectedAddonIds.includes(a.id))
+    .reduce((sum, a) => sum + a.price_cents, 0);
+
+  const estimatedTotal = subtotal + addonTotal;
+
+  function toggleAddon(addonId: string) {
+    setSelectedAddonIds((prev) =>
+      prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]
+    );
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -78,6 +104,10 @@ export default function QuoteCreatePage() {
         manual_discount_percent: manualDiscount || undefined,
         area_sqm: selectedService?.unit === 'sqm' && typeof areaSqm === 'number' ? areaSqm : undefined,
         duration_hours: selectedService?.unit === 'hour' && typeof durationHours === 'number' ? durationHours : undefined,
+        service_date: serviceDate ? new Date(serviceDate).toISOString() : undefined,
+        use_client_address: useClientAddress,
+        service_address: !useClientAddress && serviceAddress.trim() ? serviceAddress.trim() : undefined,
+        observations: observations.trim() || undefined,
       };
       await createQuote(payload);
       navigate('/quotes');
@@ -88,6 +118,10 @@ export default function QuoteCreatePage() {
     }
   }
 
+  const discountAmt = manualDiscount > 0
+    ? Math.round(subtotal * manualDiscount / 100)
+    : 0;
+
   return (
     <div>
       <div className="mb-6">
@@ -95,108 +129,258 @@ export default function QuoteCreatePage() {
         <p className="text-text-secondary text-sm mt-1">Criar um novo orçamento para um cliente</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4" aria-label="Criar orçamento">
-        <Card title="Detalhes do Orçamento">
-          <div className="space-y-3">
-            <SearchableSelect
-              label="Cliente *"
-              items={clients}
-              value={clientId}
-              onChange={setClientId}
-              getId={(c) => c.id}
-              getLabel={(c) => c.name}
-              placeholder="Buscar cliente…"
-              emptyMessage="Nenhum cliente encontrado."
-            />
+      <form onSubmit={handleSubmit} aria-label="Criar orçamento">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left column */}
+          <div className="flex-1 min-w-0 space-y-4">
+            <Card title="Detalhes do Orçamento">
+              <div className="space-y-3">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <SearchableSelect
+                      label="Cliente *"
+                      items={clients}
+                      value={clientId}
+                      onChange={setClientId}
+                      getId={(c) => c.id}
+                      getLabel={(c) => c.name}
+                      placeholder="Buscar cliente…"
+                      emptyMessage="Nenhum cliente encontrado."
+                    />
+                  </div>
+                  <Link
+                    to="/clients/new"
+                    className="shrink-0 text-xs text-primary hover:underline pb-1"
+                  >
+                    + Novo cliente
+                  </Link>
+                </div>
 
-            <SearchableSelect
-              label="Serviço *"
-              items={services}
-              value={serviceId}
-              onChange={(id) => { setServiceId(id); setPricingRuleId(''); }}
-              getId={(s) => s.id}
-              getLabel={(s) => s.name}
-              placeholder="Buscar serviço…"
-              emptyMessage="Nenhum serviço cadastrado. Cadastre serviços em Serviços."
-            />
+                <SearchableSelect
+                  label="Serviço *"
+                  items={services}
+                  value={serviceId}
+                  onChange={(sid) => { setServiceId(sid); setPricingRuleId(''); }}
+                  getId={(s) => s.id}
+                  getLabel={(s) => s.name}
+                  placeholder="Buscar serviço…"
+                  emptyMessage="Nenhum serviço cadastrado. Cadastre serviços em Serviços."
+                />
 
-            {serviceId && filteredRules.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="rule-select">
-                  Regra de Preço (opcional)
-                </label>
-                <select
-                  id="rule-select"
-                  value={pricingRuleId}
-                  onChange={(e) => setPricingRuleId(e.target.value)}
-                  className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Sem regra de preço</option>
-                  {filteredRules.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.frequency} — {r.discount_percent}% desc × {r.price_multiplier}
-                    </option>
-                  ))}
-                </select>
+                {serviceId && filteredRules.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="rule-select">
+                      Regra de Preço (opcional)
+                    </label>
+                    <select
+                      id="rule-select"
+                      value={pricingRuleId}
+                      onChange={(e) => setPricingRuleId(e.target.value)}
+                      className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Sem regra de preço</option>
+                      {filteredRules.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.frequency} — {r.discount_percent}% desc × {r.price_multiplier}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedService?.unit === 'sqm' && (
+                  <Input
+                    label="Área (m²)"
+                    type="number"
+                    value={areaSqm === '' ? '' : String(areaSqm)}
+                    onChange={(e) => setAreaSqm(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="ex: 50"
+                    required
+                  />
+                )}
+
+                {selectedService?.unit === 'hour' && (
+                  <Input
+                    label="Duração (horas)"
+                    type="number"
+                    value={durationHours === '' ? '' : String(durationHours)}
+                    onChange={(e) => setDurationHours(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="ex: 3"
+                    required
+                  />
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Válido até *"
+                    type="date"
+                    value={validUntil}
+                    onChange={(e) => setValidUntil(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Data do serviço"
+                    type="date"
+                    value={serviceDate}
+                    onChange={(e) => setServiceDate(e.target.value)}
+                  />
+                </div>
+
+                <Input
+                  label="Desconto manual (%)"
+                  type="number"
+                  value={String(manualDiscount)}
+                  onChange={(e) => setManualDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
+                  placeholder="0"
+                />
               </div>
+            </Card>
+
+            {/* Addons */}
+            {addons.length > 0 && (
+              <Card title="Adicionais">
+                <div className="space-y-2">
+                  {addons.map((addon) => (
+                    <label key={addon.id} className="flex items-center justify-between cursor-pointer py-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedAddonIds.includes(addon.id)}
+                          onChange={() => toggleAddon(addon.id)}
+                          className="w-4 h-4 accent-primary"
+                        />
+                        <span className="text-sm text-text-primary">{addon.name}</span>
+                      </div>
+                      <span className="text-sm text-text-secondary">
+                        {formatCurrency(addon.price_cents, CURRENCY)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </Card>
             )}
 
-            {selectedService?.unit === 'sqm' && (
-              <Input
-                label="Área (m²)"
-                type="number"
-                value={areaSqm === '' ? '' : String(areaSqm)}
-                onChange={(e) => setAreaSqm(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="ex: 50"
-                required
-              />
-            )}
+            {/* Local do serviço */}
+            <Card title="Local do Serviço">
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useClientAddress}
+                    onChange={(e) => setUseClientAddress(e.target.checked)}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <span className="text-sm text-text-primary">Usar endereço do cliente</span>
+                </label>
+                {!useClientAddress && (
+                  <Input
+                    label="Endereço do serviço"
+                    value={serviceAddress}
+                    onChange={(e) => setServiceAddress(e.target.value)}
+                    placeholder="Rua, número, bairro, cidade"
+                  />
+                )}
+              </div>
+            </Card>
 
-            {selectedService?.unit === 'hour' && (
-              <Input
-                label="Duração (horas)"
-                type="number"
-                value={durationHours === '' ? '' : String(durationHours)}
-                onChange={(e) => setDurationHours(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="ex: 3"
-                required
-              />
-            )}
+            {/* Observations */}
+            <Card title="Observações">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="observations" className="text-sm font-medium text-text-primary">
+                  Observações para a equipe
+                </label>
+                <textarea
+                  id="observations"
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  placeholder="Informações adicionais sobre o serviço…"
+                  rows={3}
+                  className="px-3 py-2 rounded bg-surface-alt border border-border text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200 resize-none"
+                />
+              </div>
+            </Card>
 
-            <Input
-              label="Válido até"
-              type="date"
-              value={validUntil}
-              onChange={(e) => setValidUntil(e.target.value)}
-              required
-            />
+            {error && <p className="text-sm text-error" role="alert">{error}</p>}
 
-            <Input
-              label="Desconto manual (%)"
-              type="number"
-              value={String(manualDiscount)}
-              onChange={(e) => setManualDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
-              placeholder="0"
-            />
-          </div>
-        </Card>
-
-        {serviceId && (
-          <Card>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-text-secondary">Total estimado</span>
-              <span className="text-xl font-bold text-text-primary" data-testid="estimated-total">
-                {formatCurrency(estimatedTotal, CURRENCY)}
-              </span>
+            <div className="flex gap-3 pb-6">
+              <Button type="submit" loading={loading}>Criar Orçamento</Button>
+              <Button type="button" variant="ghost" onClick={() => navigate('/quotes')}>Cancelar</Button>
             </div>
-          </Card>
-        )}
+          </div>
 
-        {error && <p className="text-sm text-error" role="alert">{error}</p>}
+          {/* Right column: summary */}
+          <div className="lg:w-72 shrink-0">
+            <div className="sticky top-6">
+              <Card title="Resumo">
+                {!serviceId ? (
+                  <p className="text-sm text-text-muted">Selecione um serviço para ver o resumo.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Serviço</span>
+                        <span className="text-text-primary font-medium">
+                          {selectedService?.name}
+                        </span>
+                      </div>
+                      {subtotal > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-text-secondary">Subtotal</span>
+                          <span className="text-text-primary">
+                            {formatCurrency(subtotal + discountAmt, CURRENCY)}
+                          </span>
+                        </div>
+                      )}
+                      {discountAmt > 0 && (
+                        <div className="flex justify-between text-sm text-success">
+                          <span>Desconto ({manualDiscount}%)</span>
+                          <span>−{formatCurrency(discountAmt, CURRENCY)}</span>
+                        </div>
+                      )}
+                      {selectedAddonIds.length > 0 && (
+                        <>
+                          {addons
+                            .filter((a) => selectedAddonIds.includes(a.id))
+                            .map((a) => (
+                              <div key={a.id} className="flex justify-between text-sm">
+                                <span className="text-text-secondary">+ {a.name}</span>
+                                <span className="text-text-primary">
+                                  {formatCurrency(a.price_cents, CURRENCY)}
+                                </span>
+                              </div>
+                            ))}
+                        </>
+                      )}
+                    </div>
 
-        <div className="flex gap-3">
-          <Button type="submit" loading={loading}>Criar Orçamento</Button>
-          <Button type="button" variant="ghost" onClick={() => navigate('/quotes')}>Cancelar</Button>
+                    <div className="border-t border-border pt-2">
+                      <div className="flex justify-between text-sm font-semibold">
+                        <span className="text-text-primary">Total estimado</span>
+                        <span className="text-primary text-base" data-testid="estimated-total">
+                          {formatCurrency(estimatedTotal, CURRENCY)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {serviceDate && (
+                      <div className="border-t border-border pt-2 text-xs text-text-secondary">
+                        Data do serviço:{' '}
+                        <span className="text-text-primary">
+                          {new Date(serviceDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    )}
+
+                    {!useClientAddress && serviceAddress.trim() && (
+                      <div className="border-t border-border pt-2 text-xs text-text-secondary">
+                        Local: <span className="text-text-primary">{serviceAddress}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </div>
+          </div>
         </div>
       </form>
     </div>

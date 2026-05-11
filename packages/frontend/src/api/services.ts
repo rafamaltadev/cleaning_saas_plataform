@@ -8,9 +8,17 @@ export async function getServices(): Promise<Service[]> {
 
 export interface CreateServicePayload {
   name: string;
-  description: string;
+  description?: string;
   base_rate_cents: number;
-  unit: 'sqm' | 'hour' | 'flat';
+  unit?: 'sqm' | 'hour' | 'flat';
+  category_id?: string;
+  estimated_duration_minutes?: number;
+  billing_type?: string;
+  availability?: object | null;
+  materials_included?: boolean;
+  materials_cost_cents?: number;
+  observations?: string;
+  has_addons?: boolean;
 }
 
 export interface CreatePricingRulePayload {
@@ -18,8 +26,8 @@ export interface CreatePricingRulePayload {
   frequency: string;
   discount_percent: number;
   price_multiplier: number;
-  min_area: number | null;
-  max_area: number | null;
+  min_area?: number | null;
+  max_area?: number | null;
 }
 
 export async function getServiceById(id: string): Promise<Service> {

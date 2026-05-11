@@ -73,6 +73,28 @@ export interface Service {
   base_rate_cents?: number;
   unit?: 'sqm' | 'hour' | 'flat';
   description?: string;
+  category_id?: string | null;
+  category_name?: string;
+  estimated_duration_minutes?: number | null;
+  billing_type?: string;
+  availability?: object | null;
+  materials_included?: boolean;
+  materials_cost_cents?: number | null;
+  observations?: string | null;
+  has_addons?: boolean;
+}
+
+export interface ServiceCategory {
+  id: string;
+  tenant_id: string;
+  name: string;
+}
+
+export interface ServiceAddon {
+  id: string;
+  service_id: string;
+  name: string;
+  price_cents: number;
 }
 
 export type QuoteStatus = 'new_lead' | 'contacted' | 'quote_sent';
@@ -142,6 +164,10 @@ export interface ApiQuote {
   client_name?: string;
   service_name?: string;
   pricing_rule_name?: string;
+  service_address?: string | null;
+  use_client_address?: boolean;
+  observations?: string | null;
+  service_date?: string | null;
 }
 
 export interface ApiBooking {
@@ -159,6 +185,10 @@ export interface ApiBooking {
   updated_at: string;
   client_name?: string;
   service_name?: string;
+  service_address?: string | null;
+  use_client_address?: boolean;
+  observations?: string | null;
+  quote_total_cents?: number;
 }
 
 export interface ApiPricingRule {

@@ -27,6 +27,9 @@ export interface CreateBookingPayload {
   scheduled_end: string;
   assigned_team?: string;
   idempotency_key: string;
+  use_client_address?: boolean;
+  service_address?: string;
+  observations?: string;
 }
 
 export async function listBookings(query: BookingsQuery = {}): Promise<PaginatedApiResult<ApiBooking>> {
