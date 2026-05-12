@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -38,6 +38,7 @@ export default function QuoteCreatePage() {
 
   const clientIdRef = useRef('');
   const serviceIdRef = useRef('');
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     Promise.all([
@@ -96,8 +97,9 @@ export default function QuoteCreatePage() {
     );
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     if (!validUntil) {
       setError('Data de validade é obrigatória.');
       return;
@@ -129,6 +131,8 @@ export default function QuoteCreatePage() {
         service_address: !useClientAddress && serviceAddress.trim() ? serviceAddress.trim() : undefined,
         observations: observations.trim() || undefined,
       };
+      console.log('clientIdRef:', clientIdRef.current, 'clientId:', clientId, 'cid:', cid);
+      console.log('serviceIdRef:', serviceIdRef.current, 'serviceId:', serviceId, 'sid:', sid);
       const created = await createQuote(payload);
       if (selectedAddonIds.length > 0) {
         const selectedAddons = addons.filter((a) => selectedAddonIds.includes(a.id));
@@ -146,6 +150,7 @@ export default function QuoteCreatePage() {
       setError(detail);
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   }
 
@@ -156,7 +161,7 @@ export default function QuoteCreatePage() {
         <p className="text-text-secondary text-sm mt-1">Criar um novo orçamento para um cliente</p>
       </div>
 
-      <form onSubmit={handleSubmit} aria-label="Criar orçamento">
+      <form aria-label="Criar orçamento">
         {error && <p className="text-sm text-error mb-4" role="alert">{error}</p>}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left column */}
@@ -308,7 +313,7 @@ export default function QuoteCreatePage() {
             </Card>
 
             <div className="flex gap-3 pb-6">
-              <Button type="submit" loading={loading}>Criar Orçamento</Button>
+              <Button type="button" onClick={handleSubmit} loading={loading}>Criar Orçamento</Button>
               <Button type="button" variant="ghost" onClick={() => navigate('/quotes')}>Cancelar</Button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -31,6 +32,8 @@ const VALID_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
 
 @Injectable()
 export class QuoteService {
+  private readonly logger = new Logger(QuoteService.name);
+
   constructor(
     private readonly quoteRepository: QuoteRepository,
     private readonly quoteAddonRepository: QuoteAddonRepository,
@@ -97,6 +100,7 @@ export class QuoteService {
     actorId: string,
     dto: CreateQuoteDto,
   ): Promise<QuoteResponseDto> {
+    this.logger.debug('create() dto: ' + JSON.stringify(dto));
     const service = await this.serviceRepository.findById(dto.service_id, tenantId);
     if (!service) {
       throw new NotFoundException({ code: 'SERVICE_NOT_FOUND', message: 'Service not found' });
