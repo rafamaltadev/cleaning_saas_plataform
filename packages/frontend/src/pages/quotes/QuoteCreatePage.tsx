@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -35,6 +35,9 @@ export default function QuoteCreatePage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const clientIdRef = useRef('');
+  const serviceIdRef = useRef('');
 
   useEffect(() => {
     Promise.all([
@@ -99,11 +102,13 @@ export default function QuoteCreatePage() {
       setError('Data de validade é obrigatória.');
       return;
     }
-    if (!clientId) {
+    const cid = clientIdRef.current || clientId;
+    const sid = serviceIdRef.current || serviceId;
+    if (!cid) {
       setError('Selecione um cliente da lista de sugestões.');
       return;
     }
-    if (!serviceId) {
+    if (!sid) {
       setError('Selecione um serviço da lista de sugestões.');
       return;
     }
@@ -112,8 +117,8 @@ export default function QuoteCreatePage() {
     setError('');
     try {
       const payload = {
-        client_id: clientId,
-        service_id: serviceId,
+        client_id: cid,
+        service_id: sid,
         currency: CURRENCY,
         valid_until: new Date(validUntil).toISOString(),
         manual_discount_percent: manualDiscount || undefined,
@@ -164,7 +169,7 @@ export default function QuoteCreatePage() {
                       label="Cliente *"
                       items={clients}
                       value={clientId}
-                      onChange={setClientId}
+                      onChange={(id) => { clientIdRef.current = id; setClientId(id); }}
                       getId={(c) => c.id}
                       getLabel={(c) => c.name}
                       placeholder="Buscar cliente…"
@@ -183,7 +188,7 @@ export default function QuoteCreatePage() {
                   label="Serviço *"
                   items={services}
                   value={serviceId}
-                  onChange={setServiceId}
+                  onChange={(id) => { serviceIdRef.current = id; setServiceId(id); }}
                   getId={(s) => s.id}
                   getLabel={(s) => s.name}
                   placeholder="Buscar serviço…"
