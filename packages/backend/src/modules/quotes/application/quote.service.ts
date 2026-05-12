@@ -265,8 +265,8 @@ export class QuoteService {
     if (dto.area_sqm !== undefined) quote.area_sqm = dto.area_sqm ?? null;
 
     const hasPricingChange =
-      dto.service_id != null ||
-      dto.pricing_rule_id !== undefined ||
+      (dto.service_id != null && dto.service_id !== quote.service_id) ||
+      (dto.pricing_rule_id != null) ||
       dto.area_sqm != null ||
       dto.duration_hours != null ||
       dto.manual_discount_percent != null;

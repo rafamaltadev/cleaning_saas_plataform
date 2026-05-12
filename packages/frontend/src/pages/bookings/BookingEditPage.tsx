@@ -123,8 +123,11 @@ export default function BookingEditPage() {
         observations: observations.trim() || undefined,
       });
       navigate(`/bookings/${id}`);
-    } catch {
-      setError('Erro ao salvar agendamento. Tente novamente.');
+    } catch (err) {
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
+      const msg = axiosErr.response?.data?.error?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar agendamento. Tente novamente.');
+      setError(detail);
     } finally {
       setLoading(false);
     }

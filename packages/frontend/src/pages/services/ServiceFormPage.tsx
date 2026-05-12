@@ -259,9 +259,11 @@ export default function ServiceFormPage() {
       }
 
       navigate('/services');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '';
-      setError(msg || 'Erro ao salvar serviço. Tente novamente.');
+    } catch (err) {
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
+      const msg = axiosErr.response?.data?.error?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar serviço. Tente novamente.');
+      setError(detail);
     } finally {
       setLoading(false);
     }

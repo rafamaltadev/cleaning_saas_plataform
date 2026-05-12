@@ -1,5 +1,4 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import type { AxiosError } from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -113,10 +112,10 @@ export default function QuoteCreatePage() {
       }
       navigate('/quotes');
     } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string | string[] }>;
-      const raw = axiosErr.response?.data?.message;
-      const msg = Array.isArray(raw) ? raw.join(', ') : (raw ?? 'Erro ao criar orçamento. Tente novamente.');
-      setError(msg);
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
+      const msg = axiosErr.response?.data?.error?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao criar orçamento. Tente novamente.');
+      setError(detail);
     } finally {
       setLoading(false);
     }

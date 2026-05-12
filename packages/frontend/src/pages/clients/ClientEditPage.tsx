@@ -80,8 +80,11 @@ export default function ClientEditPage() {
         email: email.trim(),
         phone: phone.trim() || undefined,
       });
-    } catch {
-      setErrors({ general: 'Erro ao atualizar cliente. Tente novamente.' });
+    } catch (err) {
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
+      const msg = axiosErr.response?.data?.error?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao atualizar cliente. Tente novamente.');
+      setErrors({ general: detail });
       setLoading(false);
       return;
     }
@@ -101,8 +104,11 @@ export default function ClientEditPage() {
         } else {
           await createAddress({ client_id: id, ...addrPayload });
         }
-      } catch {
-        setErrors({ general: 'Cliente atualizado, mas erro ao salvar endereço. Tente novamente.' });
+      } catch (err) {
+        const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
+        const msg = axiosErr.response?.data?.error?.message;
+        const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Cliente atualizado, mas erro ao salvar endereço. Tente novamente.');
+        setErrors({ general: detail });
         setLoading(false);
         return;
       }

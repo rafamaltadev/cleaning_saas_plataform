@@ -114,8 +114,8 @@ export default function QuoteEditPage() {
     setError('');
     try {
       const payload: Record<string, unknown> = {
-        client_id: clientId,
-        service_id: serviceId,
+        client_id: clientId !== (quote?.client_id ?? '') ? clientId : undefined,
+        service_id: serviceId !== (quote?.service_id ?? '') ? serviceId : undefined,
         currency: quote?.currency ?? 'BRL',
         valid_until: new Date(validUntil).toISOString(),
         manual_discount_percent: manualDiscount || undefined,
@@ -137,8 +137,11 @@ export default function QuoteEditPage() {
         selectedAddons.map((a) => ({ addon_id: a.id, name: a.name, price_cents: a.price_cents })),
       );
       navigate('/quotes');
-    } catch {
-      setError('Erro ao salvar orçamento. Tente novamente.');
+    } catch (err) {
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
+      const msg = axiosErr.response?.data?.error?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar orçamento. Tente novamente.');
+      setError(detail);
     } finally {
       setLoading(false);
     }
