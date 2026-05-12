@@ -55,10 +55,22 @@ export default function QuoteCreatePage() {
 
   const selectedService = services.find((s) => s.id === serviceId);
 
+  const basePrice = selectedService
+    ? calculatePriceCents({
+        unit: selectedService.unit ?? 'flat',
+        baseRateCents: selectedService.base_rate_cents ?? Math.round((selectedService.baseRate ?? 0) * 100),
+        areaSqm: typeof areaSqm === 'number' ? areaSqm : undefined,
+        durationHours: typeof durationHours === 'number' ? durationHours : undefined,
+        priceMultiplier: 1,
+        discountPercent: 0,
+        manualDiscountPercent: 0,
+      })
+    : 0;
+
   const subtotal = selectedService
     ? calculatePriceCents({
         unit: selectedService.unit ?? 'flat',
-        baseRateCents: selectedService.base_rate_cents ?? Math.round(selectedService.baseRate * 100),
+        baseRateCents: selectedService.base_rate_cents ?? Math.round((selectedService.baseRate ?? 0) * 100),
         areaSqm: typeof areaSqm === 'number' ? areaSqm : undefined,
         durationHours: typeof durationHours === 'number' ? durationHours : undefined,
         priceMultiplier: 1,
@@ -66,6 +78,8 @@ export default function QuoteCreatePage() {
         manualDiscountPercent: manualDiscount,
       })
     : 0;
+
+  const discountAmt = basePrice - subtotal;
 
   const addonTotal = addons
     .filter((a) => selectedAddonIds.includes(a.id))
@@ -83,6 +97,14 @@ export default function QuoteCreatePage() {
     e.preventDefault();
     if (!validUntil) {
       setError('Data de validade é obrigatória.');
+      return;
+    }
+    if (!clientId) {
+      setError('Selecione um cliente da lista de sugestões.');
+      return;
+    }
+    if (!serviceId) {
+      setError('Selecione um serviço da lista de sugestões.');
       return;
     }
 
@@ -112,18 +134,15 @@ export default function QuoteCreatePage() {
       }
       navigate('/quotes');
     } catch (err) {
-      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
-      const msg = axiosErr.response?.data?.error?.message;
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] }; message?: string | string[] }>;
+      const raw = axiosErr.response?.data;
+      const msg = raw?.error?.message ?? raw?.message;
       const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao criar orçamento. Tente novamente.');
       setError(detail);
     } finally {
       setLoading(false);
     }
   }
-
-  const discountAmt = manualDiscount > 0
-    ? Math.round(subtotal * manualDiscount / 100)
-    : 0;
 
   return (
     <div>
@@ -304,11 +323,11 @@ export default function QuoteCreatePage() {
                           {selectedService?.name}
                         </span>
                       </div>
-                      {subtotal > 0 && (
+                      {basePrice > 0 && discountAmt > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-text-secondary">Subtotal</span>
                           <span className="text-text-primary">
-                            {formatCurrency(subtotal + discountAmt, CURRENCY)}
+                            {formatCurrency(basePrice, CURRENCY)}
                           </span>
                         </div>
                       )}

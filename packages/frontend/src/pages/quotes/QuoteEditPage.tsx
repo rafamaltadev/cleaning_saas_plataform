@@ -80,6 +80,18 @@ export default function QuoteEditPage() {
     getAddonsByService(serviceId).then(setAddons).catch(() => setAddons([]));
   }, [serviceId]);
 
+  const basePrice = selectedService
+    ? calculatePriceCents({
+        unit: selectedService.unit ?? 'flat',
+        baseRateCents: selectedService.base_rate_cents ?? Math.round(selectedService.baseRate * 100),
+        areaSqm: typeof areaSqm === 'number' ? areaSqm : undefined,
+        durationHours: typeof durationHours === 'number' ? durationHours : undefined,
+        priceMultiplier: 1,
+        discountPercent: 0,
+        manualDiscountPercent: 0,
+      })
+    : (quote?.estimated_total_cents ?? 0);
+
   const subtotal = selectedService
     ? calculatePriceCents({
         unit: selectedService.unit ?? 'flat',
@@ -91,6 +103,8 @@ export default function QuoteEditPage() {
         manualDiscountPercent: manualDiscount,
       })
     : (quote?.estimated_total_cents ?? 0);
+
+  const discountAmt = basePrice - subtotal;
 
   const addonTotal = addons
     .filter((a) => selectedAddonIds.includes(a.id))
@@ -138,8 +152,9 @@ export default function QuoteEditPage() {
       );
       navigate('/quotes');
     } catch (err) {
-      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
-      const msg = axiosErr.response?.data?.error?.message;
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] }; message?: string | string[] }>;
+      const raw = axiosErr.response?.data;
+      const msg = raw?.error?.message ?? raw?.message;
       const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar orçamento. Tente novamente.');
       setError(detail);
     } finally {
@@ -162,7 +177,6 @@ export default function QuoteEditPage() {
   if (!quote) return null;
 
   const currency = quote.currency || 'BRL';
-  const discountAmt = manualDiscount > 0 ? Math.round(subtotal * manualDiscount / 100) : 0;
 
   return (
     <div>
@@ -331,11 +345,11 @@ export default function QuoteEditPage() {
                         <span className="text-text-primary font-medium">{selectedService.name}</span>
                       </div>
                     )}
-                    {subtotal > 0 && discountAmt > 0 && (
+                    {basePrice > 0 && discountAmt > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-text-secondary">Subtotal</span>
                         <span className="text-text-primary">
-                          {formatCurrency(subtotal + discountAmt, currency)}
+                          {formatCurrency(basePrice, currency)}
                         </span>
                       </div>
                     )}

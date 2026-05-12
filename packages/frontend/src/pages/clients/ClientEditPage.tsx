@@ -81,8 +81,9 @@ export default function ClientEditPage() {
         phone: phone.trim() || undefined,
       });
     } catch (err) {
-      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
-      const msg = axiosErr.response?.data?.error?.message;
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] }; message?: string | string[] }>;
+      const raw = axiosErr.response?.data;
+      const msg = raw?.error?.message ?? raw?.message;
       const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao atualizar cliente. Tente novamente.');
       setErrors({ general: detail });
       setLoading(false);
@@ -105,8 +106,9 @@ export default function ClientEditPage() {
           await createAddress({ client_id: id, ...addrPayload });
         }
       } catch (err) {
-        const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
-        const msg = axiosErr.response?.data?.error?.message;
+        const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] }; message?: string | string[] }>;
+        const raw = axiosErr.response?.data;
+        const msg = raw?.error?.message ?? raw?.message;
         const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Cliente atualizado, mas erro ao salvar endereço. Tente novamente.');
         setErrors({ general: detail });
         setLoading(false);

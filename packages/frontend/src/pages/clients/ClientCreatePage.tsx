@@ -6,7 +6,6 @@ import Card from '../../components/ui/Card';
 import AddressForm from './AddressForm';
 import { createClient, createAddress } from '../../api/clients';
 import type { Address } from '../../types';
-import type { AxiosError } from 'axios';
 
 interface FormErrors {
   name?: string;
@@ -61,8 +60,9 @@ export default function ClientCreatePage() {
 
       navigate('/clients');
     } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string | string[] }>;
-      const msg = axiosErr.response?.data?.message;
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] }; message?: string | string[] }>;
+      const raw = axiosErr.response?.data;
+      const msg = raw?.error?.message ?? raw?.message;
       const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao criar cliente. Tente novamente.');
       setErrors({ general: detail });
     } finally {

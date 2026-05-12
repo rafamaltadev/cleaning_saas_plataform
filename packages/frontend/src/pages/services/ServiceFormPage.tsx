@@ -260,8 +260,9 @@ export default function ServiceFormPage() {
 
       navigate('/services');
     } catch (err) {
-      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] } }>;
-      const msg = axiosErr.response?.data?.error?.message;
+      const axiosErr = err as import('axios').AxiosError<{ error?: { message?: string | string[] }; message?: string | string[] }>;
+      const raw = axiosErr.response?.data;
+      const msg = raw?.error?.message ?? raw?.message;
       const detail = Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar serviço. Tente novamente.');
       setError(detail);
     } finally {
