@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -38,6 +38,9 @@ export default function QuoteCreatePage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const clientIdRef = useRef('');
+  const serviceIdRef = useRef('');
 
   useEffect(() => {
     Promise.all([
@@ -88,7 +91,9 @@ export default function QuoteCreatePage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!clientId || !serviceId || !validUntil) {
+    const currentClientId = clientIdRef.current || clientId;
+    const currentServiceId = serviceIdRef.current || serviceId;
+    if (!currentClientId || !currentServiceId || !validUntil) {
       setError('Cliente, serviço e data de validade são obrigatórios.');
       return;
     }
@@ -97,8 +102,8 @@ export default function QuoteCreatePage() {
     setError('');
     try {
       const payload = {
-        client_id: clientId,
-        service_id: serviceId,
+        client_id: currentClientId,
+        service_id: currentServiceId,
         pricing_rule_id: pricingRuleId || undefined,
         currency: CURRENCY,
         valid_until: new Date(validUntil).toISOString(),
@@ -138,6 +143,7 @@ export default function QuoteCreatePage() {
       </div>
 
       <form onSubmit={handleSubmit} aria-label="Criar orçamento">
+        {error && <p className="text-sm text-error mb-4" role="alert">{error}</p>}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left column */}
           <div className="flex-1 min-w-0 space-y-4">
@@ -149,7 +155,7 @@ export default function QuoteCreatePage() {
                       label="Cliente *"
                       items={clients}
                       value={clientId}
-                      onChange={setClientId}
+                      onChange={(id) => { setClientId(id); clientIdRef.current = id; }}
                       getId={(c) => c.id}
                       getLabel={(c) => c.name}
                       placeholder="Buscar cliente…"
@@ -168,7 +174,7 @@ export default function QuoteCreatePage() {
                   label="Serviço *"
                   items={services}
                   value={serviceId}
-                  onChange={(sid) => { setServiceId(sid); setPricingRuleId(''); }}
+                  onChange={(sid) => { setServiceId(sid); serviceIdRef.current = sid; setPricingRuleId(''); }}
                   getId={(s) => s.id}
                   getLabel={(s) => s.name}
                   placeholder="Buscar serviço…"
@@ -307,8 +313,6 @@ export default function QuoteCreatePage() {
                 />
               </div>
             </Card>
-
-            {error && <p className="text-sm text-error" role="alert">{error}</p>}
 
             <div className="flex gap-3 pb-6">
               <Button type="submit" loading={loading}>Criar Orçamento</Button>

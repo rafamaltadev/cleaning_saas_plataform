@@ -124,7 +124,6 @@ export default function QuoteEditPage() {
       const payload: Record<string, unknown> = {
         client_id: clientId,
         service_id: serviceId,
-        pricing_rule_id: pricingRuleId || undefined,
         currency: quote?.currency ?? 'BRL',
         valid_until: new Date(validUntil).toISOString(),
         manual_discount_percent: manualDiscount || undefined,
@@ -204,27 +203,6 @@ export default function QuoteEditPage() {
                   placeholder="Buscar serviço…"
                   emptyMessage="Nenhum serviço cadastrado."
                 />
-
-                {serviceId && filteredRules.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="rule-select">
-                      Regra de Preço (opcional)
-                    </label>
-                    <select
-                      id="rule-select"
-                      value={pricingRuleId}
-                      onChange={(e) => setPricingRuleId(e.target.value)}
-                      className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">Sem regra de preço</option>
-                      {filteredRules.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.frequency} — {r.discount_percent}% desc × {r.price_multiplier}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
 
                 {selectedService?.unit === 'sqm' && (
                   <Input
