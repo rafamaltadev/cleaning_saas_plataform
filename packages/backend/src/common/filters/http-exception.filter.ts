@@ -32,7 +32,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? (exception.getResponse() as any).message || exception.message
         : 'Internal server error';
 
-    console.log('FULL VALIDATION ERRORS:', JSON.stringify(rawMessage));
     const message = Array.isArray(rawMessage)
       ? rawMessage.join(', ')
       : String(rawMessage);

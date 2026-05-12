@@ -100,7 +100,6 @@ export class QuoteService {
     actorId: string,
     dto: CreateQuoteDto,
   ): Promise<QuoteResponseDto> {
-    this.logger.debug('create() dto: ' + JSON.stringify(dto));
     const service = await this.serviceRepository.findById(dto.service_id, tenantId);
     if (!service) {
       throw new NotFoundException({ code: 'SERVICE_NOT_FOUND', message: 'Service not found' });

@@ -1,8 +1,11 @@
-import { IsInt, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, Matches, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_MSG = { message: '$property must be a valid UUID' };
+
 export class CreateServiceAddonDto {
-  @IsUUID('all')
+  @Matches(UUID_REGEX, UUID_MSG)
   service_id: string;
 
   @IsString()

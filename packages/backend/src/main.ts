@@ -12,17 +12,6 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  app.use((req: any, res: any, next: any) => {
-    if (req.method === 'POST' && req.url.includes('/quotes')) {
-      let body = '';
-      req.on('data', (chunk: any) => { body += chunk; });
-      req.on('end', () => {
-        console.log('RAW BODY:', body);
-      });
-    }
-    next();
-  });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

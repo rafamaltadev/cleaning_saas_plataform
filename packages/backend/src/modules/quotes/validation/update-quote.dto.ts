@@ -6,21 +6,24 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
+  Matches,
   Max,
   Min,
 } from 'class-validator';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_MSG = { message: '$property must be a valid UUID' };
+
 export class UpdateQuoteDto {
-  @IsUUID('all')
+  @Matches(UUID_REGEX, UUID_MSG)
   @IsOptional()
   client_id?: string;
 
-  @IsUUID('all')
+  @Matches(UUID_REGEX, UUID_MSG)
   @IsOptional()
   service_id?: string;
 
-  @IsUUID('all')
+  @Matches(UUID_REGEX, UUID_MSG)
   @IsOptional()
   pricing_rule_id?: string;
 
