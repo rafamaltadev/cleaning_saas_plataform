@@ -22,6 +22,7 @@ export class QuoteResponseDto {
   service_address: string | null;
   use_client_address: boolean;
   observations: string | null;
+  area_sqm: number | null;
   service_date: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -50,6 +51,7 @@ export class QuoteResponseDto {
     dto.service_address = quote.service_address ?? null;
     dto.use_client_address = quote.use_client_address ?? true;
     dto.observations = quote.observations ?? null;
+    dto.area_sqm = quote.area_sqm ?? null;
     dto.service_date = quote.service_date ?? null;
     dto.created_at = quote.created_at;
     dto.updated_at = quote.updated_at;

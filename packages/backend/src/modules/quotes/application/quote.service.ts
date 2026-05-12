@@ -141,6 +141,11 @@ export class QuoteService {
       valid_until: new Date(dto.valid_until),
       manual_discount_percent: dto.manual_discount_percent ?? 0,
       created_by: actorId,
+      area_sqm: dto.area_sqm ?? null,
+      observations: dto.observations ?? null,
+      service_address: dto.service_address ?? null,
+      use_client_address: dto.use_client_address ?? true,
+      service_date: dto.service_date ? new Date(dto.service_date) : null,
       deleted_at: null,
     });
 
@@ -253,6 +258,11 @@ export class QuoteService {
     if (dto.client_id) quote.client_id = dto.client_id;
     if (dto.currency) quote.currency = dto.currency;
     if (dto.valid_until) quote.valid_until = new Date(dto.valid_until);
+    if (dto.observations !== undefined) quote.observations = dto.observations ?? null;
+    if (dto.service_address !== undefined) quote.service_address = dto.service_address ?? null;
+    if (dto.use_client_address !== undefined) quote.use_client_address = dto.use_client_address;
+    if (dto.service_date !== undefined) quote.service_date = dto.service_date ? new Date(dto.service_date) : null;
+    if (dto.area_sqm !== undefined) quote.area_sqm = dto.area_sqm ?? null;
 
     const hasPricingChange =
       dto.service_id != null ||

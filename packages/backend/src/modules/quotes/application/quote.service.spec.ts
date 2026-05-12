@@ -51,6 +51,7 @@ function makeQuote(overrides: Partial<Quote> = {}): Quote {
     service_address: null,
     use_client_address: true,
     observations: null,
+    area_sqm: null,
     service_date: null,
     created_at: new Date(),
     updated_at: new Date(),

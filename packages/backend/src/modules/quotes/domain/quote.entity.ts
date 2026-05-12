@@ -52,6 +52,9 @@ export class Quote {
   @Column({ type: 'varchar', nullable: true })
   observations: string | null;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  area_sqm: number | null;
+
   @Column({ type: 'timestamp', nullable: true })
   service_date: Date | null;
 

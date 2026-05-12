@@ -53,7 +53,6 @@ export default function SearchableSelect<T extends object>({
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setQuery(e.target.value);
     setOpen(true);
-    if (e.target.value === '') onChange('');
   }
 
   function handleSelect(item: T) {
