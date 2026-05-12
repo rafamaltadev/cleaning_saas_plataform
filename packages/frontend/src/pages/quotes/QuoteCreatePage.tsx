@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
+import type { AxiosError } from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -8,10 +9,9 @@ import { createQuote } from '../../api/quotes';
 import { syncQuoteAddons } from '../../api/quoteAddons';
 import { getClients } from '../../api/clients';
 import { getServices } from '../../api/services';
-import { getPricingRules } from '../../api/pricingRules';
 import { getAddonsByService } from '../../api/addons';
 import { calculatePriceCents, formatCurrency } from '../../utils/pricing';
-import type { Client, Service, ApiPricingRule, ServiceAddon } from '../../types';
+import type { Client, Service, ServiceAddon } from '../../types';
 
 const CURRENCY = 'BRL';
 
@@ -20,13 +20,11 @@ export default function QuoteCreatePage() {
 
   const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [pricingRules, setPricingRules] = useState<ApiPricingRule[]>([]);
   const [addons, setAddons] = useState<ServiceAddon[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
 
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState('');
-  const [pricingRuleId, setPricingRuleId] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [manualDiscount, setManualDiscount] = useState(0);
   const [areaSqm, setAreaSqm] = useState<number | ''>('');
@@ -39,18 +37,13 @@ export default function QuoteCreatePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const clientIdRef = useRef('');
-  const serviceIdRef = useRef('');
-
   useEffect(() => {
     Promise.all([
       getClients({ limit: 100 }),
       getServices(),
-      getPricingRules(),
-    ]).then(([clientRes, svcRes, ruleRes]) => {
+    ]).then(([clientRes, svcRes]) => {
       setClients(clientRes.data);
       setServices(svcRes);
-      setPricingRules(ruleRes);
     }).catch(() => setError('Erro ao carregar dados do formulário.'));
   }, []);
 
@@ -62,8 +55,6 @@ export default function QuoteCreatePage() {
   }, [serviceId]);
 
   const selectedService = services.find((s) => s.id === serviceId);
-  const selectedRule = pricingRules.find((r) => r.id === pricingRuleId);
-  const filteredRules = pricingRules.filter((r) => !serviceId || r.service_id === serviceId);
 
   const subtotal = selectedService
     ? calculatePriceCents({
@@ -71,8 +62,8 @@ export default function QuoteCreatePage() {
         baseRateCents: selectedService.base_rate_cents ?? Math.round(selectedService.baseRate * 100),
         areaSqm: typeof areaSqm === 'number' ? areaSqm : undefined,
         durationHours: typeof durationHours === 'number' ? durationHours : undefined,
-        priceMultiplier: selectedRule ? selectedRule.price_multiplier : 1,
-        discountPercent: selectedRule ? selectedRule.discount_percent : 0,
+        priceMultiplier: 1,
+        discountPercent: 0,
         manualDiscountPercent: manualDiscount,
       })
     : 0;
@@ -91,10 +82,8 @@ export default function QuoteCreatePage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const currentClientId = clientIdRef.current || clientId;
-    const currentServiceId = serviceIdRef.current || serviceId;
-    if (!currentClientId || !currentServiceId || !validUntil) {
-      setError('Cliente, serviço e data de validade são obrigatórios.');
+    if (!validUntil) {
+      setError('Data de validade é obrigatória.');
       return;
     }
 
@@ -102,9 +91,8 @@ export default function QuoteCreatePage() {
     setError('');
     try {
       const payload = {
-        client_id: currentClientId,
-        service_id: currentServiceId,
-        pricing_rule_id: pricingRuleId || undefined,
+        client_id: clientId,
+        service_id: serviceId,
         currency: CURRENCY,
         valid_until: new Date(validUntil).toISOString(),
         manual_discount_percent: manualDiscount || undefined,
@@ -124,8 +112,11 @@ export default function QuoteCreatePage() {
         );
       }
       navigate('/quotes');
-    } catch {
-      setError('Erro ao criar orçamento. Tente novamente.');
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string | string[] }>;
+      const raw = axiosErr.response?.data?.message;
+      const msg = Array.isArray(raw) ? raw.join(', ') : (raw ?? 'Erro ao criar orçamento. Tente novamente.');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -155,7 +146,7 @@ export default function QuoteCreatePage() {
                       label="Cliente *"
                       items={clients}
                       value={clientId}
-                      onChange={(id) => { setClientId(id); clientIdRef.current = id; }}
+                      onChange={setClientId}
                       getId={(c) => c.id}
                       getLabel={(c) => c.name}
                       placeholder="Buscar cliente…"
@@ -174,33 +165,12 @@ export default function QuoteCreatePage() {
                   label="Serviço *"
                   items={services}
                   value={serviceId}
-                  onChange={(sid) => { setServiceId(sid); serviceIdRef.current = sid; setPricingRuleId(''); }}
+                  onChange={setServiceId}
                   getId={(s) => s.id}
                   getLabel={(s) => s.name}
                   placeholder="Buscar serviço…"
                   emptyMessage="Nenhum serviço cadastrado. Cadastre serviços em Serviços."
                 />
-
-                {serviceId && filteredRules.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-1" htmlFor="rule-select">
-                      Regra de Preço (opcional)
-                    </label>
-                    <select
-                      id="rule-select"
-                      value={pricingRuleId}
-                      onChange={(e) => setPricingRuleId(e.target.value)}
-                      className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">Sem regra de preço</option>
-                      {filteredRules.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.frequency} — {r.discount_percent}% desc × {r.price_multiplier}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
 
                 {selectedService?.unit === 'sqm' && (
                   <Input

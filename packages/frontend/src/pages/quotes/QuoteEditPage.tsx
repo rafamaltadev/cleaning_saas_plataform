@@ -8,10 +8,9 @@ import { getQuoteById, updateQuote } from '../../api/quotes';
 import { syncQuoteAddons } from '../../api/quoteAddons';
 import { getClients } from '../../api/clients';
 import { getServices } from '../../api/services';
-import { getPricingRules } from '../../api/pricingRules';
 import { getAddonsByService } from '../../api/addons';
 import { calculatePriceCents, formatCurrency } from '../../utils/pricing';
-import type { ApiQuote, Client, Service, ApiPricingRule, ServiceAddon } from '../../types';
+import type { ApiQuote, Client, Service, ServiceAddon } from '../../types';
 
 function toDateInput(isoString: string): string {
   return isoString.split('T')[0];
@@ -28,13 +27,11 @@ export default function QuoteEditPage() {
   const [quote, setQuote] = useState<ApiQuote | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [pricingRules, setPricingRules] = useState<ApiPricingRule[]>([]);
   const [addons, setAddons] = useState<ServiceAddon[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
 
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState('');
-  const [pricingRuleId, setPricingRuleId] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [manualDiscount, setManualDiscount] = useState(0);
   const [areaSqm, setAreaSqm] = useState<number | ''>('');
@@ -49,8 +46,6 @@ export default function QuoteEditPage() {
   const [error, setError] = useState('');
 
   const selectedService = services.find((s) => s.id === serviceId);
-  const selectedRule = pricingRules.find((r) => r.id === pricingRuleId);
-  const filteredRules = pricingRules.filter((r) => !serviceId || r.service_id === serviceId);
 
   useEffect(() => {
     if (!id) return;
@@ -58,16 +53,13 @@ export default function QuoteEditPage() {
       getQuoteById(id),
       getClients({ limit: 100 }),
       getServices(),
-      getPricingRules(),
     ])
-      .then(([q, clientRes, svcRes, ruleRes]) => {
+      .then(([q, clientRes, svcRes]) => {
         setQuote(q);
         setClients(clientRes.data);
         setServices(svcRes);
-        setPricingRules(ruleRes);
         setClientId(q.client_id);
         setServiceId(q.service_id);
-        setPricingRuleId(q.pricing_rule_id ?? '');
         setValidUntil(toDateInput(q.valid_until));
         setManualDiscount(q.manual_discount_percent);
         if (q.area_sqm != null) setAreaSqm(Number(q.area_sqm));
@@ -94,8 +86,8 @@ export default function QuoteEditPage() {
         baseRateCents: selectedService.base_rate_cents ?? Math.round(selectedService.baseRate * 100),
         areaSqm: typeof areaSqm === 'number' ? areaSqm : undefined,
         durationHours: typeof durationHours === 'number' ? durationHours : undefined,
-        priceMultiplier: selectedRule ? selectedRule.price_multiplier : 1,
-        discountPercent: selectedRule ? selectedRule.discount_percent : 0,
+        priceMultiplier: 1,
+        discountPercent: 0,
         manualDiscountPercent: manualDiscount,
       })
     : (quote?.estimated_total_cents ?? 0);
@@ -177,6 +169,7 @@ export default function QuoteEditPage() {
       </div>
 
       <form onSubmit={handleSubmit} aria-label="Editar orçamento">
+        {error && <p className="text-sm text-error mb-4" role="alert">{error}</p>}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left column */}
           <div className="flex-1 min-w-0 space-y-4">
@@ -197,7 +190,7 @@ export default function QuoteEditPage() {
                   label="Serviço *"
                   items={services}
                   value={serviceId}
-                  onChange={(sid) => { setServiceId(sid); setPricingRuleId(''); setSelectedAddonIds([]); }}
+                  onChange={(sid) => { setServiceId(sid); setSelectedAddonIds([]); }}
                   getId={(s) => s.id}
                   getLabel={(s) => s.name}
                   placeholder="Buscar serviço…"
@@ -314,8 +307,6 @@ export default function QuoteEditPage() {
                 />
               </div>
             </Card>
-
-            {error && <p className="text-sm text-error" role="alert">{error}</p>}
 
             <div className="flex gap-3 pb-6">
               <Button type="submit" loading={loading}>Salvar Alterações</Button>

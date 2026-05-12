@@ -300,6 +300,7 @@ export default function ServiceFormPage() {
       </div>
 
       <form onSubmit={handleSubmit} aria-label={isEdit ? 'Editar serviço' : 'Novo serviço'}>
+        {error && <p className="text-sm text-error mb-4" role="alert">{error}</p>}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left column: fields */}
           <div className="flex-1 min-w-0 space-y-4">
@@ -589,8 +590,6 @@ export default function ServiceFormPage() {
                 )}
               </div>
             </Card>
-
-            {error && <p className="text-sm text-error" role="alert">{error}</p>}
 
             <div className="flex gap-3 pb-6">
               <Button type="submit" loading={loading}>

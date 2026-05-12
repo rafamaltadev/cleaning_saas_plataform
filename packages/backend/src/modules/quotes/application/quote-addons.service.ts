@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { QuoteAddonRepository } from '../infrastructure/quote-addon.repository';
+import { QuoteRepository } from '../infrastructure/quote.repository';
 import { QuoteAddon } from '../domain/quote-addon.entity';
 import { QuoteAddonResponseDto } from '../domain/quote-addon-response.dto';
 import { CreateQuoteAddonDto } from '../validation/create-quote-addon.dto';
@@ -10,6 +11,7 @@ import { CreateQuoteAddonDto } from '../validation/create-quote-addon.dto';
 export class QuoteAddonsService {
   constructor(
     private readonly quoteAddonRepository: QuoteAddonRepository,
+    private readonly quoteRepository: QuoteRepository,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
@@ -24,6 +26,9 @@ export class QuoteAddonsService {
     quoteId: string,
     addons: CreateQuoteAddonDto[],
   ): Promise<void> {
+    const prevAddons = await this.quoteAddonRepository.findByQuoteId(quoteId, tenantId);
+    const prevAddonSum = prevAddons.reduce((s, a) => s + a.price_cents, 0);
+
     await this.dataSource.transaction(async (manager) => {
       await manager
         .createQueryBuilder()
@@ -49,5 +54,14 @@ export class QuoteAddonsService {
         await manager.save(QuoteAddon, newAddons);
       }
     });
+
+    const activeAddons = await this.quoteAddonRepository.findByQuoteId(quoteId, tenantId);
+    const newAddonSum = activeAddons.reduce((s, a) => s + a.price_cents, 0);
+
+    const quote = await this.quoteRepository.findById(quoteId, tenantId);
+    if (quote) {
+      quote.estimated_total_cents = quote.estimated_total_cents - prevAddonSum + newAddonSum;
+      await this.quoteRepository.save(quote);
+    }
   }
 }

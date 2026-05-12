@@ -296,6 +296,9 @@ export class QuoteService {
         manual_discount_percent: manualDiscount,
       });
 
+      const activeAddons = await this.quoteAddonRepository.findByQuoteId(id, tenantId);
+      quote.estimated_total_cents += activeAddons.reduce((s, a) => s + a.price_cents, 0);
+
       if (dto.service_id) quote.service_id = dto.service_id;
       if (dto.pricing_rule_id !== undefined) quote.pricing_rule_id = dto.pricing_rule_id ?? null;
       quote.manual_discount_percent = manualDiscount;
