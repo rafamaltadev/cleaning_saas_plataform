@@ -1,7 +1,7 @@
 import { IsInt, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateQuoteAddonDto {
-  @IsUUID()
+  @IsUUID('all')
   addon_id: string;
 
   @IsString()

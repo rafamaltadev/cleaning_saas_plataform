@@ -1,14 +1,14 @@
 import { IsBoolean, IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateBookingDto {
-  @IsUUID()
+  @IsUUID('all')
   quote_id: string;
 
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   client_id?: string;
 
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   service_id?: string;
 

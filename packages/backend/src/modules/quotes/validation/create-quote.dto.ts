@@ -11,13 +11,13 @@ import {
 } from 'class-validator';
 
 export class CreateQuoteDto {
-  @IsUUID()
+  @IsUUID('all')
   client_id: string;
 
-  @IsUUID()
+  @IsUUID('all')
   service_id: string;
 
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   pricing_rule_id?: string;
 

@@ -1,7 +1,7 @@
 import { IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UpdateBookingDto {
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   quote_id?: string;
 

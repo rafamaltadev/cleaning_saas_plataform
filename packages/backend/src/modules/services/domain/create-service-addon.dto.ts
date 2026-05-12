@@ -2,7 +2,7 @@ import { IsInt, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateServiceAddonDto {
-  @IsUUID()
+  @IsUUID('all')
   service_id: string;
 
   @IsString()

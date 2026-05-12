@@ -99,7 +99,6 @@ export default function QuoteCreatePage() {
 
   async function handleSubmit() {
     if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
     if (!validUntil) {
       setError('Data de validade é obrigatória.');
       return;
@@ -115,6 +114,7 @@ export default function QuoteCreatePage() {
       return;
     }
 
+    isSubmittingRef.current = true;
     setLoading(true);
     setError('');
     try {

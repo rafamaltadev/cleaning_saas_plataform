@@ -12,15 +12,15 @@ import {
 } from 'class-validator';
 
 export class UpdateQuoteDto {
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   client_id?: string;
 
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   service_id?: string;
 
-  @IsUUID()
+  @IsUUID('all')
   @IsOptional()
   pricing_rule_id?: string;
 
