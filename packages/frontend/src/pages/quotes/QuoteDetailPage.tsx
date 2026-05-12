@@ -225,10 +225,6 @@ export default function QuoteDetailPage() {
               </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Moeda</dt>
-              <dd className="text-sm text-text-primary">{quote.currency}</dd>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Válido até</dt>
               <dd className="text-sm text-text-primary">
                 {new Date(quote.valid_until).toLocaleDateString('pt-BR')}
@@ -256,10 +252,6 @@ export default function QuoteDetailPage() {
               </dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">Moeda</dt>
-              <dd className="text-sm text-text-primary">{quote.currency}</dd>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Válido até</dt>
               <dd className="text-sm text-text-primary">
                 {new Date(quote.valid_until).toLocaleDateString('pt-BR')}
@@ -277,7 +269,7 @@ export default function QuoteDetailPage() {
                   : 'Endereço do cliente'}
               </dd>
             </div>
-            {quote.observations && (
+            {quote.observations != null && (
               <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                 <dt className="text-sm text-text-secondary">Observações</dt>
                 <dd className="text-sm text-text-primary">{quote.observations}</dd>

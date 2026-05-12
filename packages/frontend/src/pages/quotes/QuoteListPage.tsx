@@ -11,7 +11,8 @@ import type { ApiQuote, ApiQuoteStatus } from '../../types';
 const PAGE_SIZE = 20;
 
 function isVisuallyExpired(quote: ApiQuote): boolean {
-  return quote.status === 'sent' && new Date(quote.valid_until) < new Date();
+  return quote.status === 'expired' ||
+    (quote.status === 'sent' && new Date(quote.valid_until) < new Date());
 }
 
 function quoteBadgeVariant(status: ApiQuoteStatus) {
