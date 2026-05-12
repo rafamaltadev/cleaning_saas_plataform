@@ -6,6 +6,7 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { QuoteRepository } from '../infrastructure/quote.repository';
+import { QuoteAddonRepository } from '../infrastructure/quote-addon.repository';
 import { ClientRepository } from '../../clients/infrastructure/client.repository';
 import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { PricingRuleRepository } from '../../services/infrastructure/pricing-rule.repository';
@@ -14,6 +15,7 @@ import { DomainEventBus } from '../../../common/events/domain-event-bus';
 import { Quote, QuoteStatus } from '../domain/quote.entity';
 import { Booking } from '../../bookings/domain/booking.entity';
 import { QuoteResponseDto } from '../domain/quote-response.dto';
+import { QuoteAddonResponseDto } from '../domain/quote-addon-response.dto';
 import { CreateQuoteDto } from '../validation/create-quote.dto';
 import { UpdateQuoteDto } from '../validation/update-quote.dto';
 import { PaginatedResult } from '../../../common/dto/pagination.dto';
@@ -23,14 +25,15 @@ const VALID_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
   draft: ['sent'],
   sent: ['accepted', 'expired', 'rejected'],
   accepted: [],
-  expired: [],
-  rejected: [],
+  expired: ['sent'],
+  rejected: ['sent'],
 };
 
 @Injectable()
 export class QuoteService {
   constructor(
     private readonly quoteRepository: QuoteRepository,
+    private readonly quoteAddonRepository: QuoteAddonRepository,
     private readonly clientRepository: ClientRepository,
     private readonly serviceRepository: ServiceRepository,
     private readonly pricingRuleRepository: PricingRuleRepository,
@@ -167,10 +170,11 @@ export class QuoteService {
 
     const items = await Promise.all(
       result.items.map(async (quote) => {
-        const context = await this.resolveQuoteContext(
-          quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId,
-        );
-        return QuoteResponseDto.from(quote, context);
+        const [context, rawAddons] = await Promise.all([
+          this.resolveQuoteContext(quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId),
+          this.quoteAddonRepository.findByQuoteId(quote.id, tenantId),
+        ]);
+        return QuoteResponseDto.from(quote, context, rawAddons.map(QuoteAddonResponseDto.from));
       }),
     );
 
@@ -189,10 +193,11 @@ export class QuoteService {
 
     await this.applyLazyExpiration(quote, actorId);
 
-    const context = await this.resolveQuoteContext(
-      quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId,
-    );
-    return QuoteResponseDto.from(quote, context);
+    const [context, rawAddons] = await Promise.all([
+      this.resolveQuoteContext(quote.client_id, quote.service_id, quote.pricing_rule_id, tenantId),
+      this.quoteAddonRepository.findByQuoteId(quote.id, tenantId),
+    ]);
+    return QuoteResponseDto.from(quote, context, rawAddons.map(QuoteAddonResponseDto.from));
   }
 
   async findAvailable(tenantId: string): Promise<QuoteResponseDto[]> {
@@ -236,6 +241,13 @@ export class QuoteService {
 
     if (dto.status) {
       this.assertValidTransition(quote.status, dto.status as QuoteStatus);
+      if (dto.status === 'sent' && (oldStatus === 'expired' || oldStatus === 'rejected')) {
+        if (!dto.valid_until || new Date(dto.valid_until) <= new Date()) {
+          throw new BadRequestException(
+            'Para reativar este orçamento, informe uma data de validade futura.',
+          );
+        }
+      }
       quote.status = dto.status as QuoteStatus;
     }
     if (dto.client_id) quote.client_id = dto.client_id;

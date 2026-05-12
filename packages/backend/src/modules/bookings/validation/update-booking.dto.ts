@@ -17,9 +17,9 @@ export class UpdateBookingDto {
   @IsOptional()
   assigned_team?: string;
 
-  @IsIn(['rescheduled', 'cancelled'])
+  @IsIn(['rescheduled', 'cancelled', 'confirmed'])
   @IsOptional()
-  status?: 'rescheduled' | 'cancelled';
+  status?: 'rescheduled' | 'cancelled' | 'confirmed';
 
   @IsOptional()
   @IsString()

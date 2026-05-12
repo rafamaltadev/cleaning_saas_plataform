@@ -132,6 +132,13 @@ export interface KanbanCard {
 
 // ── API-aligned types (T14) ─────────────────────────────────────────────────
 
+export interface QuoteAddon {
+  id: string;
+  addon_id: string;
+  name: string;
+  price_cents: number;
+}
+
 export type ApiQuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'rejected';
 export type ApiBookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed';
 
@@ -168,6 +175,7 @@ export interface ApiQuote {
   use_client_address?: boolean;
   observations?: string | null;
   service_date?: string | null;
+  addons?: QuoteAddon[];
 }
 
 export interface ApiBooking {

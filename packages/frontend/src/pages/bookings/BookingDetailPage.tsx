@@ -25,6 +25,20 @@ function bookingBadgeVariant(status: ApiBookingStatus) {
   }
 }
 
+function nowDatetimeLocal(): string {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function formatDuration(start: string, end: string): string {
+  const diffMs = new Date(end).getTime() - new Date(start).getTime();
+  const hours = Math.floor(diffMs / 3600000);
+  const mins = Math.floor((diffMs % 3600000) / 60000);
+  if (hours > 0) return `${hours}h ${mins.toString().padStart(2, '0')}min`;
+  return `${mins}min`;
+}
+
 const COMPLETE_ROLES = ['tenant_admin', 'supervisor'] as const;
 
 export default function BookingDetailPage() {
@@ -38,6 +52,11 @@ export default function BookingDetailPage() {
   const [error, setError] = useState('');
   const [completing, setCompleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
+  const [newStart, setNewStart] = useState('');
+  const [newEnd, setNewEnd] = useState('');
+  const [reactivating, setReactivating] = useState(false);
+  const [modalError, setModalError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -46,6 +65,17 @@ export default function BookingDetailPage() {
       .catch(() => setError('Erro ao carregar agendamento.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!showReactivateModal) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowReactivateModal(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showReactivateModal]);
+
+  const isVisuallyExpired = booking !== null
+    && booking.status === 'cancelled'
+    && new Date(booking.scheduled_start) < new Date();
 
   async function handleComplete() {
     if (!id) return;
@@ -74,9 +104,35 @@ export default function BookingDetailPage() {
     }
   }
 
+  async function handleReactivate() {
+    if (!id || !newStart || !newEnd) return;
+    setReactivating(true);
+    setModalError('');
+    try {
+      const { data } = await apiClient.put<{ data: ApiBooking }>(`/bookings/${id}`, {
+        status: 'confirmed',
+        scheduled_start: new Date(newStart).toISOString(),
+        scheduled_end: new Date(newEnd).toISOString(),
+      });
+      setBooking(data.data);
+      setShowReactivateModal(false);
+      setNewStart('');
+      setNewEnd('');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: unknown } } };
+      const msg = e?.response?.data?.message;
+      setModalError(typeof msg === 'string' ? msg : 'Erro ao reativar agendamento.');
+    } finally {
+      setReactivating(false);
+    }
+  }
+
   if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
   if (error && !booking) return <p className="text-error text-sm">{error}</p>;
   if (!booking) return null;
+
+  const showReactivateButton = booking.status === 'cancelled';
+  const reactivateLabel = isVisuallyExpired ? 'Reagendar' : 'Reativar Agendamento';
 
   return (
     <div>
@@ -85,7 +141,7 @@ export default function BookingDetailPage() {
           <h1 className="text-2xl font-bold text-text-primary">Detalhes do Agendamento</h1>
           <p className="text-text-secondary text-sm mt-1 font-mono">{booking.id}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Badge variant={bookingBadgeVariant(booking.status)}>
             {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
           </Badge>
@@ -110,6 +166,24 @@ export default function BookingDetailPage() {
                 Cancelar Agendamento
               </Button>
             </>
+          )}
+          {showReactivateButton && (
+            <Button
+              variant="secondary"
+              onClick={() => { setModalError(''); setNewStart(''); setNewEnd(''); setShowReactivateModal(true); }}
+              aria-label={reactivateLabel}
+            >
+              {reactivateLabel}
+            </Button>
+          )}
+          {booking.status === 'completed' && (
+            <Button
+              variant="secondary"
+              onClick={() => { setModalError(''); setNewStart(''); setNewEnd(''); setShowReactivateModal(true); }}
+              aria-label="Reverter para confirmado"
+            >
+              Reverter para Confirmado
+            </Button>
           )}
           {(booking.status === 'confirmed' || booking.status === 'rescheduled') && (
             <Button variant="ghost" onClick={() => navigate(`/bookings/${id}/edit`)}>Editar</Button>
@@ -150,16 +224,8 @@ export default function BookingDetailPage() {
           </dl>
         </Card>
 
-        <Card title="Identificadores">
+        <Card title="Detalhes do Agendamento">
           <dl className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">ID do Agendamento</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{booking.id}</dd>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-sm text-text-secondary">ID do Orçamento</dt>
-              <dd className="text-xs font-mono text-text-primary break-all">{booking.quote_id}</dd>
-            </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Cliente</dt>
               <dd className="text-sm text-text-primary break-all">
@@ -172,6 +238,52 @@ export default function BookingDetailPage() {
                 {booking.service_name ?? <span className="text-xs font-mono">{booking.service_id}</span>}
               </dd>
             </div>
+            {booking.quote_total_cents != null && (
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <dt className="text-sm text-text-secondary">Valor total</dt>
+                <dd className="text-sm font-semibold text-text-primary">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(booking.quote_total_cents / 100)}
+                </dd>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-sm text-text-secondary">Início</dt>
+              <dd className="text-sm text-text-primary">
+                {new Date(booking.scheduled_start).toLocaleString('pt-BR')}
+              </dd>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-sm text-text-secondary">Término</dt>
+              <dd className="text-sm text-text-primary">
+                {new Date(booking.scheduled_end).toLocaleString('pt-BR')}
+              </dd>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-sm text-text-secondary">Duração</dt>
+              <dd className="text-sm text-text-primary">
+                {formatDuration(booking.scheduled_start, booking.scheduled_end)}
+              </dd>
+            </div>
+            {booking.assigned_team && (
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <dt className="text-sm text-text-secondary">Equipe</dt>
+                <dd className="text-sm text-text-primary">{booking.assigned_team}</dd>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-sm text-text-secondary">Local do serviço</dt>
+              <dd className="text-sm text-text-primary">
+                {booking.use_client_address === false && booking.service_address
+                  ? booking.service_address
+                  : 'Endereço do cliente'}
+              </dd>
+            </div>
+            {booking.observations && (
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <dt className="text-sm text-text-secondary">Observações</dt>
+                <dd className="text-sm text-text-primary">{booking.observations}</dd>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Criado em</dt>
               <dd className="text-sm text-text-primary">
@@ -181,6 +293,72 @@ export default function BookingDetailPage() {
           </dl>
         </Card>
       </div>
+
+      {showReactivateModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowReactivateModal(false)}
+          aria-modal="true"
+          role="dialog"
+          aria-labelledby="reactivate-booking-modal-title"
+        >
+          <div
+            className="bg-surface rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="reactivate-booking-modal-title" className="text-lg font-semibold text-text-primary mb-2">
+              Reativar Agendamento
+            </h2>
+            <p className="text-sm text-text-secondary mb-4">
+              Informe uma nova data para reativar este agendamento.
+            </p>
+            <div className="space-y-3 mb-4">
+              <div>
+                <label htmlFor="new-start" className="block text-sm font-medium text-text-primary mb-1">
+                  Nova data de início *
+                </label>
+                <input
+                  id="new-start"
+                  type="datetime-local"
+                  value={newStart}
+                  min={nowDatetimeLocal()}
+                  onChange={(e) => setNewStart(e.target.value)}
+                  className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label htmlFor="new-end" className="block text-sm font-medium text-text-primary mb-1">
+                  Nova data de término *
+                </label>
+                <input
+                  id="new-end"
+                  type="datetime-local"
+                  value={newEnd}
+                  min={newStart || nowDatetimeLocal()}
+                  onChange={(e) => setNewEnd(e.target.value)}
+                  className="w-full h-10 px-3 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+            {modalError && (
+              <p className="text-sm text-error mb-3" role="alert">{modalError}</p>
+            )}
+            <div className="flex gap-3 justify-end">
+              <Button variant="ghost" onClick={() => setShowReactivateModal(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                loading={reactivating}
+                disabled={!newStart || !newEnd}
+                onClick={handleReactivate}
+              >
+                Reativar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

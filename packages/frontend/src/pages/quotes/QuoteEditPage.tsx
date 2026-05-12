@@ -5,6 +5,7 @@ import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import { getQuoteById, updateQuote } from '../../api/quotes';
+import { syncQuoteAddons } from '../../api/quoteAddons';
 import { getClients } from '../../api/clients';
 import { getServices } from '../../api/services';
 import { getPricingRules } from '../../api/pricingRules';
@@ -69,10 +70,15 @@ export default function QuoteEditPage() {
         setPricingRuleId(q.pricing_rule_id ?? '');
         setValidUntil(toDateInput(q.valid_until));
         setManualDiscount(q.manual_discount_percent);
+        const areaSqmValue = (q as Record<string, unknown>).area_sqm;
+        if (typeof areaSqmValue === 'number') setAreaSqm(areaSqmValue);
         if (q.service_date) setServiceDate(toDateInput(q.service_date));
         setUseClientAddress(q.use_client_address ?? true);
         setServiceAddress(q.service_address ?? '');
         setObservations(q.observations ?? '');
+        if (q.addons && q.addons.length > 0) {
+          setSelectedAddonIds(q.addons.map((a) => a.addon_id));
+        }
       })
       .catch(() => setError('Erro ao carregar orçamento.'))
       .finally(() => setLoadingData(false));
@@ -135,6 +141,11 @@ export default function QuoteEditPage() {
         payload.duration_hours = durationHours;
       }
       await updateQuote(id, payload);
+      const selectedAddons = addons.filter((a) => selectedAddonIds.includes(a.id));
+      await syncQuoteAddons(
+        id,
+        selectedAddons.map((a) => ({ addon_id: a.id, name: a.name, price_cents: a.price_cents })),
+      );
       navigate('/quotes');
     } catch {
       setError('Erro ao salvar orçamento. Tente novamente.');
@@ -188,7 +199,7 @@ export default function QuoteEditPage() {
                   label="Serviço *"
                   items={services}
                   value={serviceId}
-                  onChange={(sid) => { setServiceId(sid); setPricingRuleId(''); }}
+                  onChange={(sid) => { setServiceId(sid); setPricingRuleId(''); setSelectedAddonIds([]); }}
                   getId={(s) => s.id}
                   getLabel={(s) => s.name}
                   placeholder="Buscar serviço…"

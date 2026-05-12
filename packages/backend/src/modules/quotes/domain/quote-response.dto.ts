@@ -1,4 +1,5 @@
 import { Quote } from './quote.entity';
+import { QuoteAddonResponseDto } from './quote-addon-response.dto';
 
 interface QuoteContext {
   clientName?: string;
@@ -27,8 +28,13 @@ export class QuoteResponseDto {
   client_name?: string;
   service_name?: string;
   pricing_rule_name?: string;
+  addons?: QuoteAddonResponseDto[];
 
-  static from(quote: Quote, context?: QuoteContext): QuoteResponseDto {
+  static from(
+    quote: Quote,
+    context?: QuoteContext,
+    addons?: QuoteAddonResponseDto[],
+  ): QuoteResponseDto {
     const dto = new QuoteResponseDto();
     dto.id = quote.id;
     dto.tenant_id = quote.tenant_id;
@@ -50,6 +56,7 @@ export class QuoteResponseDto {
     if (context?.clientName) dto.client_name = context.clientName;
     if (context?.serviceName) dto.service_name = context.serviceName;
     if (context?.pricingRuleName) dto.pricing_rule_name = context.pricingRuleName;
+    if (addons) dto.addons = addons;
     return dto;
   }
 }

@@ -19,6 +19,13 @@ import { Quote } from '../../quotes/domain/quote.entity';
 
 const TERMINAL_STATUSES: BookingStatus[] = ['completed', 'cancelled'];
 
+const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
+  confirmed: ['completed', 'cancelled', 'rescheduled'],
+  rescheduled: ['completed', 'cancelled', 'confirmed'],
+  cancelled: ['confirmed'],
+  completed: ['confirmed'],
+};
+
 @Injectable()
 export class BookingService {
   constructor(
@@ -177,10 +184,21 @@ export class BookingService {
       throw new NotFoundException({ code: 'BOOKING_NOT_FOUND', message: 'Booking not found' });
     }
     if (TERMINAL_STATUSES.includes(booking.status)) {
-      throw new BadRequestException({
-        code: 'INVALID_BOOKING_STATUS',
-        message: `Cannot update a booking with status '${booking.status}'`,
-      });
+      const newStatus = dto.status as BookingStatus | undefined;
+      const validTargets = VALID_TRANSITIONS[booking.status] ?? [];
+      if (!newStatus || !validTargets.includes(newStatus)) {
+        throw new BadRequestException({
+          code: 'INVALID_BOOKING_STATUS',
+          message: `Cannot update a booking with status '${booking.status}'`,
+        });
+      }
+      if (newStatus === 'confirmed') {
+        if (!dto.scheduled_start || new Date(dto.scheduled_start) <= new Date()) {
+          throw new BadRequestException(
+            'Para reativar este agendamento, informe uma data futura.',
+          );
+        }
+      }
     }
 
     if (dto.quote_id) booking.quote_id = dto.quote_id;

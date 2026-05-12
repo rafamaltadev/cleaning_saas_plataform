@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { QuoteRepository } from '../infrastructure/quote.repository';
+import { QuoteAddonRepository } from '../infrastructure/quote-addon.repository';
 import { ClientRepository } from '../../clients/infrastructure/client.repository';
 import { ServiceRepository } from '../../services/infrastructure/service.repository';
 import { PricingRuleRepository } from '../../services/infrastructure/pricing-rule.repository';
@@ -87,6 +88,7 @@ describe('QuoteService', () => {
 
     service = new QuoteService(
       quoteRepoMock as unknown as QuoteRepository,
+      {} as unknown as QuoteAddonRepository,
       {} as unknown as ClientRepository,
       serviceRepoMock as unknown as ServiceRepository,
       pricingRuleRepoMock as unknown as PricingRuleRepository,

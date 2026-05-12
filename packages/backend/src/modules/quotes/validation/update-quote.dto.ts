@@ -48,9 +48,9 @@ export class UpdateQuoteDto {
   @IsOptional()
   duration_hours?: number;
 
-  @IsIn(['rejected', 'accepted'])
+  @IsIn(['rejected', 'accepted', 'sent'])
   @IsOptional()
-  status?: 'rejected' | 'accepted';
+  status?: 'rejected' | 'accepted' | 'sent';
 
   @IsOptional()
   @IsString()

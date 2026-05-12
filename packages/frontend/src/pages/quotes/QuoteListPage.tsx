@@ -10,6 +10,10 @@ import type { ApiQuote, ApiQuoteStatus } from '../../types';
 
 const PAGE_SIZE = 20;
 
+function isVisuallyExpired(quote: ApiQuote): boolean {
+  return quote.status === 'sent' && new Date(quote.valid_until) < new Date();
+}
+
 function quoteBadgeVariant(status: ApiQuoteStatus) {
   switch (status) {
     case 'accepted': return 'success' as const;
@@ -166,7 +170,9 @@ export default function QuoteListPage() {
                     {quote.service_name && <p className="text-xs text-text-muted mt-0.5">{quote.service_name}</p>}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant={quoteBadgeVariant(quote.status)}>{QUOTE_STATUS_LABELS[quote.status] ?? quote.status}</Badge>
+                    <Badge variant={isVisuallyExpired(quote) ? 'error' : quoteBadgeVariant(quote.status)}>
+                      {isVisuallyExpired(quote) ? 'Expirado' : (QUOTE_STATUS_LABELS[quote.status] ?? quote.status)}
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: quote.currency || 'BRL' }).format(quote.estimated_total_cents / 100)}
@@ -278,7 +284,9 @@ export default function QuoteListPage() {
                   </p>
                   <p className="text-xs text-text-muted mt-0.5">Válido: {new Date(quote.valid_until).toLocaleDateString()}</p>
                 </div>
-                <Badge variant={quoteBadgeVariant(quote.status)}>{QUOTE_STATUS_LABELS[quote.status] ?? quote.status}</Badge>
+                <Badge variant={isVisuallyExpired(quote) ? 'error' : quoteBadgeVariant(quote.status)}>
+                  {isVisuallyExpired(quote) ? 'Expirado' : (QUOTE_STATUS_LABELS[quote.status] ?? quote.status)}
+                </Badge>
               </div>
               <div className="mt-3 flex gap-2 justify-end flex-wrap">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}`)}>

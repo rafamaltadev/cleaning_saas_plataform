@@ -5,6 +5,7 @@ import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import { createQuote } from '../../api/quotes';
+import { syncQuoteAddons } from '../../api/quoteAddons';
 import { getClients } from '../../api/clients';
 import { getServices } from '../../api/services';
 import { getPricingRules } from '../../api/pricingRules';
@@ -109,7 +110,14 @@ export default function QuoteCreatePage() {
         service_address: !useClientAddress && serviceAddress.trim() ? serviceAddress.trim() : undefined,
         observations: observations.trim() || undefined,
       };
-      await createQuote(payload);
+      const created = await createQuote(payload);
+      if (selectedAddonIds.length > 0) {
+        const selectedAddons = addons.filter((a) => selectedAddonIds.includes(a.id));
+        await syncQuoteAddons(
+          created.id,
+          selectedAddons.map((a) => ({ addon_id: a.id, name: a.name, price_cents: a.price_cents })),
+        );
+      }
       navigate('/quotes');
     } catch {
       setError('Erro ao criar orçamento. Tente novamente.');

@@ -9,6 +9,10 @@ import type { ApiBooking, ApiBookingStatus } from '../../types';
 
 const PAGE_SIZE = 20;
 
+function isVisuallyExpired(booking: ApiBooking): boolean {
+  return booking.status === 'cancelled' && new Date(booking.scheduled_start) < new Date();
+}
+
 function bookingBadgeVariant(status: ApiBookingStatus) {
   switch (status) {
     case 'confirmed': return 'success' as const;
@@ -128,7 +132,9 @@ export default function BookingListPage() {
                     {booking.service_name && <p className="text-xs text-text-muted mt-0.5">{booking.service_name}</p>}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant={bookingBadgeVariant(booking.status)}>{BOOKING_STATUS_LABELS[booking.status] ?? booking.status}</Badge>
+                    <Badge variant={isVisuallyExpired(booking) ? 'error' : bookingBadgeVariant(booking.status)}>
+                      {isVisuallyExpired(booking) ? 'Expirado' : (BOOKING_STATUS_LABELS[booking.status] ?? booking.status)}
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">
                     {new Date(booking.scheduled_start).toLocaleString()}
@@ -182,7 +188,9 @@ export default function BookingListPage() {
                     <p className="text-xs text-text-muted mt-0.5">Equipe: {booking.assigned_team}</p>
                   )}
                 </div>
-                <Badge variant={bookingBadgeVariant(booking.status)}>{BOOKING_STATUS_LABELS[booking.status] ?? booking.status}</Badge>
+                <Badge variant={isVisuallyExpired(booking) ? 'error' : bookingBadgeVariant(booking.status)}>
+                  {isVisuallyExpired(booking) ? 'Expirado' : (BOOKING_STATUS_LABELS[booking.status] ?? booking.status)}
+                </Badge>
               </div>
               <div className="mt-3 flex gap-2 justify-end">
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
