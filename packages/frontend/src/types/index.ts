@@ -173,6 +173,7 @@ export interface ApiQuote {
   pricing_rule_name?: string;
   service_address?: string | null;
   use_client_address?: boolean;
+  area_sqm?: number | null;
   observations?: string | null;
   service_date?: string | null;
   addons?: QuoteAddon[];

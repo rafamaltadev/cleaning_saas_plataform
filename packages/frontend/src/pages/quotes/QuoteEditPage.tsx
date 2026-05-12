@@ -70,8 +70,7 @@ export default function QuoteEditPage() {
         setPricingRuleId(q.pricing_rule_id ?? '');
         setValidUntil(toDateInput(q.valid_until));
         setManualDiscount(q.manual_discount_percent);
-        const areaSqmValue = (q as Record<string, unknown>).area_sqm;
-        if (typeof areaSqmValue === 'number') setAreaSqm(areaSqmValue);
+        if (q.area_sqm != null) setAreaSqm(Number(q.area_sqm));
         if (q.service_date) setServiceDate(toDateInput(q.service_date));
         setUseClientAddress(q.use_client_address ?? true);
         setServiceAddress(q.service_address ?? '');
@@ -134,8 +133,8 @@ export default function QuoteEditPage() {
         service_address: !useClientAddress && serviceAddress.trim() ? serviceAddress.trim() : undefined,
         observations: observations.trim() || undefined,
       };
-      if (selectedService?.unit === 'sqm' && typeof areaSqm === 'number') {
-        payload.area_sqm = areaSqm;
+      if (selectedService?.unit === 'sqm' && areaSqm !== '' && areaSqm !== null) {
+        payload.area_sqm = Number(areaSqm);
       }
       if (selectedService?.unit === 'hour' && typeof durationHours === 'number') {
         payload.duration_hours = durationHours;
