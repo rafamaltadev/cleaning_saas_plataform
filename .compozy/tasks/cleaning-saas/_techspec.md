@@ -539,3 +539,373 @@ This project runs on Windows with npm workspaces. The `package-lock.json` and `n
 
 - [ADR-001: Full-Featured Launch Approach](adrs/adr-001-full-featured-launch.md) — Decision to develop and launch all features simultaneously for comprehensive value delivery.
 - [ADR-002: Monolithic Modular Architecture with Logical Multi-Tenant Isolation and JWT RBAC](adrs/adr-002-monolith-jwt-rbac.md) — Decision to use NestJS monolith, tenant_id logical isolation, and JWT RBAC for SPA scalability.
+
+## Phase 2 — Public Tenant Product
+
+### New Modules (Phase 2A)
+- `PublicModule` — unauthenticated public endpoints for tenant landing. All endpoints prefixed `/api/v1/public/:tenantSlug/`. Tenant isolation enforced by tenantSlug resolution, never by JWT.
+- `BrandingModule` — resolves and caches tenant branding by tenantSlug. 60-second in-memory cache (no Redis).
+- `StorageModule` — file storage abstraction. `StorageAdapter` interface with `LocalStorageAdapter` implementation. Configurable via `STORAGE_ADAPTER` env var.
+
+### New Public Routes (Frontend)
+- `/t/:tenantSlug` — public tenant landing page
+
+### New Environment Variables (add to .env.example)
+- `STORAGE_ADAPTER` (local — only supported value in Phase 2)
+- `UPLOAD_DIR` (local storage path, default: uploads/)
+
+### Phase 1 Patterns (MANDATORY for all Phase 2 tasks)
+All Phase 2 implementations MUST follow the patterns documented in each task file under "Phase 1 Patterns". These patterns address bugs encountered during Phase 1:
+- UUID validation via `@Matches(UUID_REGEX, UUID_MSG)`, NEVER `@IsUUID()`
+- DTO fields fully assigned in service create/update — no silent drops
+- Frontend form double-submit prevention via `isSubmittingRef`
+- SearchableSelect with paired `useRef` + `useState`
+- Error message at top of form
+- Mobile-first responsive design at 375px minimum width
+
+### Critical Rules (Phase 2 additions)
+- ALL public endpoints MUST enforce tenant isolation by tenantSlug resolution
+- Public endpoints MUST NOT expose internal IDs (tenant_id, user_id, created_by, etc.)
+- File uploads MUST validate MIME type and size (image/png, image/jpeg; max 2MB) before processing
+- Public endpoints MUST be rate-limited (60 req/min per IP minimum)
+- The frontend `--color-primary-override` CSS variable MUST scope only to the public landing page, NEVER globally
+
+#### New Modules (Phase 2B)
+- `PublicQuotesModule` — handles public quote estimation (in-memory, no persistence) and public quote submission (persisted with `origin='public'`, `approval_required=true`).
+- `PublicBookingsModule` — handles availability calculation and public booking creation with atomic slot locking.
+- `AvailabilityService` — computes available time slots based on tenant operating hours, excluding existing confirmed/rescheduled/pending_approval bookings.
+- `PublicAuthModule` — exposes public-scoped authentication endpoints (register, login, OAuth callbacks) that scope users and clients to the resolved tenant.
+
+#### New Integrations (Phase 2B)
+- **Google OAuth**: `passport-google-oauth20` strategy. Environment variables: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_CALLBACK_URL`.
+- **Facebook OAuth**: `passport-facebook` strategy. Environment variables: `FACEBOOK_OAUTH_APP_ID`, `FACEBOOK_OAUTH_APP_SECRET`, `FACEBOOK_OAUTH_CALLBACK_URL`.
+- OAuth state parameter MUST include tenantSlug for tenant scoping and CSRF protection.
+
+#### New Public Routes (Frontend — Phase 2B)
+- `/t/:tenantSlug/orcamento` — public quote request form (anonymous)
+- `/t/:tenantSlug/orcamento/cadastro` — account creation / login for quote submission
+- `/t/:tenantSlug/orcamento/agendar` — scheduling (authenticated client only)
+- `/t/:tenantSlug/orcamento/confirmacao` — booking confirmation page
+
+#### New Environment Variables (add to .env.example)
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+- `GOOGLE_OAUTH_CALLBACK_URL`
+- `FACEBOOK_OAUTH_APP_ID`
+- `FACEBOOK_OAUTH_APP_SECRET`
+- `FACEBOOK_OAUTH_CALLBACK_URL`
+
+#### New User Role
+- `'client'` — created via public registration. Scoped to a single tenant. Can access only own quotes, bookings, profile. Cannot access admin or staff endpoints.
+
+#### New Domain Events (Phase 2B)
+- `QuotePublicCreated` — emitted when a public-origin quote is submitted. Triggers admin/staff notification.
+- `BookingPublicCreated` — emitted when a public-origin booking is created. Triggers admin/staff notification for approval.
+
+#### Approval Workflow (Phase 2B)
+- Public-origin quotes default to `status='draft'`, `approval_required=true`. Admin/staff must approve via existing quote endpoints to transition to `'sent'` or `'accepted'`.
+- Public-origin bookings default to `status='pending_approval'`. Admin/staff must approve via existing booking endpoints to transition to `'confirmed'`.
+- Both flows trigger notifications (email/in-app) to admin/staff users of the tenant.
+- The first booking from any client (bookings_count === 0) shows a modal warning that confirmation depends on tenant approval.
+
+#### Critical Rules (Phase 2B additions)
+- ALL public booking creation MUST use database transaction with row-level lock on overlapping bookings to prevent double-booking race conditions
+- Public clients MUST only access their own quotes and bookings (cross-resource injection prevented at controller level)
+- Availability calculation MUST account for both internal and public-origin bookings (single source of truth)
+- The new `'client'` role MUST have an explicit allowlist of endpoints — NEVER granted access by default to any new endpoint
+- OAuth callbacks MUST validate state parameter; mismatched state returns 400
+- Public registration MUST be rate-limited (10 req/min per IP) to prevent abuse
+- Audit log entries MUST be created for every public quote/booking event with origin, ip, user_agent
+
+#### Stripe Integration Architecture (Phase 2C)
+
+The platform uses Stripe at two levels with separate API keys and webhooks:
+
+**Level A — Platform Subscriptions:**
+- Stripe customer = tenant; Stripe is the platform's own account
+- Tenants subscribe to SaaS plans (monthly, semiannual, annual)
+- Grandfathering: existing subscribers preserve their price on plan readjustments via `discount_ratio` (relative discount preserved on annual readjustments)
+- 30-day notice for price changes via automated email
+- Webhook: `/api/v1/webhooks/stripe/platform` with `STRIPE_PLATFORM_WEBHOOK_SECRET`
+
+**Level B — Stripe Connect Express:**
+- Each tenant has their own Express account (when opted in)
+- Tenant onboarding via Stripe-hosted Express forms (KYC, bank info)
+- End clients pay tenants directly with platform taking 1% `application_fee_amount`
+- Webhook: `/api/v1/webhooks/stripe/connect` with `STRIPE_CONNECT_WEBHOOK_SECRET`
+
+#### New Modules (Phase 2C)
+- `BillingModule` — root billing module
+- `SubscriptionsModule` — platform subscriptions, plan management, readjustments
+- `StripeConnectModule` — Connect onboarding, terms management, payment configuration
+- `PaymentsModule` — payment intents, refunds, payment workflow
+- `StripeWebhooksModule` — webhook signature validation, idempotency, event routing
+
+#### Payment Methods by Region
+- **Brazil (BR):** card credit, card debit, PIX
+- **United States (US):** card credit, card debit, ACH, Apple Pay, Google Pay
+- **Other regions:** Phase 3+ (not supported in Phase 2)
+
+#### Payment Modes
+- **Manual** (default for new tenants): no Stripe integration, system records "Pagamento Manual" only, no confirmation flow
+- **Stripe**: requires Connect Express active, supports prepaid and postpaid timing
+
+#### Payment Timing (Stripe mode only)
+- **Prepaid** (DEFAULT): client pays before booking is confirmed (booking transitions: pending_approval → pending_payment → confirmed)
+- **Postpaid**: client pays after service execution (payment link auto-sent after admin marks booking as completed)
+- Toggle requires confirmation modal; disabled when payment_mode='manual'
+
+#### Terms & Consent System
+- Versioned terms documents per country/language (BR: pt-BR; US: EN, ES)
+- Tenant MUST accept current terms version before enabling Stripe integration
+- Consent record stores: terms_version, accepted_at, accepted_ip, accepted_user_agent, accepted_by_user_id
+- Information page available at any time at `/settings/payments/info-br` or `/settings/payments/info-us`
+- Highlighted card at top of Company Configuration requires acknowledgment before Stripe Connect can be enabled
+
+#### Fees
+- **Platform fee:** 1% per Connect transaction (configurable via `PLATFORM_FEE_PERCENT` env var, default 1)
+- **Stripe BR fees:** 3.99% + R$0,39 (card), 0.99% (PIX)
+- **Stripe US fees:** 2.9% + $0.30 (card), 0.8% capped $5 (ACH)
+- Fees displayed transparently in information page and during checkout
+
+#### New Environment Variables (add to .env.example)
+- `STRIPE_PLATFORM_SECRET_KEY`
+- `STRIPE_PLATFORM_PUBLISHABLE_KEY`
+- `STRIPE_PLATFORM_WEBHOOK_SECRET`
+- `STRIPE_CONNECT_CLIENT_ID`
+- `STRIPE_CONNECT_WEBHOOK_SECRET`
+- `STRIPE_CONNECT_RETURN_URL`
+- `STRIPE_CONNECT_REFRESH_URL`
+- `PLATFORM_FEE_PERCENT` (default: 1)
+- `STRIPE_FEE_BR_CARD_PERCENT` (default: 3.99)
+- `STRIPE_FEE_BR_PIX_PERCENT` (default: 0.99)
+- `STRIPE_FEE_US_CARD_PERCENT` (default: 2.9)
+- `STRIPE_FEE_US_ACH_PERCENT` (default: 0.8)
+
+#### New Roles
+- `'platform_admin'` — platform owner; manages subscription plans, views all tenant subscriptions; assigned via DB seed only, never via UI
+
+#### New Routes (Frontend — Phase 2C)
+- `/settings/billing` — subscription management
+- `/settings/billing/success` — return from Stripe Checkout
+- `/settings/billing/cancel` — Stripe Checkout cancel return
+- `/settings/payments/info-br` — Brazil information page (pt-BR only)
+- `/settings/payments/info-us` — US information page (EN/ES toggle)
+- `/settings/payments/connected` — Stripe Connect return handler
+- `/platform-admin/plans` — platform admin plan management
+- `/platform-admin/subscriptions` — platform admin subscription list
+- `/payments` — admin payments list
+- `/t/:tenantSlug/pagamento` — public client payment page
+- `/t/:tenantSlug/pagamento/sucesso` — public payment success page
+
+#### Critical Rules (Phase 2C additions)
+- Stripe webhook signatures MUST be validated on every webhook endpoint — different secrets for platform vs Connect
+- Stripe API keys MUST be loaded from environment, NEVER hardcoded or stored in DB
+- Payment amounts MUST NEVER be sent from frontend — backend always calculates from booking/quote
+- Webhook events MUST be idempotent via `stripe_webhook_events` table (event.id deduplication)
+- Application fee MUST be set via `application_fee_amount` parameter on Connect PaymentIntents
+- Manual payment mode MUST NOT create Payment records — purely informational status
+- Tenant email MUST be required (NOT NULL) — used for billing and notifications
+- Client email MUST be required for clients created via public flow — used for payment notifications
+- Payment links sent via email MUST expire after 7 days
+- Refunds MUST require admin role AND create audit log entry with full context
+- Grandfathering: `discount_ratio` preserved on every readjustment to maintain relative pricing fairness
+- Annual readjustments MUST notify tenants 30 days in advance via email
+- Payment timing changes MUST require confirmation modal; default value MUST be 'prepaid'
+- Switching from manual to Stripe mode requires Connect status='active'
+- Terms acceptance is IRREVERSIBLE per version; new terms version requires new acceptance
+
+#### Granular Permissions System (Phase 2D)
+
+The platform uses a permission system designed to support per-module access in Phase 2 with the schema ready for per-action granularity in future phases without refactoring.
+
+**Schema:**
+- `permissions` table: `(module, action)` — Phase 2 actions are `'read'` and `'write'`. Future actions (`'create'`, `'update'`, `'delete'`) can be added without schema changes.
+- `roles` table: tenant-scoped or system roles
+- `role_permissions` table: many-to-many between roles and permissions
+- `user_permission_overrides` table: per-user grants/revokes beyond role defaults
+
+**System Roles (seeded):**
+- `platform_admin` — platform owner, all permissions
+- `admin` — tenant admin, all module:read AND module:write
+- `staff` — generic staff, no permissions by default (granted per user)
+- `client` — public end client, no module permissions (different access path)
+
+**Guard:**
+- `@RequirePermission(module, action)` decorator replaces `@Roles()` on protected endpoints
+- `PermissionGuard` evaluates effective permissions = role permissions + overrides
+- Admin role bypasses permission checks (always allowed)
+
+**Migration Note:** Existing `users.role: string` is migrated to `users.role_id: uuid` referencing the `roles` table. Existing role names ('admin', 'staff') are mapped to corresponding role_ids during migration.
+
+#### Internationalization (Phase 2D)
+
+The platform supports three languages: pt-BR (default), EN (US English), and ES (Latin American Spanish). Language is auto-detected from browser/locale settings with NO manual user override (intentional design decision to ensure region-appropriate content).
+
+**Backend:**
+- `nestjs-i18n` package, JSON-based translations in `src/i18n/{lang}/`
+- `AcceptLanguageResolver` reads from request headers
+- Fallback: pt-BR
+- All exception messages, validation messages, and email templates translated
+
+**Frontend:**
+- `react-i18next` + `i18next-browser-languagedetector`
+- NO localStorage caching, NO manual toggle UI
+- Detection order: authenticated user.locale → navigator.language → fallback pt-BR
+- `<html lang="">` updated dynamically
+- All UI strings extracted to translation files in `src/i18n/locales/{lang}/{namespace}.json`
+
+**Email Templates:**
+- All templates have `{name}.pt-BR.hbs`, `{name}.en.hbs`, `{name}.es.hbs` versions
+- Template selection: `user.locale ?? tenant.locale ?? 'pt-BR'`
+
+**Locale-Aware Formatting:**
+- Use `Intl.DateTimeFormat`, `Intl.NumberFormat` consistently
+- pt-BR: 14/05/2026, R$ 1.234,56
+- en: 05/14/2026, $1,234.56
+- es: 14/05/2026, $ 1.234,56
+
+#### Password Recovery (Phase 2D)
+
+- Token-based, 24-hour expiration, single-use
+- Token stored as SHA-256 hash (never plain)
+- Rate limit: 3 attempts per email per hour, 10 requests per IP per minute
+- Successful reset invalidates all refresh tokens for the user (force re-login on all devices)
+- Cleanup job deletes expired tokens after 7 days
+- Generic responses regardless of email existence (prevent enumeration)
+
+#### Email Verification (Phase 2D)
+
+- Required for admin and staff users to access configuration endpoints
+- NOT required for public clients (OAuth users are auto-verified; email/password public clients can use app without verification)
+- Token-based, 24-hour expiration, single-use
+- Admin can log in without verification but settings/configuration endpoints are blocked
+- Staff CANNOT log in without verification
+- `EmailVerifiedGuard` enforces on all settings/configuration controllers
+- Verification banner shown on UI for unverified admins (not dismissible)
+
+#### New Roles (Phase 2D additions)
+- (no new roles — refactor of existing role system into permission-based)
+
+#### New Frontend Routes (Phase 2D)
+- `/forgot-password` — password recovery request
+- `/reset-password?token=X` — password reset form
+- `/verify-email?token=X` — email verification handler
+- `/resend-verification` — resend verification email
+- `/staff` — staff user management (admin only)
+- `/staff/new` — create staff user
+- `/staff/:id/edit` — edit staff user permissions
+
+#### Critical Rules (Phase 2D additions)
+- Permission checks MUST happen on backend — frontend hiding is UX only
+- Tenant CANNOT remove the last admin user (prevent lockout)
+- Tokens (password reset, email verification) MUST be cryptographically random AND SHA-256 hashed before storage
+- Tokens MUST be single-use (marked used_at on success)
+- Password reset MUST invalidate all refresh tokens for the user
+- NO language toggle UI — locale is auto-detected and immutable per session
+- Locale validation MUST be server-side (don't trust client-supplied headers blindly)
+- Email verification gate applies to admin/staff settings ONLY — does NOT block public clients
+- Existing seed user (admin@seed.local) MUST be marked email_verified=true during migration
+- `@RequirePermission(module, action)` MUST replace `@Roles()` on all migrated endpoints; auth and public endpoints retain `@Public()` or `@Roles()` as appropriate
+- Audit log entries required for: permission changes, password resets, email verification
+
+#### Analytics Architecture (Phase 2E)
+
+**Data layer:**
+- `analytics_snapshots` table — daily aggregated metrics per tenant, populated by scheduled job at 01:00
+- Database views/materialized views for real-time aggregation: `mv_quotes_funnel`, `mv_bookings_status`, `mv_revenue_by_method`, `mv_service_popularity`
+- Snapshot strategy: historical data from snapshots (fast), recent 24h from live queries (accurate)
+
+**Service layer:**
+- `AnalyticsService` exposes scoped metrics per tenant
+- All queries tenant_id-scoped at SQL level
+- Date range validation: max 365 days, no future `to`
+- Period comparison auto-calculates equivalent previous period
+
+**Endpoints:**
+- `GET /api/v1/analytics/operational` — quote funnel, bookings status, approval times, service popularity, active clients
+- `GET /api/v1/analytics/financial` — revenue, fees, ticket size, revenue by method, MRR
+- `GET /api/v1/analytics/export.csv` — CSV export
+- `GET /api/v1/analytics/export.pdf` — PDF export via server-side rendering
+- All require `reports:read` permission and rate-limited (30 req/min)
+
+**Frontend:**
+- Single route `/analytics` with two tabs: Operacional / Financeiro
+- Charts via `recharts` library
+- Date range picker with presets
+- Period comparison toggle
+- Export menu (CSV / PDF)
+- Mobile-first responsive
+
+#### Onboarding System (Phase 2E)
+
+**State:**
+- `tenant_onboarding_progress` table — one record per tenant tracking 6 boolean flags + `welcome_modal_dismissed` + `completed_at`
+- Existing tenants pre-completed on migration
+
+**Auto-completion via domain events:**
+- `EmailVerifiedEvent` → email_verified
+- `BrandingUpdatedEvent` → branding_configured
+- `ServiceCreatedEvent` → first_service_created
+- `ClientCreatedEvent` → first_client_created
+- `PaymentConfigUpdatedEvent` → payment_configured
+- `QuoteCreatedEvent` → first_quote_created
+
+**UI components:**
+- `WelcomeModal` — first-session only, dismissible (one-time)
+- `OnboardingChecklist` — sidebar widget (desktop), bottom sheet via floating icon (mobile)
+- Visibility: admin role only; staff and public clients do NOT see onboarding UI
+- Disappears 24h after `completed_at` is set
+
+**Endpoints:**
+- `GET /api/v1/onboarding/progress`
+- `POST /api/v1/onboarding/welcome-dismiss` (admin)
+- `POST /api/v1/onboarding/skip` (admin, one-way action)
+
+#### E2E Testing Strategy (Phase 2E)
+
+**Framework:**
+- Playwright with TypeScript
+- 10 test suites covering critical flows
+- Mobile viewport tests on iPhone 13 (390x844)
+- Cross-browser smoke tests (chromium primary, firefox/webkit smoke)
+
+**Test suites:**
+1. Tenant Onboarding Flow
+2. Public Tenant Product Flow
+3. Stripe Connect & Payment Flow
+4. Subscription Flow (Platform Level)
+5. Permissions & Staff Management
+6. Password Recovery & Email Verification
+7. i18n & Locale Detection
+8. Analytics Dashboard
+9. Mobile-First Responsiveness
+10. Cross-Tenant Isolation (security validation)
+
+**Infrastructure:**
+- Test database seeded deterministically before each suite
+- Stripe-mock fixture for Stripe API simulation
+- Email-mock fixture captures sent emails for assertion
+- GitHub Actions CI runs full suite on every PR
+- HTML reports + screenshots + videos on failure
+
+**Manual test suite:**
+- Visual regression
+- Animations and transitions
+- Accessibility (keyboard, screen reader)
+- Print stylesheets
+
+#### New Frontend Routes (Phase 2E)
+- `/analytics` — analytics dashboard
+
+#### Critical Rules (Phase 2E additions)
+- Analytics queries MUST be tenant_id-scoped at SQL level — NEVER trust user-supplied tenant ID
+- Numeric aggregations MUST happen server-side; client only renders
+- Date range validation MUST cap at 365 days
+- Export files (CSV/PDF) MUST be generated server-side
+- Snapshot job MUST be idempotent (UPSERT pattern)
+- Onboarding state changes MUST flow through domain events — never direct UI flag manipulation
+- Onboarding UI MUST be hidden for staff and public clients (admin-only experience)
+- E2E tests MUST cover cross-tenant isolation explicitly (security test suite)
+- E2E tests MUST run in CI on every PR; failures block merge
+- No flaky tests tolerated — retries pass MUST not mask flakiness (fix or quarantine)

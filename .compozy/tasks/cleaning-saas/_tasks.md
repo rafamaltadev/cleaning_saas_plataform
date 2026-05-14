@@ -20,3 +20,18 @@
 | 14 | Frontend MVP Part B: Quotes, Bookings & Dashboard | completed | high | task_13 |
 | 15 | Public Landing Page & Subscriber Login | completed | high | task_14 |
 | 16 | Full System Validation (Integration & E2E) | completed | critical | task_15 |
+| 17 | White-label: Tenant Branding Configuration | pending | medium | task_16 |
+| 18 | Public Tenant Landing Page | pending | high | task_17 |
+| 19 | Public Quote Flow Part A: Quote Request Form | pending | high | task_18 |
+| 20 | Public Quote Flow Part B: Account Creation & Quote Submission | pending | high | task_19 |
+| 21 | Public Scheduling Flow with Availability Sync | pending | high | task_20 |
+| 22 | Stripe Platform Subscriptions (Level A: tenant pays SaaS) | pending | high | task_21 |
+| 23 | Stripe Connect Express Onboarding & Information Pages | pending | high | task_22 |
+| 24 | Public Payment Flow with Stripe Connect (Level B: client pays tenant) | pending | high | task_23 |
+| 25 | Staff Granular Permissions (module-level with action-ready schema) | pending | medium | task_24 |
+| 26 | Internationalization (i18n) with Auto-Detection (pt-BR / EN / ES) | pending | medium | task_25 |
+| 27 | Password Recovery Flow | pending | medium | task_26 |
+| 28 | Email Verification Flow (Required Before Configuration) | pending | medium | task_27 |
+| 29 | Operational & Financial Analytics Dashboard | pending | high | task_28 |
+| 30 | In-App Onboarding (Welcome Modal + Progressive Checklist) | pending | medium | task_29 |
+| 31 | Phase 2 Full System Validation (E2E) | pending | critical | task_30 |
