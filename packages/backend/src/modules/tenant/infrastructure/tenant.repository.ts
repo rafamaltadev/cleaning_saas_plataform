@@ -14,6 +14,10 @@ export class TenantRepository {
     return this.repo.findOne({ where: { id, deleted_at: IsNull() } });
   }
 
+  async findBySlug(slug: string): Promise<Tenant | null> {
+    return this.repo.findOne({ where: { tenant_slug: slug, deleted_at: IsNull() } });
+  }
+
   async save(tenant: Partial<Tenant>): Promise<Tenant> {
     return this.repo.save(tenant as Tenant);
   }

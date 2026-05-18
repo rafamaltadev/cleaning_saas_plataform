@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { TenantRepository } from '../infrastructure/tenant.repository';
+import { StorageAdapter } from '../../../common/storage/storage.adapter';
 import { Tenant } from '../domain/tenant.entity';
 import { TenantResponseDto } from '../domain/tenant-response.dto';
 
@@ -11,6 +12,10 @@ function makeTenant(overrides: Partial<Tenant> = {}): Tenant {
   t.subscription_plan = 'basic';
   t.currency = 'BRL';
   t.timezone = 'America/Sao_Paulo';
+  t.tenant_slug = 'test-tenant';
+  t.logo_url = null;
+  t.primary_color = null;
+  t.favicon_url = null;
   t.created_at = new Date('2024-01-01');
   t.updated_at = new Date('2024-06-01');
   t.deleted_at = null;
@@ -19,14 +24,20 @@ function makeTenant(overrides: Partial<Tenant> = {}): Tenant {
 
 describe('TenantService', () => {
   let service: TenantService;
-  let repoMock: jest.Mocked<Pick<TenantRepository, 'findById' | 'save'>>;
+  let repoMock: jest.Mocked<Pick<TenantRepository, 'findById' | 'findBySlug' | 'save'>>;
+  let storageMock: jest.Mocked<StorageAdapter>;
 
   beforeEach(() => {
     repoMock = {
       findById: jest.fn(),
+      findBySlug: jest.fn(),
       save: jest.fn(),
     };
-    service = new TenantService(repoMock as unknown as TenantRepository);
+    storageMock = { save: jest.fn(), delete: jest.fn() };
+    service = new TenantService(
+      repoMock as unknown as TenantRepository,
+      storageMock as unknown as StorageAdapter,
+    );
   });
 
   describe('getById', () => {

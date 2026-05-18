@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "name": "Cleaning SaaS UI",
+    "style": "balanced-minimal",
+    "inspiration": ["linear", "stripe", "shadcn"]
+  },
+
+  "colors": {
+    "primary": "#4F46E5",
+    "primary_hover": "#4338CA",
+
+    "secondary": "#0EA5E9",
+    "secondary_hover": "#0284C7",
+
+    "background": "#0B0F19",
+    "surface": "#111827",
+    "surface_alt": "#1F2937",
+
+    "border": "#2D3748",
+
+    "text_primary": "#F9FAFB",
+    "text_secondary": "#9CA3AF",
+    "text_muted": "#6B7280",
+
+    "success": "#22C55E",
+    "warning": "#F59E0B",
+    "error": "#EF4444"
+  },
+
+  "typography": {
+    "font_family": "Inter, sans-serif",
+
+    "scale": {
+      "xs": "12px",
+      "sm": "14px",
+      "md": "16px",
+      "lg": "18px",
+      "xl": "20px",
+      "2xl": "24px",
+      "3xl": "30px"
+    },
+
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    }
+  },
+
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32
+  },
+
+  "radius": {
+    "sm": "6px",
+    "md": "8px",
+    "lg": "12px",
+    "xl": "16px"
+  },
+
+  "shadows": {
+    "sm": "0 1px 2px rgba(0,0,0,0.05)",
+    "md": "0 4px 6px rgba(0,0,0,0.1)",
+    "lg": "0 10px 15px rgba(0,0,0,0.15)"
+  },
+
+  "layout": {
+    "container_width": "1200px",
+    "sidebar_width": "260px",
+    "header_height": "64px"
+  },
+
+  "components": {
+    "button": {
+      "height": "40px",
+      "padding": "0 16px",
+      "radius": "8px",
+      "variants": ["primary", "secondary", "ghost", "danger"]
+    },
+
+    "input": {
+      "height": "40px",
+      "padding": "0 12px",
+      "radius": "8px",
+      "border": "1px solid border",
+      "focus_ring": "primary"
+    },
+
+    "card": {
+      "padding": "16px",
+      "radius": "12px",
+      "background": "surface",
+      "border": "1px solid border"
+    },
+
+    "badge": {
+      "padding": "2px 8px",
+      "radius": "6px",
+      "variants": ["success", "warning", "error", "neutral"]
+    },
+
+    "modal": {
+      "radius": "12px",
+      "padding": "24px",
+      "overlay": "rgba(0,0,0,0.6)"
+    }
+  },
+
+  "interaction": {
+    "hover_opacity": 0.9,
+    "transition": "all 0.2s ease",
+    "focus_ring": "2px solid primary"
+  }
+}

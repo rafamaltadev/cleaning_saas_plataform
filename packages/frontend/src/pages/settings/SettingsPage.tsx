@@ -8,11 +8,13 @@ import { getTenant, updateTenant } from '../../api/tenants';
 import { getServices } from '../../api/services';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../api/categories';
 import type { Tenant, BusinessHours, Service, ServiceCategory } from '../../types';
+import BrandingSection from './sections/BrandingSection';
 
-type Tab = 'profile' | 'hours' | 'categories' | 'services' | 'payment';
+type Tab = 'profile' | 'branding' | 'hours' | 'categories' | 'services' | 'payment';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Perfil da Empresa' },
+  { id: 'branding', label: 'Identidade Visual' },
   { id: 'hours', label: 'Horário de Funcionamento' },
   { id: 'categories', label: 'Categorias' },
   { id: 'services', label: 'Serviços e Preços' },
@@ -52,6 +54,7 @@ export default function SettingsPage() {
         {/* Content */}
         <div className="flex-1 min-w-0">
           {activeTab === 'profile' && <ProfileSection />}
+          {activeTab === 'branding' && <BrandingSection />}
           {activeTab === 'hours' && <BusinessHoursSection />}
           {activeTab === 'categories' && <CategoriesSection />}
           {activeTab === 'services' && <ServicesSection />}

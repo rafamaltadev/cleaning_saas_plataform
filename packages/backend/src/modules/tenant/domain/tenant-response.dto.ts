@@ -6,6 +6,10 @@ export class TenantResponseDto {
   subscription_plan: string;
   currency: string;
   timezone: string;
+  tenant_slug: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  favicon_url: string | null;
   created_at: Date;
   updated_at: Date;
 
@@ -16,6 +20,10 @@ export class TenantResponseDto {
     dto.subscription_plan = tenant.subscription_plan;
     dto.currency = tenant.currency;
     dto.timezone = tenant.timezone;
+    dto.tenant_slug = tenant.tenant_slug;
+    dto.logo_url = tenant.logo_url;
+    dto.primary_color = tenant.primary_color;
+    dto.favicon_url = tenant.favicon_url;
     dto.created_at = tenant.created_at;
     dto.updated_at = tenant.updated_at;
     return dto;

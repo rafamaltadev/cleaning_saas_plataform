@@ -171,17 +171,41 @@ export const handlers = [
 
   http.get(`${BASE}/tenants/me`, () => {
     return HttpResponse.json({
-      id: 'tenant-1',
-      name: 'My Company',
-      email: 'company@test.com',
-      timezone: 'America/New_York',
-      currency: 'USD',
+      data: {
+        id: 'tenant-1',
+        name: 'My Company',
+        email: 'company@test.com',
+        timezone: 'America/New_York',
+        currency: 'USD',
+        tenant_slug: 'my-company',
+        logo_url: null,
+        primary_color: '#4F46E5',
+        favicon_url: null,
+      },
     });
   }),
 
   http.put(`${BASE}/tenants/me`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({ id: 'tenant-1', ...body });
+    return HttpResponse.json({
+      data: {
+        id: 'tenant-1',
+        name: 'My Company',
+        tenant_slug: 'my-company',
+        logo_url: null,
+        primary_color: '#4F46E5',
+        favicon_url: null,
+        ...body,
+      },
+    });
+  }),
+
+  http.post(`${BASE}/tenants/me/logo`, () => {
+    return HttpResponse.json({ data: { logo_url: '/uploads/tenant-1-logo-123.png' } }, { status: 201 });
+  }),
+
+  http.post(`${BASE}/tenants/me/favicon`, () => {
+    return HttpResponse.json({ data: { favicon_url: '/uploads/tenant-1-favicon-123.png' } }, { status: 201 });
   }),
 
   http.get(`${BASE}/services`, () => {

@@ -47,6 +47,10 @@ export interface Tenant {
   email: string;
   timezone: string;
   currency: string;
+  tenant_slug?: string;
+  logo_url?: string | null;
+  primary_color?: string | null;
+  favicon_url?: string | null;
   businessHours?: BusinessHours;
 }
 

@@ -23,6 +23,18 @@ export class Tenant {
   @Column({ type: 'varchar' })
   timezone: string;
 
+  @Column({ type: 'varchar', length: 60, unique: true })
+  tenant_slug: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  logo_url: string | null;
+
+  @Column({ type: 'varchar', length: 7, nullable: true })
+  primary_color: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  favicon_url: string | null;
+
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
