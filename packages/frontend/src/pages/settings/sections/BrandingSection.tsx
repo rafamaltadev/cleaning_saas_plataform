@@ -17,17 +17,16 @@ export default function BrandingSection() {
 
   const isSubmittingRef = useRef(false);
 
-  // Form fields
+  // Primary color — initialized as empty string (never undefined) to keep input controlled
   const primaryColorRef = useRef('');
   const [primaryColor, setPrimaryColor] = useState('');
 
-  // Logo upload state
+  // File preview state — null means no preview; always a string or null, never undefined
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoMessage, setLogoMessage] = useState('');
 
-  // Favicon upload state
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [faviconUploading, setFaviconUploading] = useState(false);
@@ -37,11 +36,15 @@ export default function BrandingSection() {
     getTenant()
       .then((t) => {
         setTenant(t);
-        const color = t.primary_color ?? '#4F46E5';
+
+        // Populate all form fields from the API response on mount
+        const color = t.primary_color ?? '';
         setPrimaryColor(color);
         primaryColorRef.current = color;
-        if (t.logo_url) setLogoPreview(t.logo_url);
-        if (t.favicon_url) setFaviconPreview(t.favicon_url);
+
+        // Always set previews from backend (null if not present)
+        setLogoPreview(t.logo_url ?? null);
+        setFaviconPreview(t.favicon_url ?? null);
       })
       .catch(() => setError('Erro ao carregar dados da empresa.'))
       .finally(() => setLoading(false));
@@ -83,6 +86,8 @@ export default function BrandingSection() {
     setLogoMessage('');
     try {
       const result = await uploadLogo(logoFile);
+      // Update preview with the server URL so reload shows the same image
+      setLogoPreview(result.logo_url);
       setTenant((prev) => prev ? { ...prev, logo_url: result.logo_url } : prev);
       setLogoMessage('Logo enviado com sucesso!');
     } catch {
@@ -98,6 +103,8 @@ export default function BrandingSection() {
     setFaviconMessage('');
     try {
       const result = await uploadFavicon(faviconFile);
+      // Update preview with the server URL so reload shows the same image
+      setFaviconPreview(result.favicon_url);
       setTenant((prev) => prev ? { ...prev, favicon_url: result.favicon_url } : prev);
       setFaviconMessage('Favicon enviado com sucesso!');
     } catch {
@@ -132,6 +139,10 @@ export default function BrandingSection() {
     setSaved(false);
     try {
       const updated = await updateTenant({ primary_color: color || undefined });
+      // Sync form state with what the server confirmed, so reload shows the saved value
+      const savedColor = updated.primary_color ?? '';
+      setPrimaryColor(savedColor);
+      primaryColorRef.current = savedColor;
       setTenant((prev) => prev ? { ...prev, ...updated } : updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -281,7 +292,7 @@ export default function BrandingSection() {
               <Input
                 label=""
                 type="text"
-                value={primaryColor}
+                value={primaryColor ?? ''}
                 onChange={handleHexInput}
                 placeholder="#4F46E5"
                 aria-label="Código hex da cor primária"

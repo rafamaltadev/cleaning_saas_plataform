@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.schema';
 import { SharedModule } from './modules/shared/shared.module';
@@ -59,6 +61,10 @@ import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
           limit: config.get<number>('throttle.authLimit')!,
         },
       ],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
     }),
     ScheduleModule.forRoot(),
     SharedModule,
