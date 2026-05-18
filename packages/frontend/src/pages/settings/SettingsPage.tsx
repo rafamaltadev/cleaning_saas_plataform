@@ -1,14 +1,12 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import type { AxiosError } from 'axios';
+import { useState, useEffect } from 'react';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
-import { getTenant, updateTenant } from '../../api/tenants';
 import { getServices } from '../../api/services';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../api/categories';
-import type { Tenant, BusinessHours, Service, ServiceCategory } from '../../types';
+import type { BusinessHours, Service, ServiceCategory } from '../../types';
 import BrandingSection from './sections/BrandingSection';
+import CompanyProfileSection from './sections/CompanyProfileSection';
 
 type Tab = 'profile' | 'branding' | 'hours' | 'categories' | 'services' | 'payment';
 
@@ -53,7 +51,7 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {activeTab === 'profile' && <ProfileSection />}
+          {activeTab === 'profile' && <CompanyProfileSection />}
           {activeTab === 'branding' && <BrandingSection />}
           {activeTab === 'hours' && <BusinessHoursSection />}
           {activeTab === 'categories' && <CategoriesSection />}
@@ -62,129 +60,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function ProfileSection() {
-  const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [facebook, setFacebook] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    getTenant()
-      .then((t) => {
-        setTenant(t);
-        setName(t.name);
-        setEmail(t.email);
-      })
-      .catch(() => setError('Erro ao carregar perfil da empresa.'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function handleSave(e: FormEvent) {
-    e.preventDefault();
-    if (!tenant) return;
-    setSaving(true);
-    setError('');
-    try {
-      await updateTenant({ name });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string | string[] }>;
-      const msg = axiosErr.response?.data?.message;
-      setError(Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao salvar alterações.'));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
-
-  return (
-    <Card title="Perfil da Empresa">
-      <form onSubmit={handleSave} className="space-y-3" aria-label="Perfil da empresa">
-        <Input
-          label="Nome da Empresa"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <Input
-          label="E-mail"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <div className="space-y-1">
-          <Input
-            label="Telefone"
-            type="text"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+55 11 99999-9999"
-          />
-          <p className="text-xs text-text-muted">Em breve</p>
-        </div>
-        <div className="space-y-1">
-          <Input
-            label="Endereço"
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Rua, número, cidade"
-          />
-          <p className="text-xs text-text-muted">Em breve</p>
-        </div>
-        <div className="space-y-1">
-          <Input
-            label="Instagram"
-            type="text"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            placeholder="@usuario"
-          />
-          <p className="text-xs text-text-muted">Em breve</p>
-        </div>
-        <div className="space-y-1">
-          <Input
-            label="Facebook"
-            type="text"
-            value={facebook}
-            onChange={(e) => setFacebook(e.target.value)}
-            placeholder="facebook.com/pagina"
-          />
-          <p className="text-xs text-text-muted">Em breve</p>
-        </div>
-        <div className="space-y-1">
-          <Input
-            label="WhatsApp"
-            type="text"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            placeholder="+55 11 99999-9999"
-          />
-          <p className="text-xs text-text-muted">Em breve</p>
-        </div>
-
-        {error && <p className="text-sm text-error" role="alert">{error}</p>}
-        {saved && <p className="text-sm text-success">Alterações salvas!</p>}
-
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" loading={saving}>Salvar Alterações</Button>
-        </div>
-      </form>
-    </Card>
   );
 }
 

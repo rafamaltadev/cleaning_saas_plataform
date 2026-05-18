@@ -20,8 +20,8 @@
 | 14 | Frontend MVP Part B: Quotes, Bookings & Dashboard | completed | high | task_13 |
 | 15 | Public Landing Page & Subscriber Login | completed | high | task_14 |
 | 16 | Full System Validation (Integration & E2E) | completed | critical | task_15 |
-| 17 | White-label: Tenant Branding Configuration | pending | medium | task_16 |
-| 18 | Public Tenant Landing Page | pending | high | task_17 |
+| 17 | White-label: Tenant Branding Configuration | completed | medium | task_16 |
+| 18 | Public Tenant Landing Page | completed | high | task_17 |
 | 19 | Public Quote Flow Part A: Quote Request Form | pending | high | task_18 |
 | 20 | Public Quote Flow Part B: Account Creation & Quote Submission | pending | high | task_19 |
 | 21 | Public Scheduling Flow with Availability Sync | pending | high | task_20 |

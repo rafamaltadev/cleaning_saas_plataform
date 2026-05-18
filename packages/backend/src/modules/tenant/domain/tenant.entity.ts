@@ -35,6 +35,26 @@ export class Tenant {
   @Column({ type: 'varchar', nullable: true })
   favicon_url: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  phone: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  social_links: {
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+    website?: string;
+  } | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  google_maps_embed_url: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  public_address: string | null;
+
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 

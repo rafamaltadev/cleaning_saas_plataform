@@ -59,6 +59,11 @@ export class TenantService {
     if (dto.logo_url !== undefined) tenant.logo_url = dto.logo_url;
     if (dto.primary_color !== undefined) tenant.primary_color = dto.primary_color;
     if (dto.favicon_url !== undefined) tenant.favicon_url = dto.favicon_url;
+    if (dto.description !== undefined) tenant.description = dto.description;
+    if (dto.phone !== undefined) tenant.phone = dto.phone;
+    if (dto.social_links !== undefined) tenant.social_links = dto.social_links;
+    if (dto.google_maps_embed_url !== undefined) tenant.google_maps_embed_url = dto.google_maps_embed_url;
+    if (dto.public_address !== undefined) tenant.public_address = dto.public_address;
 
     const saved = await this.tenantRepository.save(tenant);
     return TenantResponseDto.from(saved);

@@ -23,6 +23,7 @@ import BookingDetailPage from './pages/bookings/BookingDetailPage';
 import BookingEditPage from './pages/bookings/BookingEditPage';
 import ServiceListPage from './pages/services/ServiceListPage';
 import ServiceFormPage from './pages/services/ServiceFormPage';
+import TenantLandingPage from './pages/public/TenantLandingPage';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route element={<PublicLandingRoute />}>
             <Route index element={<LandingPage />} />
           </Route>
+          <Route path="/t/:tenantSlug" element={<TenantLandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
