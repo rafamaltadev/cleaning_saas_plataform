@@ -1,9 +1,12 @@
-import { IsIn, IsInt, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsIn, IsInt, IsNumber, IsOptional, Matches, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_MSG = { message: '$property must be a valid UUID' };
 
 export class UpdatePricingRuleDto {
   @IsOptional()
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   service_id?: string;
 
   @IsOptional()

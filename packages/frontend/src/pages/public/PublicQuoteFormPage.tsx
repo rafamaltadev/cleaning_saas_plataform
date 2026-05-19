@@ -16,6 +16,7 @@ import { saveDraft } from '../../utils/publicQuoteDraft';
 import ServiceSelector from '../../components/public/ServiceSelector';
 import QuoteSummaryPanel from '../../components/public/QuoteSummaryPanel';
 import PublicNotFoundPage from './PublicNotFoundPage';
+import Input from '../../components/ui/Input';
 
 function sanitizeText(value: string): string {
   return value.replace(/<[^>]*>/g, '').trim();
@@ -365,7 +366,7 @@ export default function PublicQuoteFormPage() {
                     >
                       Área (m²) <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       id="area-sqm"
                       type="number"
                       min="1"
@@ -375,8 +376,9 @@ export default function PublicQuoteFormPage() {
                         setAreaSqm(e.target.value);
                         setError('');
                       }}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                      className="w-full"
                       placeholder="Ex: 80"
+                      variant="public"
                       data-testid="area-sqm-input"
                     />
                   </div>
@@ -390,7 +392,7 @@ export default function PublicQuoteFormPage() {
                     >
                       Duração (horas) <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       id="duration-hours"
                       type="number"
                       min="0.5"
@@ -400,8 +402,9 @@ export default function PublicQuoteFormPage() {
                         setDurationHours(e.target.value);
                         setError('');
                       }}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                      className="w-full"
                       placeholder="Ex: 3"
+                      variant="public"
                       data-testid="duration-hours-input"
                     />
                   </div>
@@ -455,7 +458,7 @@ export default function PublicQuoteFormPage() {
                   >
                     Endereço <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     id="address"
                     type="text"
                     value={address}
@@ -463,8 +466,9 @@ export default function PublicQuoteFormPage() {
                       setAddress(e.target.value);
                       setError('');
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                    className="w-full"
                     placeholder="Rua, número, complemento"
+                    variant="public"
                   />
                 </div>
 
@@ -476,7 +480,7 @@ export default function PublicQuoteFormPage() {
                     >
                       Cidade <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       id="city"
                       type="text"
                       value={city}
@@ -484,8 +488,9 @@ export default function PublicQuoteFormPage() {
                         setCity(e.target.value);
                         setError('');
                       }}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                      className="w-full"
                       placeholder="São Paulo"
+                      variant="public"
                     />
                   </div>
                   <div>
@@ -495,7 +500,7 @@ export default function PublicQuoteFormPage() {
                     >
                       Estado <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       id="state"
                       type="text"
                       value={state}
@@ -503,9 +508,10 @@ export default function PublicQuoteFormPage() {
                         setState(e.target.value);
                         setError('');
                       }}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                      className="w-full"
                       placeholder="SP"
                       maxLength={2}
+                      variant="public"
                     />
                   </div>
                 </div>
@@ -517,7 +523,7 @@ export default function PublicQuoteFormPage() {
                   >
                     CEP <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     id="postal-code"
                     type="text"
                     value={postalCode}
@@ -525,8 +531,9 @@ export default function PublicQuoteFormPage() {
                       setPostalCode(e.target.value);
                       setError('');
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                    className="w-full"
                     placeholder="00000-000"
+                    variant="public"
                   />
                 </div>
               </div>
@@ -540,7 +547,7 @@ export default function PublicQuoteFormPage() {
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all duration-200"
                 placeholder="Informações adicionais (opcional)"
               />
             </section>
@@ -556,7 +563,7 @@ export default function PublicQuoteFormPage() {
                   >
                     Nome <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     id="contact-name"
                     type="text"
                     value={contactName}
@@ -564,8 +571,9 @@ export default function PublicQuoteFormPage() {
                       setContactName(e.target.value);
                       setError('');
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                    className="w-full"
                     placeholder="Seu nome completo"
+                    variant="public"
                   />
                 </div>
                 <div>
@@ -575,7 +583,7 @@ export default function PublicQuoteFormPage() {
                   >
                     E-mail <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     id="contact-email"
                     type="email"
                     value={email}
@@ -583,8 +591,9 @@ export default function PublicQuoteFormPage() {
                       setEmail(e.target.value);
                       setError('');
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                    className="w-full"
                     placeholder="seu@email.com"
+                    variant="public"
                   />
                 </div>
                 <div>
@@ -594,7 +603,7 @@ export default function PublicQuoteFormPage() {
                   >
                     Telefone <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     id="contact-phone"
                     type="tel"
                     value={phone}
@@ -602,8 +611,9 @@ export default function PublicQuoteFormPage() {
                       setPhone(e.target.value);
                       setError('');
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2"
+                    className="w-full"
                     placeholder="(11) 99999-9999"
+                    variant="public"
                   />
                 </div>
               </div>
