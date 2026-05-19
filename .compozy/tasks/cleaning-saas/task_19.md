@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Public Quote Flow Part A: Quote Request Form"
 type: feature
 complexity: high

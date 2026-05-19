@@ -332,6 +332,103 @@ export const handlers = [
     return HttpResponse.json({ notifications_enabled: true });
   }),
 
+  // Public tenant endpoints
+  http.get(`${BASE}/public/:tenantSlug/branding`, ({ params }) => {
+    if (params.tenantSlug === 'unknown-tenant') {
+      return HttpResponse.json(
+        { code: 'TENANT_NOT_FOUND', message: 'Tenant not found' },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json({
+      data: {
+        tenant_slug: params.tenantSlug,
+        name: 'Acme Limpeza',
+        logo_url: null,
+        primary_color: '#4F46E5',
+        favicon_url: null,
+      },
+      meta: {},
+    });
+  }),
+
+  http.get(`${BASE}/public/:tenantSlug/services`, ({ params }) => {
+    if (params.tenantSlug === 'unknown-tenant') {
+      return HttpResponse.json(
+        { code: 'TENANT_NOT_FOUND', message: 'Tenant not found' },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json({
+      data: [
+        {
+          id: 'svc-sqm-1',
+          name: 'Limpeza por M²',
+          description: 'Limpeza cobrada por metro quadrado',
+          base_rate_cents: 500,
+          unit: 'sqm',
+          currency: 'BRL',
+          category_name: 'Residencial',
+        },
+        {
+          id: 'svc-hour-1',
+          name: 'Limpeza por Hora',
+          description: 'Limpeza cobrada por hora',
+          base_rate_cents: 8000,
+          unit: 'hour',
+          currency: 'BRL',
+          category_name: null,
+        },
+        {
+          id: 'svc-flat-1',
+          name: 'Limpeza Flat',
+          description: 'Limpeza a preço fixo',
+          base_rate_cents: 20000,
+          unit: 'flat',
+          currency: 'BRL',
+          category_name: null,
+        },
+      ],
+      meta: {},
+    });
+  }),
+
+  http.get(`${BASE}/public/:tenantSlug/services/:serviceId/addons`, ({ params }) => {
+    if (params.serviceId === 'svc-sqm-1') {
+      return HttpResponse.json({
+        data: [
+          { id: 'addon-1', name: 'Limpeza de vidros', price_cents: 3000 },
+          { id: 'addon-2', name: 'Higienização de sofá', price_cents: 5000 },
+        ],
+        meta: {},
+      });
+    }
+    return HttpResponse.json({ data: [], meta: {} });
+  }),
+
+  http.post(`${BASE}/public/:tenantSlug/quote-estimate`, async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    const serviceId = body.service_id as string;
+    let subtotal = 20000;
+    if (serviceId === 'svc-sqm-1') {
+      subtotal = 500 * ((body.area_sqm as number) || 1);
+    } else if (serviceId === 'svc-hour-1') {
+      subtotal = 8000 * ((body.duration_hours as number) || 1);
+    }
+    const addonIds = (body.addon_ids as string[]) || [];
+    const addonTotal = addonIds.length > 0 ? addonIds.length * 3000 : 0;
+    return HttpResponse.json({
+      data: {
+        subtotal_cents: subtotal,
+        addon_total_cents: addonTotal,
+        discount_amount_cents: 0,
+        estimated_total_cents: subtotal + addonTotal,
+        currency: 'BRL',
+      },
+      meta: {},
+    });
+  }),
+
   http.get(`${BASE}/pricing-rules`, () => {
     return HttpResponse.json({
       items: [

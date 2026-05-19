@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "White-label: Tenant Branding Configuration"
 type: feature
 complexity: medium

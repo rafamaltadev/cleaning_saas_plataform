@@ -22,7 +22,7 @@
 | 16 | Full System Validation (Integration & E2E) | completed | critical | task_15 |
 | 17 | White-label: Tenant Branding Configuration | completed | medium | task_16 |
 | 18 | Public Tenant Landing Page | completed | high | task_17 |
-| 19 | Public Quote Flow Part A: Quote Request Form | pending | high | task_18 |
+| 19 | Public Quote Flow Part A: Quote Request Form | completed | high | task_18 |
 | 20 | Public Quote Flow Part B: Account Creation & Quote Submission | pending | high | task_19 |
 | 21 | Public Scheduling Flow with Availability Sync | pending | high | task_20 |
 | 22 | Stripe Platform Subscriptions (Level A: tenant pays SaaS) | pending | high | task_21 |

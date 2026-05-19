@@ -1,5 +1,5 @@
 ---
-status: done
+status: completed
 title: "Public Tenant Landing Page"
 type: feature
 complexity: high

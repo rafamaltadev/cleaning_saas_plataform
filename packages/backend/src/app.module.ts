@@ -19,6 +19,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { PublicQuotesModule } from './modules/public-quotes/public-quotes.module';
 import { AuthUserMiddleware } from './common/middleware/auth-user.middleware';
 import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 
@@ -78,6 +79,7 @@ import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
     AuditLogModule,
     NotificationsModule,
     BillingModule,
+    PublicQuotesModule,
   ],
   providers: [
     {
