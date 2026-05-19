@@ -429,6 +429,48 @@ export const handlers = [
     });
   }),
 
+  // Public auth endpoints (T20)
+  http.post(`${BASE}/public/:tenantSlug/auth/register`, async ({ request }) => {
+    const body = await request.json() as { email?: string; password?: string };
+    if (!body.password || !/^(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(body.password)) {
+      return HttpResponse.json(
+        { error: { message: 'A senha deve ter no mínimo 8 caracteres, uma letra e um número' } },
+        { status: 400 },
+      );
+    }
+    if (body.email === 'existing@example.com') {
+      return HttpResponse.json(
+        { error: { message: 'Este e-mail já está em uso' } },
+        { status: 409 },
+      );
+    }
+    return HttpResponse.json(
+      { data: { accessToken: 'new-client-access-token', refreshToken: 'new-client-refresh-token' } },
+      { status: 201 },
+    );
+  }),
+
+  http.post(`${BASE}/public/:tenantSlug/auth/login`, async ({ request }) => {
+    const body = await request.json() as { email?: string; password?: string };
+    if (body.email === 'admin@example.com') {
+      return HttpResponse.json(
+        { error: { message: 'Este endpoint é exclusivo para clientes' } },
+        { status: 403 },
+      );
+    }
+    if (body.email === 'client@example.com' && body.password === 'Senha123') {
+      return HttpResponse.json({ data: { accessToken: 'client-token', refreshToken: 'client-refresh' } });
+    }
+    return HttpResponse.json({ error: { message: 'E-mail ou senha inválidos' } }, { status: 401 });
+  }),
+
+  http.post(`${BASE}/public/:tenantSlug/quotes`, async () => {
+    return HttpResponse.json(
+      { data: { id: 'quote-public-1', status: 'draft', estimated_total_cents: 45000 } },
+      { status: 201 },
+    );
+  }),
+
   http.get(`${BASE}/pricing-rules`, () => {
     return HttpResponse.json({
       items: [

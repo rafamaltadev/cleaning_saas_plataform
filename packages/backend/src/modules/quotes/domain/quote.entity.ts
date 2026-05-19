@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'rejected';
+export type QuoteOrigin = 'internal' | 'public';
 
 @Entity('quotes')
 export class Quote {
@@ -57,6 +58,15 @@ export class Quote {
 
   @Column({ type: 'timestamp', nullable: true })
   service_date: Date | null;
+
+  @Column({ type: 'varchar', length: 20, default: 'internal' })
+  origin: QuoteOrigin;
+
+  @Column({ type: 'uuid', nullable: true })
+  created_by_client_id: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  approval_required: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

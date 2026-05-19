@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Public Quote Flow Part B: Account Creation & Quote Submission"
 type: feature
 complexity: high

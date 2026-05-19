@@ -54,17 +54,17 @@ export async function seed(dataSource: DataSource): Promise<void> {
   const passwordHash = await bcrypt.hash(seedPassword, 10);
 
   await dataSource.query(
-    `INSERT INTO tenants (id, name, subscription_plan, currency, timezone)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO tenants (id, name, subscription_plan, currency, timezone, tenant_slug)
+     VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT (id) DO NOTHING`,
-    [DEFAULT_TENANT_ID, 'Default Tenant', 'basic', 'BRL', 'America/Sao_Paulo'],
+    [DEFAULT_TENANT_ID, 'Default Tenant', 'basic', 'BRL', 'America/Sao_Paulo', 'default'],
   );
 
   for (const user of SEED_USERS) {
     await dataSource.query(
       `INSERT INTO users (id, tenant_id, email, password_hash, roles, first_name, last_name)
        VALUES (uuid_generate_v4(), $1, $2, $3, ARRAY[$4], '', '')
-       ON CONFLICT (email) DO NOTHING`,
+       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
       [DEFAULT_TENANT_ID, user.email, passwordHash, user.role],
     );
   }

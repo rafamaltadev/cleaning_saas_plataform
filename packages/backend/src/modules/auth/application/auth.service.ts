@@ -43,7 +43,7 @@ export class AuthService {
       });
     }
 
-    return this.issueTokenPair(user);
+    return this.issueTokenPairPublic(user);
   }
 
   async refresh(
@@ -113,7 +113,7 @@ export class AuthService {
       });
     }
 
-    return this.issueTokenPair(user);
+    return this.issueTokenPairPublic(user);
   }
 
   async logout(rawRefreshToken: string): Promise<void> {
@@ -132,7 +132,7 @@ export class AuthService {
     );
   }
 
-  private async issueTokenPair(
+  async issueTokenPairPublic(
     user: User,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const jwtPayload: JwtPayload = {

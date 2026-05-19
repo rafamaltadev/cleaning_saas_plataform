@@ -19,4 +19,11 @@ export const envValidationSchema = Joi.object({
   THROTTLE_LIMIT: Joi.number().default(100),
   THROTTLE_AUTH_TTL: Joi.number().default(60000),
   THROTTLE_AUTH_LIMIT: Joi.number().default(5),
+  // OAuth — optional, graceful fallback when missing
+  GOOGLE_OAUTH_CLIENT_ID: Joi.string().optional().allow(''),
+  GOOGLE_OAUTH_CLIENT_SECRET: Joi.string().optional().allow(''),
+  GOOGLE_OAUTH_CALLBACK_URL: Joi.string().optional().allow(''),
+  FACEBOOK_OAUTH_APP_ID: Joi.string().optional().allow(''),
+  FACEBOOK_OAUTH_APP_SECRET: Joi.string().optional().allow(''),
+  FACEBOOK_OAUTH_CALLBACK_URL: Joi.string().optional().allow(''),
 });

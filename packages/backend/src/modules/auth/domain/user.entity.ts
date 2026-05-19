@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export type AuthProvider = 'local' | 'google' | 'facebook';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -17,8 +19,8 @@ export class User {
   @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @Column({ type: 'varchar' })
-  password_hash: string;
+  @Column({ type: 'varchar', nullable: true })
+  password_hash: string | null;
 
   @Column('text', { array: true, default: '{}' })
   roles: string[];
@@ -28,6 +30,15 @@ export class User {
 
   @Column({ type: 'varchar' })
   last_name: string;
+
+  @Column({ type: 'varchar', length: 20, default: 'local' })
+  auth_provider: AuthProvider;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  provider_id: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  provider_email_verified: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

@@ -25,6 +25,7 @@ import ServiceListPage from './pages/services/ServiceListPage';
 import ServiceFormPage from './pages/services/ServiceFormPage';
 import TenantLandingPage from './pages/public/TenantLandingPage';
 import PublicQuoteFormPage from './pages/public/PublicQuoteFormPage';
+import PublicQuoteRegisterPage from './pages/public/PublicQuoteRegisterPage';
 
 export default function App() {
   return (
@@ -36,19 +37,16 @@ export default function App() {
           </Route>
           <Route path="/t/:tenantSlug" element={<TenantLandingPage />} />
           <Route path="/t/:tenantSlug/orcamento" element={<PublicQuoteFormPage />} />
-          {/* TODO(T20): replace with real PublicQuoteRegisterPage */}
+          <Route path="/t/:tenantSlug/orcamento/cadastro" element={<PublicQuoteRegisterPage />} />
+          {/* TODO(T21): replace with real scheduling page */}
           <Route
-            path="/t/:tenantSlug/orcamento/cadastro"
+            path="/t/:tenantSlug/orcamento/agendar"
             element={
               <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
                 <div className="text-center max-w-md">
-                  <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Em breve
-                  </h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-2">Em breve</h1>
                   <p className="text-gray-600">
-                    A criação de conta para conclusão de orçamento será
-                    liberada em breve. Esta funcionalidade está sendo finalizada
-                    (T20).
+                    O agendamento de serviços será disponibilizado em breve (T21).
                   </p>
                 </div>
               </div>

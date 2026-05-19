@@ -23,7 +23,7 @@
 | 17 | White-label: Tenant Branding Configuration | completed | medium | task_16 |
 | 18 | Public Tenant Landing Page | completed | high | task_17 |
 | 19 | Public Quote Flow Part A: Quote Request Form | completed | high | task_18 |
-| 20 | Public Quote Flow Part B: Account Creation & Quote Submission | pending | high | task_19 |
+| 20 | Public Quote Flow Part B: Account Creation & Quote Submission | completed | high | task_19 |
 | 21 | Public Scheduling Flow with Availability Sync | pending | high | task_20 |
 | 22 | Stripe Platform Subscriptions (Level A: tenant pays SaaS) | pending | high | task_21 |
 | 23 | Stripe Connect Express Onboarding & Information Pages | pending | high | task_22 |

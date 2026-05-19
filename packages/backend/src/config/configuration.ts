@@ -21,4 +21,14 @@ export default () => ({
     authTtl: parseInt(process.env.THROTTLE_AUTH_TTL ?? '60000', 10),
     authLimit: parseInt(process.env.THROTTLE_AUTH_LIMIT ?? '5', 10),
   },
+  google: {
+    clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    callbackUrl: process.env.GOOGLE_OAUTH_CALLBACK_URL ?? 'http://localhost:3000/api/v1/public',
+  },
+  facebook: {
+    appId: process.env.FACEBOOK_OAUTH_APP_ID,
+    appSecret: process.env.FACEBOOK_OAUTH_APP_SECRET,
+    callbackUrl: process.env.FACEBOOK_OAUTH_CALLBACK_URL ?? 'http://localhost:3000/api/v1/public',
+  },
 });
