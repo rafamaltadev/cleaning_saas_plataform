@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { loadDraft, clearDraft, type QuoteDraft } from '../../utils/publicQuoteDraft';
+import { savePublicSession } from '../../utils/publicSession';
 import { getPublicBranding, type PublicBranding } from '../../api/publicTenant';
 import {
   registerPublicUser,
@@ -44,6 +45,8 @@ export default function PublicQuoteRegisterPage() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
+  const sessionExpired = searchParams.get('sessionExpired') === '1';
+
   // Phase 1 patterns
   const isSubmittingRef = useRef(false);
   const [error, setError] = useState('');
@@ -67,6 +70,15 @@ export default function PublicQuoteRegisterPage() {
 
     const loaded = loadDraft(tenantSlug);
     if (!loaded) {
+      if (sessionExpired) {
+        // Session expired after quote was already submitted — show login tab with notice
+        setTab('login');
+        getPublicBranding(tenantSlug).catch(() => null).then((b) => {
+          setBranding(b);
+          setLoading(false);
+        });
+        return;
+      }
       navigate(`/t/${tenantSlug}/orcamento`, { replace: true });
       return;
     }
@@ -83,6 +95,7 @@ export default function PublicQuoteRegisterPage() {
 
     // If returning from OAuth, auto-submit quote
     if (oauthToken && loaded) {
+      savePublicSession(tenantSlug, oauthToken);
       void submitQuoteWithToken(oauthToken, loaded, tenantSlug);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,6 +164,7 @@ export default function PublicQuoteRegisterPage() {
 
   const handleAuthAndSubmit = async (tokens: AuthTokens) => {
     if (!draft || !tenantSlug) return;
+    savePublicSession(tenantSlug, tokens.accessToken);
     await submitQuoteWithToken(tokens.accessToken, draft, tenantSlug);
   };
 
@@ -254,6 +268,16 @@ export default function PublicQuoteRegisterPage() {
         <p className="text-gray-600 text-sm mb-6">
           Ao criar a conta, seu orçamento será enviado para análise da empresa. Você receberá a confirmação por e-mail.
         </p>
+
+        {sessionExpired && (
+          <div
+            role="alert"
+            className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm"
+            data-testid="session-expired-notice"
+          >
+            Sua sessão expirou. Faça login novamente para continuar.
+          </div>
+        )}
 
         <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-8 lg:items-start">
           {/* Main form area */}

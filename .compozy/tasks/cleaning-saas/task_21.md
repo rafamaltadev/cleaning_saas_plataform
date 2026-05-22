@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Public Scheduling Flow with Availability Sync"
 type: feature
 complexity: high

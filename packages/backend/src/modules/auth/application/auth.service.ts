@@ -132,8 +132,18 @@ export class AuthService {
     );
   }
 
+  async issueTokenPairPublicClient(
+    user: User,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    return this.issueTokenPairPublic(
+      user,
+      this.configService.get<string>('jwt.publicClientAccessExpiration') ?? '60m',
+    );
+  }
+
   async issueTokenPairPublic(
     user: User,
+    accessExpiresIn?: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const jwtPayload: JwtPayload = {
       sub: user.id,
@@ -144,7 +154,9 @@ export class AuthService {
     const accessToken = this.jwtService.sign(jwtPayload, {
       secret: this.configService.get<string>('jwt.secret'),
       expiresIn:
-        this.configService.get<string>('jwt.accessExpiration') ?? '15m',
+        accessExpiresIn ??
+        this.configService.get<string>('jwt.accessExpiration') ??
+        '15m',
     });
 
     const tokenId = crypto.randomUUID();

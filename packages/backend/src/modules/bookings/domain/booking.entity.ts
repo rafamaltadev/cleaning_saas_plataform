@@ -6,7 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export type BookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed';
+export type BookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed' | 'pending_approval';
+export type BookingOrigin = 'internal' | 'public';
 
 @Entity('bookings')
 export class Booking {
@@ -48,6 +49,12 @@ export class Booking {
 
   @Column({ type: 'varchar', nullable: true })
   observations: string | null;
+
+  @Column({ type: 'varchar', length: 20, default: 'internal' })
+  origin: BookingOrigin;
+
+  @Column({ type: 'boolean', default: false })
+  approval_required: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

@@ -5,29 +5,14 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { listBookings, completeBooking } from '../../api/bookings';
 import type { RootState } from '../../store';
-import type { ApiBooking, ApiBookingStatus } from '../../types';
+import type { ApiBooking } from '../../types';
+import { BOOKING_STATUS_LABELS, bookingBadgeVariant } from '../../utils/bookingStatusLabels';
 
 const PAGE_SIZE = 20;
 
 function isVisuallyExpired(booking: ApiBooking): boolean {
   return booking.status === 'cancelled' && new Date(booking.scheduled_start) < new Date();
 }
-
-function bookingBadgeVariant(status: ApiBookingStatus) {
-  switch (status) {
-    case 'confirmed': return 'success' as const;
-    case 'rescheduled': return 'warning' as const;
-    case 'cancelled': return 'error' as const;
-    default: return 'neutral' as const;
-  }
-}
-
-const BOOKING_STATUS_LABELS: Record<string, string> = {
-  confirmed: 'Confirmado',
-  rescheduled: 'Reagendado',
-  cancelled: 'Cancelado',
-  completed: 'Concluído',
-};
 
 const COMPLETE_ROLES = ['tenant_admin', 'supervisor'] as const;
 
@@ -94,6 +79,7 @@ export default function BookingListPage() {
           aria-label="Filter by status"
         >
           <option value="">Todos os status</option>
+          <option value="pending_approval">Aguardando aprovação</option>
           <option value="confirmed">Confirmado</option>
           <option value="rescheduled">Reagendado</option>
           <option value="cancelled">Cancelado</option>

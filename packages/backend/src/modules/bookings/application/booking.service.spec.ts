@@ -23,6 +23,8 @@ function makeBooking(overrides: Partial<Booking> = {}): Booking {
     service_address: null,
     use_client_address: true,
     observations: null,
+    origin: 'internal',
+    approval_required: false,
     created_at: new Date(),
     updated_at: new Date(),
     deleted_at: null,
@@ -45,11 +47,18 @@ describe('BookingService', () => {
     Pick<BookingRepository, 'findByIdempotencyKey' | 'findById' | 'findPaginated' | 'save'>
   >;
   let eventBusMock: jest.Mocked<Pick<DomainEventBus, 'emit'>>;
-  let mockManager: { findOne: jest.Mock; save: jest.Mock };
-  let dataSourceMock: { transaction: jest.Mock };
+  let mockManager: { findOne: jest.Mock; save: jest.Mock; query: jest.Mock };
+  let dataSourceMock: { transaction: jest.Mock; query: jest.Mock };
+  let mockClientRepo: { findById: jest.Mock };
+  let mockServiceRepo: { findById: jest.Mock };
 
   beforeEach(() => {
-    mockManager = { findOne: jest.fn(), save: jest.fn() };
+    mockManager = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+      // Default: no slot conflicts (empty array)
+      query: jest.fn().mockResolvedValue([]),
+    };
     repoMock = {
       findByIdempotencyKey: jest.fn(),
       findById: jest.fn(),
@@ -57,14 +66,18 @@ describe('BookingService', () => {
       save: jest.fn(),
     };
     eventBusMock = { emit: jest.fn() };
+    mockClientRepo = { findById: jest.fn().mockResolvedValue(null) };
+    mockServiceRepo = { findById: jest.fn().mockResolvedValue(null) };
     dataSourceMock = {
       transaction: jest.fn().mockImplementation(async (fn) => fn(mockManager)),
+      // resolveBookingContext uses dataSource.query to fetch quote total
+      query: jest.fn().mockResolvedValue([null]),
     };
 
     service = new BookingService(
       repoMock as unknown as BookingRepository,
-      {} as unknown as ClientRepository,
-      {} as unknown as ServiceRepository,
+      mockClientRepo as unknown as ClientRepository,
+      mockServiceRepo as unknown as ServiceRepository,
       eventBusMock as unknown as DomainEventBus,
       dataSourceMock as unknown as DataSource,
     );

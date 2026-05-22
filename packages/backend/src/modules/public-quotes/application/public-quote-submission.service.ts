@@ -106,7 +106,7 @@ export class PublicQuoteSubmissionService {
       client_id: client.id,
       service_id: service.id,
       pricing_rule_id: null,
-      status: 'draft',
+      status: 'sent',
       origin: 'public',
       approval_required: true,
       created_by_client_id: client.id,

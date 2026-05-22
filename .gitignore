@@ -34,3 +34,6 @@ cypress/screenshots/
 .claude/
 .mcpjam/
 frontend_prompts
+
+# Local startup scripts (machine-specific paths and credentials)
+start-cleaning-saas.bat

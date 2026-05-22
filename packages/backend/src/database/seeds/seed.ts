@@ -202,13 +202,14 @@ export async function seed(dataSource: DataSource): Promise<void> {
   for (const b of bookings) {
     await dataSource.query(
       `INSERT INTO bookings (id, tenant_id, quote_id, client_id, service_id,
-         scheduled_start, scheduled_end, status, assigned_team, idempotency_key)
+         scheduled_start, scheduled_end, status, assigned_team, idempotency_key,
+         origin, approval_required)
        VALUES ($1, $2, $3, $4, $5,
          ${b.startExpr}, ${b.endExpr},
-         $6, $7, $8)
+         $6, $7, $8, $9, $10)
        ON CONFLICT (id) DO NOTHING`,
       [b.id, DEFAULT_TENANT_ID, b.quoteId, b.clientId, b.serviceId,
-       b.status, b.team, b.idem],
+       b.status, b.team, b.idem, 'internal', false],
     );
   }
 }

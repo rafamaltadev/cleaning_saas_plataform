@@ -62,6 +62,8 @@ function makeBookingEntity(overrides: Partial<Booking> = {}): Booking {
     service_address: null,
     use_client_address: true,
     observations: null,
+    origin: 'internal',
+    approval_required: false,
     created_at: new Date(),
     updated_at: new Date(),
     deleted_at: null,

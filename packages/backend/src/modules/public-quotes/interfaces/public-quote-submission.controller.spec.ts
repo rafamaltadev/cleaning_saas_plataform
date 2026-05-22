@@ -17,7 +17,7 @@ const OTHER_SERVICE_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 
 const MOCK_QUOTE_RESULT = {
   id: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-  status: 'draft',
+  status: 'sent',
   estimated_total_cents: 45000,
 };
 

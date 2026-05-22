@@ -81,7 +81,7 @@ export class PublicAuthService {
       }),
     );
 
-    return this.authService.issueTokenPairPublic(user);
+    return this.authService.issueTokenPairPublicClient(user);
   }
 
   async loginAsClient(
@@ -115,7 +115,7 @@ export class PublicAuthService {
       throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'E-mail ou senha inválidos' });
     }
 
-    return this.authService.issueTokenPairPublic(user);
+    return this.authService.issueTokenPairPublicClient(user);
   }
 
   async handleOAuthUser(
@@ -178,6 +178,6 @@ export class PublicAuthService {
       throw new ForbiddenException({ code: 'NOT_CLIENT', message: 'Este endpoint é exclusivo para clientes' });
     }
 
-    return this.authService.issueTokenPairPublic(user);
+    return this.authService.issueTokenPairPublicClient(user);
   }
 }

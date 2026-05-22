@@ -1,4 +1,4 @@
-import { Booking } from './booking.entity';
+import { Booking, BookingOrigin } from './booking.entity';
 
 interface BookingContext {
   clientName?: string;
@@ -20,6 +20,8 @@ export class BookingResponseDto {
   service_address: string | null;
   use_client_address: boolean;
   observations: string | null;
+  origin: BookingOrigin;
+  approval_required: boolean;
   created_at: Date;
   updated_at: Date;
   client_name?: string;
@@ -41,6 +43,8 @@ export class BookingResponseDto {
     dto.service_address = booking.service_address ?? null;
     dto.use_client_address = booking.use_client_address ?? true;
     dto.observations = booking.observations ?? null;
+    dto.origin = booking.origin ?? 'internal';
+    dto.approval_required = booking.approval_required ?? false;
     dto.created_at = booking.created_at;
     dto.updated_at = booking.updated_at;
     if (context?.clientName) dto.client_name = context.clientName;

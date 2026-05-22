@@ -7,23 +7,8 @@ import Card from '../../components/ui/Card';
 import { getBookingById, completeBooking } from '../../api/bookings';
 import { apiClient } from '../../api/client';
 import type { RootState } from '../../store';
-import type { ApiBooking, ApiBookingStatus } from '../../types';
-
-const BOOKING_STATUS_LABELS: Record<ApiBookingStatus, string> = {
-  confirmed: 'Confirmado',
-  completed: 'Concluído',
-  cancelled: 'Cancelado',
-  rescheduled: 'Reagendado',
-};
-
-function bookingBadgeVariant(status: ApiBookingStatus) {
-  switch (status) {
-    case 'confirmed': return 'success' as const;
-    case 'rescheduled': return 'warning' as const;
-    case 'cancelled': return 'error' as const;
-    default: return 'neutral' as const;
-  }
-}
+import type { ApiBooking } from '../../types';
+import { BOOKING_STATUS_LABELS, bookingBadgeVariant } from '../../utils/bookingStatusLabels';
 
 function nowDatetimeLocal(): string {
   const now = new Date();
@@ -52,6 +37,10 @@ export default function BookingDetailPage() {
   const [error, setError] = useState('');
   const [completing, setCompleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [newStart, setNewStart] = useState('');
   const [newEnd, setNewEnd] = useState('');
@@ -76,6 +65,37 @@ export default function BookingDetailPage() {
   const isVisuallyExpired = booking !== null
     && booking.status === 'cancelled'
     && new Date(booking.scheduled_start) < new Date();
+
+  async function handleApprove() {
+    if (!id) return;
+    setApproving(true);
+    try {
+      const { data } = await apiClient.put<{ data: ApiBooking }>(`/bookings/${id}`, { status: 'confirmed' });
+      setBooking(data.data);
+    } catch {
+      setError('Erro ao aprovar agendamento.');
+    } finally {
+      setApproving(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!id) return;
+    setRejecting(true);
+    try {
+      const { data } = await apiClient.put<{ data: ApiBooking }>(`/bookings/${id}`, {
+        status: 'cancelled',
+        observations: rejectReason || undefined,
+      });
+      setBooking(data.data);
+      setShowRejectModal(false);
+      setRejectReason('');
+    } catch {
+      setError('Erro ao rejeitar agendamento.');
+    } finally {
+      setRejecting(false);
+    }
+  }
 
   async function handleComplete() {
     if (!id) return;
@@ -145,6 +165,26 @@ export default function BookingDetailPage() {
           <Badge variant={bookingBadgeVariant(booking.status)}>
             {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
           </Badge>
+          {booking.status === 'pending_approval' && canComplete && (
+            <>
+              <Button
+                variant="primary"
+                loading={approving}
+                onClick={handleApprove}
+                aria-label="Aprovar agendamento"
+              >
+                Aprovar
+              </Button>
+              <Button
+                variant="danger"
+                loading={rejecting}
+                onClick={() => setShowRejectModal(true)}
+                aria-label="Rejeitar agendamento"
+              >
+                Rejeitar
+              </Button>
+            </>
+          )}
           {booking.status === 'confirmed' && (
             <>
               {canComplete && (
@@ -284,6 +324,22 @@ export default function BookingDetailPage() {
                 <dd className="text-sm text-text-primary">{booking.observations}</dd>
               </div>
             )}
+            {booking.origin && (
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <dt className="text-sm text-text-secondary">Origem</dt>
+                <dd className="text-sm text-text-primary">
+                  {booking.origin === 'public' ? 'Público' : 'Interno'}
+                </dd>
+              </div>
+            )}
+            {booking.approval_required && (
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <dt className="text-sm text-text-secondary">Aprovação</dt>
+                <dd>
+                  <Badge variant="warning">Requer aprovação</Badge>
+                </dd>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-sm text-text-secondary">Criado em</dt>
               <dd className="text-sm text-text-primary">
@@ -293,6 +349,47 @@ export default function BookingDetailPage() {
           </dl>
         </Card>
       </div>
+
+      {showRejectModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowRejectModal(false)}
+          aria-modal="true"
+          role="dialog"
+          aria-labelledby="reject-booking-modal-title"
+        >
+          <div
+            className="bg-surface rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="reject-booking-modal-title" className="text-lg font-semibold text-text-primary mb-2">
+              Rejeitar Agendamento
+            </h2>
+            <p className="text-sm text-text-secondary mb-4">
+              O agendamento será cancelado. Motivo (opcional):
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Motivo da rejeição…"
+              rows={3}
+              className="w-full px-3 py-2 rounded bg-surface-alt border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none mb-4"
+            />
+            <div className="flex gap-3 justify-end">
+              <Button variant="ghost" onClick={() => setShowRejectModal(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                loading={rejecting}
+                onClick={handleReject}
+              >
+                Rejeitar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showReactivateModal && (
         <div

@@ -24,7 +24,10 @@ const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   rescheduled: ['completed', 'cancelled', 'confirmed'],
   cancelled: ['confirmed'],
   completed: ['confirmed'],
+  pending_approval: ['confirmed', 'cancelled'],
 };
+
+export const BUSY_STATUSES: BookingStatus[] = ['confirmed', 'rescheduled', 'pending_approval'];
 
 @Injectable()
 export class BookingService {
@@ -108,6 +111,24 @@ export class BookingService {
         await manager.save(Quote, quote);
       }
 
+      // Atomic slot conflict check with row-level lock
+      const conflicting = await manager.query(
+        `SELECT id FROM bookings
+          WHERE tenant_id = $1
+            AND deleted_at IS NULL
+            AND status = ANY($2)
+            AND scheduled_start < $4
+            AND scheduled_end > $3
+          FOR UPDATE SKIP LOCKED`,
+        [tenantId, BUSY_STATUSES, new Date(dto.scheduled_start), new Date(dto.scheduled_end)],
+      ) as { id: string }[];
+      if (conflicting.length > 0) {
+        throw new BadRequestException({
+          code: 'SLOT_UNAVAILABLE',
+          message: 'The requested time slot is already taken',
+        });
+      }
+
       const newBooking = new Booking();
       newBooking.tenant_id = tenantId;
       newBooking.quote_id = dto.quote_id;
@@ -116,6 +137,8 @@ export class BookingService {
       newBooking.scheduled_start = new Date(dto.scheduled_start);
       newBooking.scheduled_end = new Date(dto.scheduled_end);
       newBooking.status = 'confirmed';
+      newBooking.origin = 'internal';
+      newBooking.approval_required = false;
       newBooking.assigned_team = dto.assigned_team ?? null;
       newBooking.idempotency_key = dto.idempotency_key;
       newBooking.service_address = dto.service_address ?? null;

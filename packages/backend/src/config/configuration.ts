@@ -13,6 +13,7 @@ export default () => ({
     refreshSecret: process.env.JWT_REFRESH_SECRET,
     accessExpiration: process.env.JWT_ACCESS_EXPIRATION ?? '15m',
     refreshExpiration: process.env.JWT_REFRESH_EXPIRATION ?? '30d',
+    publicClientAccessExpiration: process.env.PUBLIC_CLIENT_TOKEN_EXPIRATION ?? '60m',
   },
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   throttle: {

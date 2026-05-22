@@ -18,6 +18,7 @@ const COLUMNS: { id: KanbanStatus; label: string }[] = [
   { id: 'new_lead', label: 'Novo Lead' },
   { id: 'contacted', label: 'Contatado' },
   { id: 'quote_sent', label: 'Orçamento Enviado' },
+  { id: 'pending_approval', label: 'Aguardando Aprovação' },
   { id: 'booking_confirmed', label: 'Agendamento Confirmado' },
   { id: 'completed', label: 'Concluído' },
   { id: 'cancelled', label: 'Cancelado' },
@@ -27,6 +28,7 @@ const STATUS_LABELS: Record<KanbanStatus, string> = {
   new_lead: 'Novo Lead',
   contacted: 'Contatado',
   quote_sent: 'Orçamento Enviado',
+  pending_approval: 'Aguardando Aprovação',
   booking_confirmed: 'Agendamento Confirmado',
   completed: 'Concluído',
   cancelled: 'Cancelado',
@@ -47,6 +49,7 @@ function apiQuoteStatusToKanban(status: string): KanbanStatus {
 
 function apiBookingStatusToKanban(status: string): KanbanStatus {
   switch (status) {
+    case 'pending_approval': return 'pending_approval';
     case 'confirmed':
     case 'rescheduled': return 'booking_confirmed';
     case 'completed': return 'completed';
@@ -59,6 +62,7 @@ function statusBadgeVariant(status: KanbanStatus) {
   if (status === 'completed') return 'success' as const;
   if (status === 'cancelled') return 'error' as const;
   if (status === 'booking_confirmed') return 'warning' as const;
+  if (status === 'pending_approval') return 'warning' as const;
   return 'neutral' as const;
 }
 
@@ -84,11 +88,14 @@ function KanbanCardItem({ card }: KanbanCardItemProps) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`bg-surface-alt border border-border rounded p-3 cursor-grab active:cursor-grabbing transition-opacity ${
+      className={`bg-surface-alt border rounded p-3 cursor-grab active:cursor-grabbing transition-opacity ${
         isDragging ? 'opacity-50' : 'opacity-100'
-      }`}
+      } ${card.status === 'pending_approval' ? 'border-yellow-400/60 bg-yellow-400/5' : 'border-border'}`}
       data-testid={`kanban-card-${card.id}`}
     >
+      {card.status === 'pending_approval' && (
+        <p className="text-xs font-semibold text-yellow-600 mb-1">⏳ Aguardando aprovação</p>
+      )}
       <p className="text-sm font-medium text-text-primary truncate">{card.clientName}</p>
       <p className="text-xs text-text-secondary mt-0.5 truncate">{card.serviceName}</p>
       {card.scheduledDate && (

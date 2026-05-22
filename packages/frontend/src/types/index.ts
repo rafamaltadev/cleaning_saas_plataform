@@ -103,7 +103,7 @@ export interface ServiceAddon {
 
 export type QuoteStatus = 'new_lead' | 'contacted' | 'quote_sent';
 export type BookingStatus = 'booking_confirmed' | 'completed' | 'cancelled';
-export type KanbanStatus = QuoteStatus | BookingStatus;
+export type KanbanStatus = QuoteStatus | BookingStatus | 'pending_approval';
 
 export interface Quote {
   id: string;
@@ -144,7 +144,7 @@ export interface QuoteAddon {
 }
 
 export type ApiQuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'rejected';
-export type ApiBookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed';
+export type ApiBookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed' | 'pending_approval';
 
 export interface PaginationMeta {
   total: number;
@@ -202,6 +202,8 @@ export interface ApiBooking {
   use_client_address?: boolean;
   observations?: string | null;
   quote_total_cents?: number;
+  origin?: 'internal' | 'public';
+  approval_required?: boolean;
 }
 
 export interface ApiPricingRule {
