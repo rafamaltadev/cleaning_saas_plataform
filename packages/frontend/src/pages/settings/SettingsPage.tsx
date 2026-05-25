@@ -7,8 +7,9 @@ import { getCategories, createCategory, updateCategory, deleteCategory } from '.
 import type { BusinessHours, Service, ServiceCategory } from '../../types';
 import BrandingSection from './sections/BrandingSection';
 import CompanyProfileSection from './sections/CompanyProfileSection';
+import BillingSection from './sections/BillingSection';
 
-type Tab = 'profile' | 'branding' | 'hours' | 'categories' | 'services' | 'payment';
+type Tab = 'profile' | 'branding' | 'hours' | 'categories' | 'services' | 'billing';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Perfil da Empresa' },
@@ -16,7 +17,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'hours', label: 'Horário de Funcionamento' },
   { id: 'categories', label: 'Categorias' },
   { id: 'services', label: 'Serviços e Preços' },
-  { id: 'payment', label: 'Pagamento' },
+  { id: 'billing', label: 'Plano e Cobrança' },
 ];
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -56,7 +57,7 @@ export default function SettingsPage() {
           {activeTab === 'hours' && <BusinessHoursSection />}
           {activeTab === 'categories' && <CategoriesSection />}
           {activeTab === 'services' && <ServicesSection />}
-          {activeTab === 'payment' && <PaymentSection />}
+          {activeTab === 'billing' && <BillingSection />}
         </div>
       </div>
     </div>
@@ -286,22 +287,3 @@ function ServicesSection() {
   );
 }
 
-function PaymentSection() {
-  return (
-    <Card title="Integração de Pagamento">
-      <div className="flex flex-col items-center justify-center py-10 text-center" aria-label="Stripe placeholder">
-        <div className="w-16 h-16 rounded-full bg-surface-alt flex items-center justify-center mb-4">
-          <span className="text-3xl">💳</span>
-        </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">Integração com Stripe</h3>
-        <p className="text-text-secondary text-sm mb-6 max-w-sm">
-          Conecte sua conta Stripe para aceitar pagamentos online de clientes.
-          Esta funcionalidade estará disponível em breve.
-        </p>
-        <Button variant="secondary" disabled>
-          Em Breve
-        </Button>
-      </div>
-    </Card>
-  );
-}

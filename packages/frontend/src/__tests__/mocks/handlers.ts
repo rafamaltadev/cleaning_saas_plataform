@@ -471,6 +471,14 @@ export const handlers = [
     );
   }),
 
+  // Billing endpoints — minimal global stubs (BillingSection.test.tsx overrides per-test)
+  http.get(`${BASE}/billing/subscription/me`, () =>
+    HttpResponse.json({ data: null }),
+  ),
+  http.get(`${BASE}/billing/plans`, () =>
+    HttpResponse.json({ data: [] }),
+  ),
+
   http.get(`${BASE}/pricing-rules`, () => {
     return HttpResponse.json({
       items: [

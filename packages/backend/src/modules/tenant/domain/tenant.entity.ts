@@ -15,7 +15,13 @@ export class Tenant {
   name: string;
 
   @Column({ type: 'varchar' })
+  email: string;
+
+  @Column({ type: 'varchar' })
   subscription_plan: string;
+
+  @Column({ type: 'varchar', nullable: true, unique: true })
+  stripe_customer_id: string | null;
 
   @Column({ type: 'varchar', length: 3 })
   currency: string;

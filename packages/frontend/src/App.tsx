@@ -28,6 +28,10 @@ import PublicQuoteFormPage from './pages/public/PublicQuoteFormPage';
 import PublicQuoteRegisterPage from './pages/public/PublicQuoteRegisterPage';
 import PublicSchedulingPage from './pages/public/PublicSchedulingPage';
 import PublicConfirmationPage from './pages/public/PublicConfirmationPage';
+import SubscriptionSuccessPage from './pages/billing/SubscriptionSuccessPage';
+import SubscriptionCancelPage from './pages/billing/SubscriptionCancelPage';
+import PlansPage from './pages/platform-admin/PlansPage';
+import SubscriptionsPage from './pages/platform-admin/SubscriptionsPage';
 
 export default function App() {
   return (
@@ -87,6 +91,24 @@ export default function App() {
                 element={
                   <RoleGuard requiredRoles={['tenant_admin', 'supervisor']}>
                     <SettingsPage />
+                  </RoleGuard>
+                }
+              />
+              <Route path="/settings/billing/success" element={<SubscriptionSuccessPage />} />
+              <Route path="/settings/billing/cancel" element={<SubscriptionCancelPage />} />
+              <Route
+                path="/platform-admin/plans"
+                element={
+                  <RoleGuard requiredRoles={['platform_admin']}>
+                    <PlansPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/platform-admin/subscriptions"
+                element={
+                  <RoleGuard requiredRoles={['platform_admin']}>
+                    <SubscriptionsPage />
                   </RoleGuard>
                 }
               />

@@ -8,7 +8,9 @@ function makeTenant(overrides: Partial<Tenant> = {}): Tenant {
   return {
     id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     name: 'Acme Clean',
+    email: 'acme@tenant.local',
     subscription_plan: 'basic',
+    stripe_customer_id: null,
     currency: 'BRL',
     timezone: 'America/Sao_Paulo',
     tenant_slug: 'acme-clean',

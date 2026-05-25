@@ -30,17 +30,14 @@ describe('SettingsPage', () => {
     });
   });
 
-  it('renders Stripe placeholder section without errors', async () => {
+  it('renders billing section when Plano e Cobrança tab is clicked', async () => {
     const user = userEvent.setup();
     renderWithProviders(<SettingsPage />, { preloadedState: authenticatedState });
 
-    // Click the Payment tab
-    await user.click(screen.getByRole('button', { name: /^payment$/i }));
+    await user.click(screen.getByRole('button', { name: /plano e cobrança/i }));
 
-    // Verify Stripe placeholder content renders
     await waitFor(() => {
-      expect(screen.getByText(/stripe integration/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /coming soon/i })).toBeInTheDocument();
+      expect(screen.getByText(/você ainda não possui uma assinatura ativa/i)).toBeInTheDocument();
     });
   });
 });

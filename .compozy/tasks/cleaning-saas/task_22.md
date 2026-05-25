@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Stripe Platform Subscriptions (Level A: tenant pays SaaS)"
 type: feature
 complexity: high

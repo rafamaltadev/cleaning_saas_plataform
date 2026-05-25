@@ -32,4 +32,13 @@ export default () => ({
     appSecret: process.env.FACEBOOK_OAUTH_APP_SECRET,
     callbackUrl: process.env.FACEBOOK_OAUTH_CALLBACK_URL ?? 'http://localhost:3000/api/v1/public',
   },
+  stripe: {
+    platformSecretKey: process.env.STRIPE_PLATFORM_SECRET_KEY ?? '',
+    platformPublishableKey: process.env.STRIPE_PLATFORM_PUBLISHABLE_KEY ?? '',
+    platformWebhookSecret: process.env.STRIPE_PLATFORM_WEBHOOK_SECRET ?? '',
+    platformFeePercent: parseFloat(process.env.PLATFORM_FEE_PERCENT ?? '1'),
+    feeBrCardPercent: parseFloat(process.env.STRIPE_FEE_BR_CARD_PERCENT ?? '3.99'),
+    feeBrPixPercent: parseFloat(process.env.STRIPE_FEE_BR_PIX_PERCENT ?? '0.99'),
+    feeUsCardPercent: parseFloat(process.env.STRIPE_FEE_US_CARD_PERCENT ?? '2.9'),
+  },
 });

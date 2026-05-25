@@ -27,4 +27,12 @@ export const envValidationSchema = Joi.object({
   FACEBOOK_OAUTH_APP_ID: Joi.string().optional().allow(''),
   FACEBOOK_OAUTH_APP_SECRET: Joi.string().optional().allow(''),
   FACEBOOK_OAUTH_CALLBACK_URL: Joi.string().optional().allow(''),
+  // Stripe — optional, graceful degradation when missing
+  STRIPE_PLATFORM_SECRET_KEY: Joi.string().optional().allow(''),
+  STRIPE_PLATFORM_PUBLISHABLE_KEY: Joi.string().optional().allow(''),
+  STRIPE_PLATFORM_WEBHOOK_SECRET: Joi.string().optional().allow(''),
+  PLATFORM_FEE_PERCENT: Joi.number().default(1),
+  STRIPE_FEE_BR_CARD_PERCENT: Joi.number().default(3.99),
+  STRIPE_FEE_BR_PIX_PERCENT: Joi.number().default(0.99),
+  STRIPE_FEE_US_CARD_PERCENT: Joi.number().default(2.9),
 });
