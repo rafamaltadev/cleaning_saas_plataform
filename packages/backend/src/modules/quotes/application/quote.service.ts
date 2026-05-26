@@ -338,7 +338,12 @@ export class QuoteService {
       throw new NotFoundException({ code: 'QUOTE_NOT_FOUND', message: 'Quote not found' });
     }
 
-    this.assertValidTransition(quote.status, 'sent');
+    if (quote.status !== 'draft') {
+      throw new BadRequestException({
+        code: 'INVALID_TRANSITION',
+        message: `Cannot transition quote from '${quote.status}' to 'sent'`,
+      });
+    }
 
     const oldStatus = quote.status;
     await this.dataSource.transaction(async (manager) => {

@@ -129,25 +129,33 @@ export class StripePlatformWebhookController {
       .getRepository(TenantSubscription)
       .findOne({ where: { stripe_subscription_id: stripeSubscriptionId } });
 
+    let subscriptionResourceId: string;
     if (!existing) {
-      const discountRatio = plan.amount_cents > 0
-        ? Math.max(0, 1 - plan.amount_cents / plan.amount_cents)
+      const chargedAmount = stripeSub.items?.data?.[0]?.price?.unit_amount ?? plan.amount_cents;
+      const discountRatio = plan.amount_cents > 0 && chargedAmount < plan.amount_cents
+        ? Math.max(0, 1 - chargedAmount / plan.amount_cents)
         : 0;
 
-      await this.dataSource.getRepository(TenantSubscription).save({
+      const periodStart = stripeSub.current_period_start ?? stripeSub.items?.data?.[0]?.current_period_start;
+      const periodEnd = stripeSub.current_period_end ?? stripeSub.items?.data?.[0]?.current_period_end;
+
+      const savedSub = await this.dataSource.getRepository(TenantSubscription).save({
         tenant_id: tenantId,
         plan_id: planId,
         stripe_subscription_id: stripeSubscriptionId,
         stripe_customer_id: customerId,
         status: stripeSub.status as SubscriptionStatus,
-        current_period_start: new Date(stripeSub.current_period_start * 1000),
-        current_period_end: new Date(stripeSub.current_period_end * 1000),
+        current_period_start: periodStart ? new Date(periodStart * 1000) : null,
+        current_period_end: periodEnd ? new Date(periodEnd * 1000) : null,
         cancel_at_period_end: stripeSub.cancel_at_period_end,
         canceled_at: null,
         trial_ends_at: stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : null,
         grandfathered_price_cents: plan.amount_cents,
         discount_ratio: discountRatio,
       });
+      subscriptionResourceId = savedSub.id;
+    } else {
+      subscriptionResourceId = existing.id;
     }
 
     await this.dataSource.getRepository(Tenant).update(
@@ -155,7 +163,7 @@ export class StripePlatformWebhookController {
       { stripe_customer_id: customerId },
     );
 
-    await this.logAudit(tenantId, 'checkout.session.completed', 'tenant_subscription', stripeSubscriptionId);
+    await this.logAudit(tenantId, 'checkout.session.completed', 'tenant_subscription', subscriptionResourceId);
   }
 
   private async handleSubscriptionUpdated(sub: any): Promise<void> {

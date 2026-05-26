@@ -1,5 +1,4 @@
 import { Logger } from '@nestjs/common';
-import Stripe from 'stripe';
 
 const logger = new Logger('StripeConfig');
 
@@ -14,7 +13,8 @@ export function getStripeClient(): any {
     return null;
   }
 
-  stripeInstance = new (Stripe as any)(secretKey, { apiVersion: '2026-04-22.dahlia' });
+  const StripeLib = require('stripe');
+  stripeInstance = new StripeLib(secretKey, { apiVersion: '2026-04-22.dahlia' });
   return stripeInstance;
 }
 

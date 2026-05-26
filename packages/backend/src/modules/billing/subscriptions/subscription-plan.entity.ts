@@ -1,4 +1,6 @@
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -52,4 +54,10 @@ export class SubscriptionPlan {
 
   @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date | null;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  normalizeCurrency() {
+    if (this.currency) this.currency = this.currency.toUpperCase();
+  }
 }

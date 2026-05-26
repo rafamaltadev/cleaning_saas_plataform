@@ -66,6 +66,8 @@ function makeQuote(overrides: Partial<Quote> = {}): Quote {
 describe('QuoteService', () => {
   let service: QuoteService;
   let quoteRepoMock: jest.Mocked<Pick<QuoteRepository, 'findById' | 'findPaginated' | 'save'>>;
+  let clientRepoMock: jest.Mocked<Pick<ClientRepository, 'findById'>>;
+  let quoteAddonRepoMock: jest.Mocked<Pick<QuoteAddonRepository, 'findByQuoteId'>>;
   let serviceRepoMock: jest.Mocked<Pick<ServiceRepository, 'findById'>>;
   let pricingRuleRepoMock: jest.Mocked<Pick<PricingRuleRepository, 'findById'>>;
   let pricingServiceMock: jest.Mocked<Pick<PricingService, 'calculate'>>;
@@ -80,7 +82,9 @@ describe('QuoteService', () => {
       findPaginated: jest.fn(),
       save: jest.fn(),
     };
-    serviceRepoMock = { findById: jest.fn() };
+    clientRepoMock = { findById: jest.fn().mockResolvedValue(null) };
+    quoteAddonRepoMock = { findByQuoteId: jest.fn().mockResolvedValue([]) };
+    serviceRepoMock = { findById: jest.fn().mockResolvedValue(null) };
     pricingRuleRepoMock = { findById: jest.fn() };
     pricingServiceMock = { calculate: jest.fn() };
     eventBusMock = { emit: jest.fn() };
@@ -92,8 +96,8 @@ describe('QuoteService', () => {
 
     service = new QuoteService(
       quoteRepoMock as unknown as QuoteRepository,
-      {} as unknown as QuoteAddonRepository,
-      {} as unknown as ClientRepository,
+      quoteAddonRepoMock as unknown as QuoteAddonRepository,
+      clientRepoMock as unknown as ClientRepository,
       serviceRepoMock as unknown as ServiceRepository,
       pricingRuleRepoMock as unknown as PricingRuleRepository,
       pricingServiceMock as unknown as PricingService,
@@ -489,6 +493,8 @@ describe('QuoteService', () => {
     it('updates manual_discount_percent', async () => {
       const quote = makeQuote({ status: 'draft' });
       quoteRepoMock.findById.mockResolvedValue(quote);
+      serviceRepoMock.findById.mockResolvedValue(makeService());
+      pricingServiceMock.calculate.mockReturnValue(1000);
       quoteRepoMock.save.mockResolvedValue({ ...quote, manual_discount_percent: 10 });
 
       const result = await service.update('quote-uuid', 'tenant-uuid', 'actor', {

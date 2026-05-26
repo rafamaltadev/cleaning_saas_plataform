@@ -22,6 +22,7 @@ function makePlan(overrides: Partial<SubscriptionPlan> = {}): SubscriptionPlan {
     created_at: new Date(),
     updated_at: new Date(),
     deleted_at: null,
+    normalizeCurrency() { if (this.currency) this.currency = this.currency.toUpperCase(); },
     ...overrides,
   };
 }

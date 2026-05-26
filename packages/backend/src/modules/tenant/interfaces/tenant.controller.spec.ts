@@ -22,7 +22,7 @@ describe('TenantController', () => {
 
   describe('getMe', () => {
     it('delegates to tenantService.getById with the tenantId from request', async () => {
-      const dto = { id: 'tenant-uuid', name: 'Acme', subscription_plan: 'basic', currency: 'BRL', timezone: 'UTC', created_at: new Date(), updated_at: new Date() };
+      const dto = { id: 'tenant-uuid', name: 'Acme', email: 'tenant1@seed.local', stripe_customer_id: 'cus_test_fixture_1', subscription_plan: 'basic', currency: 'BRL', timezone: 'UTC', created_at: new Date(), updated_at: new Date() };
       (mockTenantService.getById as jest.Mock).mockResolvedValue(dto);
 
       const result = await controller.getMe(makeRequest('tenant-uuid'));
@@ -35,7 +35,7 @@ describe('TenantController', () => {
   describe('updateMe', () => {
     it('delegates to tenantService.update with tenantId and dto', async () => {
       const dto = { timezone: 'UTC' };
-      const response = { id: 'tenant-uuid', name: 'Acme', subscription_plan: 'basic', currency: 'BRL', timezone: 'UTC', created_at: new Date(), updated_at: new Date() };
+      const response = { id: 'tenant-uuid', name: 'Acme', email: 'tenant2@seed.local', stripe_customer_id: 'cus_test_fixture_2', subscription_plan: 'basic', currency: 'BRL', timezone: 'UTC', created_at: new Date(), updated_at: new Date() };
       (mockTenantService.update as jest.Mock).mockResolvedValue(response);
 
       const result = await controller.updateMe(makeRequest('tenant-uuid'), dto);

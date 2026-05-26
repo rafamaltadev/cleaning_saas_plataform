@@ -8,7 +8,7 @@ interface AvailabilityCalendarProps {
   primaryColor?: string;
 }
 
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const WEEKDAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
@@ -33,6 +33,7 @@ export default function AvailabilityCalendar({
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [hoveredDay, setHoveredDay] = useState<string | null>(null);
 
   const primary = primaryColor ?? '#4F46E5';
 
@@ -88,7 +89,7 @@ export default function AvailabilityCalendar({
           onClick={prevMonth}
           disabled={!canGoPrev}
           aria-label="Mês anterior"
-          className="w-11 h-11 flex items-center justify-center rounded-lg text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors text-xl"
+          className="w-9 h-9 flex items-center justify-center rounded-full text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors text-xl"
         >
           ‹
         </button>
@@ -99,7 +100,7 @@ export default function AvailabilityCalendar({
           type="button"
           onClick={nextMonth}
           aria-label="Próximo mês"
-          className="w-11 h-11 flex items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors text-xl"
+          className="w-9 h-9 flex items-center justify-center rounded-full text-gray-700 hover:bg-gray-100 transition-colors text-xl"
         >
           ›
         </button>
@@ -126,15 +127,20 @@ export default function AvailabilityCalendar({
           const isPast = dateStr < todayIso;
           const isAvailable = availableDates.has(dateStr);
           const isDisabled = isPast || !isAvailable;
+          const isHovered = hoveredDay === dateStr;
 
           const cellClass = (() => {
-            const base =
-              'min-h-[44px] min-w-[44px] w-full aspect-square rounded-lg text-sm font-medium flex items-center justify-center transition-all';
-            if (isPast) return `${base} text-gray-300 cursor-not-allowed`;
-            if (!isAvailable) return `${base} text-gray-400 cursor-not-allowed`;
+            const base = 'w-9 h-9 rounded-full mx-auto flex items-center justify-center text-sm font-medium transition-all';
+            if (isDisabled) return `${base} text-gray-300 cursor-not-allowed`;
             if (isSelected) return `${base} font-bold`;
-            if (isToday) return `${base} border-2 font-semibold`;
-            return `${base} text-gray-900 hover:bg-gray-100 cursor-pointer`;
+            return `${base} text-gray-900 cursor-pointer`;
+          })();
+
+          const inlineStyle = (() => {
+            if (isSelected) return { backgroundColor: primary, color: '#fff' };
+            if (isToday && !isDisabled) return { backgroundColor: primary, color: '#fff' };
+            if (isHovered && !isDisabled) return { backgroundColor: primary + '20' };
+            return undefined;
           })();
 
           return (
@@ -143,15 +149,11 @@ export default function AvailabilityCalendar({
               type="button"
               disabled={isDisabled}
               onClick={() => !isDisabled && onDateSelect(dateStr)}
+              onMouseEnter={() => !isDisabled && setHoveredDay(dateStr)}
+              onMouseLeave={() => setHoveredDay(null)}
               aria-label={`${day} de ${MONTHS[viewMonth]}`}
               aria-pressed={isSelected}
-              style={
-                isSelected
-                  ? { backgroundColor: primary, color: '#fff' }
-                  : isToday && !isDisabled
-                  ? { borderColor: primary, color: primary }
-                  : undefined
-              }
+              style={inlineStyle}
               className={cellClass}
             >
               {day}

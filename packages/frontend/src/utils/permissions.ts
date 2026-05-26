@@ -4,6 +4,7 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   tenant_admin: ['quotes.send', 'bookings.complete', 'settings.manage'],
   supervisor: ['quotes.send', 'bookings.complete'],
   staff: [],
+  platform_admin: ['quotes.send', 'bookings.complete', 'settings.manage'],
 };
 
 export function hasPermission(role: UserRole | undefined | null, permission: string): boolean {
