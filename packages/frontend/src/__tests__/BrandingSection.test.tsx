@@ -89,7 +89,7 @@ describe('BrandingSection', () => {
     const form = screen.getByRole('form', { name: /identidade visual/i });
     const errorIndex = Array.from(form.children).findIndex((el) => el === errorMsg);
     const submitBtn = screen.getByRole('button', { name: /salvar identidade visual/i });
-    const submitIndex = Array.from(form.querySelectorAll('button')).indexOf(submitBtn);
+    const submitIndex = Array.from(form.querySelectorAll('button')).indexOf(submitBtn as HTMLButtonElement);
     expect(errorIndex).toBeLessThan(form.children.length - 1);
     expect(errorIndex).toBeGreaterThanOrEqual(0);
     void submitIndex;

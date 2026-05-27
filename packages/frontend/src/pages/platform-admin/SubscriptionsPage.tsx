@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
+
 import { adminGetSubscriptions, type TenantSubscription } from '../../api/billing';
 import SubscriptionStatusBadge from '../../components/billing/SubscriptionStatusBadge';
 
