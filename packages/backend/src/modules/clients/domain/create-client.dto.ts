@@ -4,8 +4,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
+  Matches,
 } from 'class-validator';
+import { UUID_REGEX, UUID_MSG } from '../../../common/constants/uuid.constants';
 
 export class CreateClientDto {
   @IsString()
@@ -20,7 +21,7 @@ export class CreateClientDto {
   phone: string;
 
   @IsOptional()
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   address_id?: string;
 
   @IsOptional()

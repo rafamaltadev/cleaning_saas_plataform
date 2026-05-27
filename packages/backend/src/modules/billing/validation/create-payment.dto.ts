@@ -3,17 +3,18 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
+  Matches,
   Min,
 } from 'class-validator';
+import { UUID_REGEX, UUID_MSG } from '../../../common/constants/uuid.constants';
 
 export class CreatePaymentDto {
   @IsOptional()
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   booking_id?: string;
 
   @IsOptional()
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   quote_id?: string;
 
   @IsInt()

@@ -4,15 +4,16 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
+  Matches,
   Min,
 } from 'class-validator';
+import { UUID_REGEX, UUID_MSG } from '../../../common/constants/uuid.constants';
 
 export class CreateInvoiceDto {
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   booking_id: string;
 
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   client_id: string;
 
   @IsInt()

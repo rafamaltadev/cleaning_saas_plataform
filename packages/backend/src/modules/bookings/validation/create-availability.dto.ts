@@ -1,7 +1,8 @@
-import { IsString, IsUUID, Matches } from 'class-validator';
+import { IsString, Matches } from 'class-validator';
+import { UUID_REGEX, UUID_MSG } from '../../../common/constants/uuid.constants';
 
 export class CreateAvailabilityDto {
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   employee_id: string;
 
   @IsString()

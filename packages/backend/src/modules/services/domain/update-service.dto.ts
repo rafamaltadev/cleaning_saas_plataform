@@ -1,6 +1,7 @@
 import {
-  IsBoolean, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, Min,
+  IsBoolean, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Matches, Min,
 } from 'class-validator';
+import { UUID_REGEX, UUID_MSG } from '../../../common/constants/uuid.constants';
 import { Type } from 'class-transformer';
 
 export class UpdateServiceDto {
@@ -25,7 +26,7 @@ export class UpdateServiceDto {
   unit?: 'sqm' | 'hour' | 'flat';
 
   @IsOptional()
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   category_id?: string;
 
   @IsOptional()

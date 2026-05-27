@@ -1,4 +1,5 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import type { Stripe } from 'stripe/cjs/stripe.core';
 import { getStripeClient } from '../../../config/stripe.config';
 import { Tenant } from '../../tenant/domain/tenant.entity';
 import { AuditLog } from '../../audit-log/domain/audit-log.entity';
@@ -13,7 +14,7 @@ export class StripePlatformService {
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
-  private getStripe(): any {
+  private getStripe(): Stripe {
     const client = getStripeClient();
     if (!client) {
       throw new InternalServerErrorException('Stripe is not configured');
@@ -97,7 +98,7 @@ export class StripePlatformService {
 
       return await stripe.subscriptions.update(params.subscriptionId, {
         items: [{ id: itemId, price: params.newPriceId }],
-        proration_behavior: params.prorationBehavior,
+        proration_behavior: params.prorationBehavior as any,
       });
     } catch (err) {
       await this.logAuditError('stripe.updateSubscription', params.tenantId, err);
@@ -132,7 +133,7 @@ export class StripePlatformService {
     tier: string;
   }): Promise<any> {
     const stripe = this.getStripe();
-    const stripeInterval: any = params.interval === 'semiannual' ? 'month' : params.interval;
+    const stripeInterval: Stripe.Plan.Interval = params.interval === 'semiannual' ? 'month' : params.interval as Stripe.Plan.Interval;
     const stripeIntervalCount = params.interval === 'semiannual' ? 6 : params.intervalCount;
 
     const product = await stripe.products.create({

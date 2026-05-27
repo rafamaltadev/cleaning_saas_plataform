@@ -1,9 +1,10 @@
-import { IsUUID } from 'class-validator';
+import { Matches } from 'class-validator';
+import { UUID_REGEX, UUID_MSG } from '../../../common/constants/uuid.constants';
 
 export class CreateAssignmentDto {
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   booking_id: string;
 
-  @IsUUID()
+  @Matches(UUID_REGEX, UUID_MSG)
   employee_id: string;
 }

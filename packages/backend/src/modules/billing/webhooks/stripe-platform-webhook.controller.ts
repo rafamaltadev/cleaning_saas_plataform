@@ -19,6 +19,7 @@ import { SubscriptionPlan } from '../subscriptions/subscription-plan.entity';
 import { Tenant } from '../../tenant/domain/tenant.entity';
 import { AuditLog } from '../../audit-log/domain/audit-log.entity';
 import type { SubscriptionStatus } from '../subscriptions/tenant-subscription.entity';
+import type { Stripe } from 'stripe/cjs/stripe.core';
 
 @ApiTags('webhooks')
 @Controller('v1/webhooks/stripe')
@@ -43,7 +44,7 @@ export class StripePlatformWebhookController {
       return { received: true };
     }
 
-    let event: any;
+    let event: Stripe.Event;
     try {
       const rawBody = req.rawBody;
       if (!rawBody) throw new Error('Missing raw body');
@@ -77,7 +78,7 @@ export class StripePlatformWebhookController {
     return { received: true };
   }
 
-  private async processEvent(event: any): Promise<void> {
+  private async processEvent(event: Stripe.Event): Promise<void> {
     switch (event.type) {
       case 'checkout.session.completed':
         await this.handleCheckoutCompleted(event.data.object);
@@ -102,7 +103,7 @@ export class StripePlatformWebhookController {
     }
   }
 
-  private async handleCheckoutCompleted(session: any): Promise<void> {
+  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
     const tenantId = session.metadata?.tenant_id;
     const planId = session.metadata?.plan_id;
     if (!tenantId || !planId || !session.subscription) return;
@@ -166,7 +167,7 @@ export class StripePlatformWebhookController {
     await this.logAudit(tenantId, 'checkout.session.completed', 'tenant_subscription', subscriptionResourceId);
   }
 
-  private async handleSubscriptionUpdated(sub: any): Promise<void> {
+  private async handleSubscriptionUpdated(sub: Stripe.Subscription): Promise<void> {
     const tenantId = sub.metadata?.tenant_id;
     if (!tenantId) return;
 
@@ -174,8 +175,8 @@ export class StripePlatformWebhookController {
       { stripe_subscription_id: sub.id },
       {
         status: sub.status as SubscriptionStatus,
-        current_period_start: new Date(sub.current_period_start * 1000),
-        current_period_end: new Date(sub.current_period_end * 1000),
+        current_period_start: new Date((sub as any).current_period_start * 1000),
+        current_period_end: new Date((sub as any).current_period_end * 1000),
         cancel_at_period_end: sub.cancel_at_period_end,
         canceled_at: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
       },
@@ -184,7 +185,7 @@ export class StripePlatformWebhookController {
     await this.logAudit(tenantId, 'customer.subscription.updated', 'tenant_subscription', sub.id);
   }
 
-  private async handleSubscriptionDeleted(sub: any): Promise<void> {
+  private async handleSubscriptionDeleted(sub: Stripe.Subscription): Promise<void> {
     const tenantId = sub.metadata?.tenant_id;
 
     await this.dataSource.getRepository(TenantSubscription).update(
@@ -197,10 +198,11 @@ export class StripePlatformWebhookController {
     }
   }
 
-  private async handleInvoicePaymentSucceeded(invoice: any): Promise<void> {
-    const subId = typeof invoice.subscription === 'string'
-      ? invoice.subscription
-      : invoice.subscription?.id;
+  private async handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+    const rawInvoice = invoice as any;
+    const subId = typeof rawInvoice.subscription === 'string'
+      ? rawInvoice.subscription
+      : rawInvoice.subscription?.id;
     if (!subId) return;
 
     const sub = await this.dataSource
@@ -216,10 +218,11 @@ export class StripePlatformWebhookController {
     this.logger.log(`Payment succeeded for subscription ${subId}`);
   }
 
-  private async handleInvoicePaymentFailed(invoice: any): Promise<void> {
-    const subId = typeof invoice.subscription === 'string'
-      ? invoice.subscription
-      : invoice.subscription?.id;
+  private async handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+    const rawInvoice = invoice as any;
+    const subId = typeof rawInvoice.subscription === 'string'
+      ? rawInvoice.subscription
+      : rawInvoice.subscription?.id;
     if (!subId) return;
 
     await this.dataSource.getRepository(TenantSubscription).update(
@@ -230,7 +233,7 @@ export class StripePlatformWebhookController {
     this.logger.warn(`Payment failed for subscription ${subId}`);
   }
 
-  private async handleTrialWillEnd(sub: any): Promise<void> {
+  private async handleTrialWillEnd(sub: Stripe.Subscription): Promise<void> {
     const tenantId = sub.metadata?.tenant_id;
     this.logger.log(`Trial will end soon for tenant ${tenantId ?? 'unknown'}, subscription ${sub.id}`);
   }
