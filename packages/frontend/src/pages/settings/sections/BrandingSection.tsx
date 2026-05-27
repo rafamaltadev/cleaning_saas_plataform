@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
+import { Globe } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -166,9 +167,34 @@ export default function BrandingSection() {
   if (loading) return <p className="text-text-muted text-sm">Carregando…</p>;
 
   const previewColor = primaryColorRef.current || primaryColor || '#4F46E5';
+  const validPreviewColor = /^#[0-9a-fA-F]{6}$/.test(previewColor) ? previewColor : '#4F46E5';
+  const hasSocialLinks = tenant?.social_links
+    ? Object.values(tenant.social_links).some(Boolean)
+    : false;
+  const hasContact = !!(tenant?.phone || tenant?.public_address || hasSocialLinks);
 
   return (
     <div className="space-y-6">
+      {tenant?.tenant_slug && (
+        <div className="flex items-center justify-between gap-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Globe className="w-5 h-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text-primary">Página pública da empresa</p>
+              <p className="text-xs text-text-muted truncate">/t/{tenant.tenant_slug}</p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => window.open(`/t/${tenant.tenant_slug}`, '_blank')}
+          >
+            Ver página pública
+          </Button>
+        </div>
+      )}
+
       <Card title="Identidade da empresa">
         <form aria-label="Identidade Visual" className="space-y-5">
           {error && (
@@ -313,31 +339,89 @@ export default function BrandingSection() {
 
       {/* Preview card */}
       <Card title="Pré-visualização">
-        <div className="flex flex-col items-center justify-center py-6 text-center gap-4">
-          {logoPreview ? (
-            <img
-              src={logoPreview}
-              alt="Logo da empresa"
-              className="h-16 w-auto object-contain"
-            />
-          ) : (
-            <div className="h-16 w-16 rounded-full bg-surface-alt border border-border flex items-center justify-center text-text-muted text-2xl font-bold">
-              {tenant?.name?.charAt(0)?.toUpperCase() ?? '?'}
+        <div className="overflow-hidden rounded-lg border border-border" style={{ height: '340px' }}>
+          <div style={{ transform: 'scale(0.55)', transformOrigin: 'top left', width: '182%', pointerEvents: 'none', userSelect: 'none' }}>
+
+            {/* Header */}
+            <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {logoPreview ? (
+                <img src={logoPreview} alt="" style={{ height: '36px', width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: validPreviewColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '16px', flexShrink: 0 }}>
+                  {tenant?.name?.charAt(0)?.toUpperCase() ?? '?'}
+                </div>
+              )}
+              <span style={{ fontWeight: 600, fontSize: '16px', color: '#111827' }}>{tenant?.name ?? 'Nome da empresa'}</span>
             </div>
-          )}
-          <p
-            className="text-xl font-semibold"
-            style={{ color: /^#[0-9a-fA-F]{6}$/.test(previewColor) ? previewColor : '#4F46E5' }}
-          >
-            {tenant?.name ?? 'Nome da empresa'}
-          </p>
-          <button
-            type="button"
-            className="px-4 py-2 rounded-lg text-white text-sm font-medium min-h-[44px] transition-opacity hover:opacity-90"
-            style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(previewColor) ? previewColor : '#4F46E5' }}
-          >
-            Solicitar orçamento
-          </button>
+
+            {/* Hero */}
+            <div style={{ background: '#f9fafb', padding: '36px 20px' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: validPreviewColor, marginBottom: '12px', lineHeight: 1.2 }}>
+                {tenant?.name ?? 'Nome da empresa'}
+              </h1>
+              {tenant?.description && (
+                <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '16px', maxWidth: '500px', lineHeight: 1.6 }}>
+                  {tenant.description}
+                </p>
+              )}
+              <div style={{ display: 'inline-flex', alignItems: 'center', height: '44px', padding: '0 24px', borderRadius: '8px', background: validPreviewColor, color: 'white', fontWeight: 600, fontSize: '14px' }}>
+                Solicitar Orçamento
+              </div>
+            </div>
+
+            {/* Services placeholder */}
+            <div style={{ padding: '28px 20px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Nossos Serviços</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} style={{ border: '1px solid #e5e7eb', borderRadius: '10px', padding: '16px', background: 'white' }}>
+                    <div style={{ width: '65%', height: '12px', background: '#e5e7eb', borderRadius: '4px', marginBottom: '8px' }} />
+                    <div style={{ width: '45%', height: '10px', background: '#e5e7eb', borderRadius: '4px', marginBottom: '8px' }} />
+                    <div style={{ width: '30%', height: '10px', background: '#e5e7eb', borderRadius: '4px' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div style={{ padding: '28px 20px', background: '#f9fafb' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Contato</h2>
+              {hasContact ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {tenant?.phone && (
+                    <span style={{ fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>📞</span>{tenant.phone}
+                    </span>
+                  )}
+                  {tenant?.public_address && (
+                    <span style={{ fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>📍</span>{tenant.public_address}
+                    </span>
+                  )}
+                  {tenant?.social_links?.instagram && (
+                    <span style={{ fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>📸</span>Instagram
+                    </span>
+                  )}
+                  {tenant?.social_links?.whatsapp && (
+                    <span style={{ fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>💬</span>WhatsApp
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <p style={{ fontSize: '13px', color: '#9ca3af', textAlign: 'center' }}>Informações de contato não configuradas</p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '16px 20px', textAlign: 'center', borderTop: '1px solid #e5e7eb', background: 'white' }}>
+              <span style={{ fontSize: '12px', color: '#9ca3af' }}>
+                © {new Date().getFullYear()} {tenant?.name ?? 'Nome da empresa'}. Todos os direitos reservados.
+              </span>
+            </div>
+
+          </div>
         </div>
       </Card>
     </div>

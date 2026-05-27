@@ -51,6 +51,16 @@ export interface Tenant {
   logo_url?: string | null;
   primary_color?: string | null;
   favicon_url?: string | null;
+  description?: string;
+  phone?: string;
+  public_address?: string;
+  google_maps_embed_url?: string;
+  social_links?: {
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+    website?: string;
+  };
   businessHours?: BusinessHours;
 }
 

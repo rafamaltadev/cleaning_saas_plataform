@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Globe } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { listBookings } from '../../api/bookings';
 import { listQuotes } from '../../api/quotes';
 import { getNotifications } from '../../api/notifications';
+import { getTenant } from '../../api/tenants';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import type { RootState } from '../../store';
-import type { ApiNotification } from '../../types';
+import type { ApiNotification, Tenant } from '../../types';
 
 interface KpiData {
   confirmedBookings: number;
@@ -22,6 +24,7 @@ export default function DashboardPage() {
   const flags = useFeatureFlags();
 
   const [kpi, setKpi] = useState<KpiData>({ confirmedBookings: 0, openQuotes: 0 });
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [loadingKpi, setLoadingKpi] = useState(true);
   const [loadingNotif, setLoadingNotif] = useState(true);
@@ -31,12 +34,14 @@ export default function DashboardPage() {
       listBookings({ page: 1, limit: 1, status: 'confirmed' }),
       listQuotes({ page: 1, limit: 1, status: 'draft' }),
       listQuotes({ page: 1, limit: 1, status: 'sent' }),
+      getTenant().catch(() => null),
     ])
-      .then(([confirmedRes, draftRes, sentRes]) => {
+      .then(([confirmedRes, draftRes, sentRes, tenantRes]) => {
         setKpi({
           confirmedBookings: confirmedRes.meta.total,
           openQuotes: draftRes.meta.total + sentRes.meta.total,
         });
+        if (tenantRes) setTenant(tenantRes);
       })
       .finally(() => setLoadingKpi(false));
   }, []);
@@ -57,6 +62,26 @@ export default function DashboardPage() {
           </p>
         )}
       </div>
+
+      {/* Public page banner */}
+      {tenant?.tenant_slug && (
+        <div className="flex items-center justify-between gap-4 bg-primary/5 border border-primary/20 rounded-xl p-5 mb-8">
+          <div className="flex items-center gap-3 min-w-0">
+            <Globe className="w-5 h-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text-primary">Sua página pública está no ar</p>
+              <p className="text-xs text-text-muted truncate">/t/{tenant.tenant_slug}</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => window.open(`/t/${tenant.tenant_slug}`, '_blank')}
+          >
+            Ver página pública
+          </Button>
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
