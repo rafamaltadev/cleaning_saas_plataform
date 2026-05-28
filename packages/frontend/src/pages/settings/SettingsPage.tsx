@@ -8,8 +8,9 @@ import type { BusinessHours, Service, ServiceCategory } from '../../types';
 import BrandingSection from './sections/BrandingSection';
 import CompanyProfileSection from './sections/CompanyProfileSection';
 import BillingSection from './sections/BillingSection';
+import PaymentsSection from './sections/PaymentsSection';
 
-type Tab = 'profile' | 'branding' | 'hours' | 'categories' | 'services' | 'billing';
+type Tab = 'profile' | 'branding' | 'hours' | 'categories' | 'services' | 'billing' | 'payments';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Perfil da Empresa' },
@@ -18,6 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'categories', label: 'Categorias' },
   { id: 'services', label: 'Serviços e Preços' },
   { id: 'billing', label: 'Plano e Cobrança' },
+  { id: 'payments', label: 'Pagamentos' },
 ];
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -58,6 +60,7 @@ export default function SettingsPage() {
           {activeTab === 'categories' && <CategoriesSection />}
           {activeTab === 'services' && <ServicesSection />}
           {activeTab === 'billing' && <BillingSection />}
+          {activeTab === 'payments' && <PaymentsSection />}
         </div>
       </div>
     </div>

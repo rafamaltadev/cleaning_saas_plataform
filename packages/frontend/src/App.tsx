@@ -32,6 +32,9 @@ import SubscriptionSuccessPage from './pages/billing/SubscriptionSuccessPage';
 import SubscriptionCancelPage from './pages/billing/SubscriptionCancelPage';
 import PlansPage from './pages/platform-admin/PlansPage';
 import SubscriptionsPage from './pages/platform-admin/SubscriptionsPage';
+import StripeConnectedPage from './pages/settings/StripeConnectedPage';
+import PaymentsInfoBRPage from './pages/settings/PaymentsInfoBRPage';
+import PaymentsInfoUSPage from './pages/settings/PaymentsInfoUSPage';
 
 export default function App() {
   return (
@@ -47,6 +50,8 @@ export default function App() {
           <Route path="/t/:tenantSlug/orcamento/agendar" element={<PublicSchedulingPage />} />
           <Route path="/t/:tenantSlug/orcamento/confirmacao" element={<PublicConfirmationPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/settings/payments/info-br" element={<PaymentsInfoBRPage />} />
+          <Route path="/settings/payments/info-us" element={<PaymentsInfoUSPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -96,6 +101,7 @@ export default function App() {
               />
               <Route path="/settings/billing/success" element={<SubscriptionSuccessPage />} />
               <Route path="/settings/billing/cancel" element={<SubscriptionCancelPage />} />
+              <Route path="/settings/payments/connected" element={<StripeConnectedPage />} />
               <Route
                 path="/platform-admin/plans"
                 element={

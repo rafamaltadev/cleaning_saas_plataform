@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Stripe Connect Express Onboarding & Information Pages"
 type: feature
 complexity: high
