@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Enlace de Pago Post-Servicio</title></head>
+<body style="font-family:Inter,sans-serif;background:#0B0F19;color:#F9FAFB;padding:32px;">
+<div style="max-width:600px;margin:0 auto;background:#111827;border:1px solid #2D3748;border-radius:12px;padding:32px;">
+  <h1 style="color:#4F46E5;font-size:24px;margin-bottom:16px;">Servicio Completado — Realiza el Pago</h1>
+  <p style="color:#9CA3AF;margin-bottom:24px;">Hola, {{clientName}}!</p>
+  <p>Tu servicio ha sido completado. Realiza el pago ahora:</p>
+  <div style="margin:32px 0;text-align:center;">
+    <a href="{{paymentUrl}}" style="background:#4F46E5;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;display:inline-block;">
+      Pagar {{amount}}
+    </a>
+  </div>
+  <p style="color:#6B7280;font-size:14px;">Este enlace expira en 7 días.</p>
+  <hr style="border-color:#2D3748;margin:24px 0;">
+  <p style="color:#6B7280;font-size:12px;">Servicio: {{serviceName}} | Fecha: {{scheduledDate}}</p>
+</div>
+</body>
+</html>

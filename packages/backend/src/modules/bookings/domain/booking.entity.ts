@@ -6,7 +6,14 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export type BookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed' | 'pending_approval';
+export type BookingStatus =
+  | 'confirmed'
+  | 'rescheduled'
+  | 'cancelled'
+  | 'completed'
+  | 'pending_approval'
+  | 'pending_payment';
+
 export type BookingOrigin = 'internal' | 'public';
 
 @Entity('bookings')
@@ -55,6 +62,9 @@ export class Booking {
 
   @Column({ type: 'boolean', default: false })
   approval_required: boolean;
+
+  @Column({ type: 'uuid', nullable: true })
+  payment_id: string | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

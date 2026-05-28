@@ -11,8 +11,10 @@ import { useDroppable, useDraggable } from '@dnd-kit/core';
 import Badge from '../../components/ui/Badge';
 import { getQuotes } from '../../api/quotes';
 import { getBookings, completeBooking } from '../../api/bookings';
+import { listAdminPayments } from '../../api/payments';
 import { apiClient } from '../../api/client';
 import type { KanbanCard, KanbanStatus } from '../../types';
+import type { ApiPayment } from '../../api/payments';
 
 const COLUMNS: { id: KanbanStatus; label: string }[] = [
   { id: 'new_lead', label: 'Novo Lead' },
@@ -70,9 +72,9 @@ function formatBRL(cents: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
 }
 
-interface KanbanCardItemProps { card: KanbanCard }
+interface KanbanCardItemProps { card: KanbanCard; paymentStatus?: string; paymentMode?: string }
 
-function KanbanCardItem({ card }: KanbanCardItemProps) {
+function KanbanCardItem({ card, paymentStatus, paymentMode }: KanbanCardItemProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: { card },
@@ -103,8 +105,17 @@ function KanbanCardItem({ card }: KanbanCardItemProps) {
           {new Date(card.scheduledDate).toLocaleDateString('pt-BR')}
         </p>
       )}
-      <div className="mt-2">
+      <div className="mt-2 flex flex-wrap gap-1">
         <Badge variant={statusBadgeVariant(card.status)}>{STATUS_LABELS[card.status]}</Badge>
+        {paymentMode === 'manual' && (
+          <Badge variant="neutral">Manual</Badge>
+        )}
+        {paymentStatus === 'pending' && paymentMode === 'stripe' && (
+          <Badge variant="warning">Aguardando pagamento</Badge>
+        )}
+        {paymentStatus === 'succeeded' && (
+          <Badge variant="success">Pago</Badge>
+        )}
       </div>
     </div>
   );
@@ -113,9 +124,10 @@ function KanbanCardItem({ card }: KanbanCardItemProps) {
 interface KanbanColumnProps {
   column: { id: KanbanStatus; label: string };
   cards: KanbanCard[];
+  paymentMap: Map<string, ApiPayment>;
 }
 
-function KanbanColumn({ column, cards }: KanbanColumnProps) {
+function KanbanColumn({ column, cards, paymentMap }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
   const [visibleCount, setVisibleCount] = useState(CARDS_PER_PAGE);
 
@@ -139,9 +151,18 @@ function KanbanColumn({ column, cards }: KanbanColumnProps) {
         }`}
         data-testid={`kanban-column-${column.id}`}
       >
-        {visibleCards.map((card) => (
-          <KanbanCardItem key={card.id} card={card} />
-        ))}
+        {visibleCards.map((card) => {
+          const bookingId = card.type === 'booking' ? card.id.replace('booking-', '') : undefined;
+          const payment = bookingId ? paymentMap.get(bookingId) : undefined;
+          return (
+            <KanbanCardItem
+              key={card.id}
+              card={card}
+              paymentStatus={payment?.status}
+              paymentMode={payment?.payment_mode}
+            />
+          );
+        })}
       </div>
       {hasMore && (
         <button
@@ -157,6 +178,7 @@ function KanbanColumn({ column, cards }: KanbanColumnProps) {
 
 export default function KanbanPage() {
   const [cards, setCards] = useState<KanbanCard[]>([]);
+  const [paymentMap, setPaymentMap] = useState<Map<string, ApiPayment>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -166,8 +188,8 @@ export default function KanbanPage() {
   );
 
   useEffect(() => {
-    Promise.all([getQuotes(), getBookings()])
-      .then(([quotesResult, bookingsResult]) => {
+    Promise.all([getQuotes(), getBookings(), listAdminPayments({ limit: 200 }).catch(() => ({ items: [], total: 0 }))])
+      .then(([quotesResult, bookingsResult, paymentsResult]) => {
         const quoteCards: KanbanCard[] = quotesResult.items.map((q) => ({
           id: `quote-${q.id}`,
           type: 'quote',
@@ -185,6 +207,12 @@ export default function KanbanPage() {
           status: apiBookingStatusToKanban(b.status),
         }));
         setCards([...quoteCards, ...bookingCards]);
+
+        const pMap = new Map<string, ApiPayment>();
+        for (const p of paymentsResult.items) {
+          if (p.booking_id) pMap.set(p.booking_id, p);
+        }
+        setPaymentMap(pMap);
       })
       .catch(() => setError('Erro ao carregar dados do fluxo de trabalho.'))
       .finally(() => setLoading(false));
@@ -251,6 +279,7 @@ export default function KanbanPage() {
               key={column.id}
               column={column}
               cards={cards.filter((c) => c.status === column.id)}
+              paymentMap={paymentMap}
             />
           ))}
         </div>

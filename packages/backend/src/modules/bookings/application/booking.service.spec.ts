@@ -25,6 +25,7 @@ function makeBooking(overrides: Partial<Booking> = {}): Booking {
     observations: null,
     origin: 'internal',
     approval_required: false,
+    payment_id: null,
     created_at: new Date(),
     updated_at: new Date(),
     deleted_at: null,

@@ -27,7 +27,7 @@
 | 21 | Public Scheduling Flow with Availability Sync | completed | high | task_20 |
 | 22 | Stripe Platform Subscriptions (Level A: tenant pays SaaS) | completed | high | task_21 |
 | 23 | Stripe Connect Express Onboarding & Information Pages | completed | high | task_22 |
-| 24 | Public Payment Flow with Stripe Connect (Level B: client pays tenant) | pending | high | task_23 |
+| 24 | Public Payment Flow with Stripe Connect (Level B: client pays tenant) | completed | high | task_23 |
 | 25 | Staff Granular Permissions (module-level with action-ready schema) | pending | medium | task_24 |
 | 26 | Internationalization (i18n) with Auto-Detection (pt-BR / EN / ES) | pending | medium | task_25 |
 | 27 | Password Recovery Flow | pending | medium | task_26 |

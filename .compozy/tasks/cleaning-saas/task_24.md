@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 title: "Public Payment Flow with Stripe Connect (Level B: client pays tenant)"
 type: feature
 complexity: high

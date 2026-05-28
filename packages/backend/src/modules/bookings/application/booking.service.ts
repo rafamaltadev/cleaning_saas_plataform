@@ -24,10 +24,11 @@ const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   rescheduled: ['completed', 'cancelled', 'confirmed'],
   cancelled: ['confirmed'],
   completed: ['confirmed'],
-  pending_approval: ['confirmed', 'cancelled'],
+  pending_approval: ['confirmed', 'cancelled', 'pending_payment'],
+  pending_payment: ['confirmed', 'cancelled'],
 };
 
-export const BUSY_STATUSES: BookingStatus[] = ['confirmed', 'rescheduled', 'pending_approval'];
+export const BUSY_STATUSES: BookingStatus[] = ['confirmed', 'rescheduled', 'pending_approval', 'pending_payment'];
 
 @Injectable()
 export class BookingService {

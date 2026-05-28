@@ -4,10 +4,14 @@ import { useSelector } from 'react-redux';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
+import PaymentStatusBadge from '../../components/payments/PaymentStatusBadge';
+import RefundModal from '../../components/payments/RefundModal';
 import { getBookingById, completeBooking } from '../../api/bookings';
+import { listAdminPayments, sendPaymentLink } from '../../api/payments';
 import { apiClient } from '../../api/client';
 import type { RootState } from '../../store';
 import type { ApiBooking } from '../../types';
+import type { ApiPayment } from '../../api/payments';
 import { BOOKING_STATUS_LABELS, bookingBadgeVariant } from '../../utils/bookingStatusLabels';
 
 function nowDatetimeLocal(): string {
@@ -26,11 +30,17 @@ function formatDuration(start: string, end: string): string {
 
 const COMPLETE_ROLES = ['tenant_admin', 'supervisor'] as const;
 
+function formatAmount(cents: number, currency = 'BRL'): string {
+  const locale = currency.toUpperCase() === 'BRL' ? 'pt-BR' : 'en-US';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: currency.toUpperCase() }).format(cents / 100);
+}
+
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const canComplete = user?.role && (COMPLETE_ROLES as readonly string[]).includes(user.role);
+  const isAdmin = user?.role === 'tenant_admin';
 
   const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +56,10 @@ export default function BookingDetailPage() {
   const [newEnd, setNewEnd] = useState('');
   const [reactivating, setReactivating] = useState(false);
   const [modalError, setModalError] = useState('');
+  const [activeTab, setActiveTab] = useState<'details' | 'payments'>('details');
+  const [payments, setPayments] = useState<ApiPayment[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [refundTarget, setRefundTarget] = useState<ApiPayment | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -54,6 +68,17 @@ export default function BookingDetailPage() {
       .catch(() => setError('Erro ao carregar agendamento.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (activeTab !== 'payments' || !id) return;
+    setPaymentsLoading(true);
+    listAdminPayments()
+      .then((result) => {
+        setPayments(result.items.filter((p) => p.booking_id === id));
+      })
+      .catch(() => {})
+      .finally(() => setPaymentsLoading(false));
+  }, [activeTab, id]);
 
   useEffect(() => {
     if (!showReactivateModal) return;
@@ -234,7 +259,104 @@ export default function BookingDetailPage() {
 
       {error && <p className="text-error text-sm mb-4" role="alert">{error}</p>}
 
-      <div className="space-y-4 max-w-2xl">
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab('details')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors min-h-[44px] ${
+            activeTab === 'details'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          Detalhes
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('payments')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors min-h-[44px] ${
+            activeTab === 'payments'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          Pagamentos
+        </button>
+      </div>
+
+      {activeTab === 'payments' && (
+        <div className="max-w-2xl mb-6">
+          {paymentsLoading ? (
+            <p className="text-text-muted text-sm">Carregando pagamentos…</p>
+          ) : payments.length === 0 ? (
+            <p className="text-text-muted text-sm">Nenhum pagamento encontrado para este agendamento.</p>
+          ) : (
+            <div className="space-y-4">
+              {payments.map((p) => (
+                <Card key={p.id} title="">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <PaymentStatusBadge status={p.status as any} />
+                      <span className="text-text-primary font-semibold">
+                        {formatAmount(p.amount_cents, p.currency)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Método</span>
+                      <span className="text-text-primary capitalize">{p.payment_method}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Modo</span>
+                      <span className="text-text-primary capitalize">{p.payment_mode}</span>
+                    </div>
+                    {p.application_fee_cents > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Taxa plataforma</span>
+                        <span className="text-text-primary">{formatAmount(p.application_fee_cents, p.currency)}</span>
+                      </div>
+                    )}
+                    {p.stripe_fee_cents != null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Taxa Stripe</span>
+                        <span className="text-text-primary">{formatAmount(p.stripe_fee_cents, p.currency)}</span>
+                      </div>
+                    )}
+                    {p.net_amount_cents != null && (
+                      <div className="flex justify-between text-sm font-medium">
+                        <span className="text-text-secondary">Líquido</span>
+                        <span className="text-success">{formatAmount(p.net_amount_cents, p.currency)}</span>
+                      </div>
+                    )}
+                    <div className="flex gap-3 pt-2 flex-wrap">
+                      {isAdmin && p.status === 'succeeded' && (
+                        <button
+                          type="button"
+                          onClick={() => setRefundTarget(p)}
+                          className="text-sm text-error underline min-h-[44px]"
+                        >
+                          Reembolsar
+                        </button>
+                      )}
+                      {p.status === 'pending' && (
+                        <button
+                          type="button"
+                          onClick={() => sendPaymentLink(p.id).catch(() => {})}
+                          className="text-sm text-primary underline min-h-[44px]"
+                        >
+                          Reenviar link de pagamento
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'details' && <div className="space-y-4 max-w-2xl">
         <Card title="Informações do Agendamento">
           <dl className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
@@ -348,7 +470,18 @@ export default function BookingDetailPage() {
             </div>
           </dl>
         </Card>
-      </div>
+      </div>}
+
+      {refundTarget && (
+        <RefundModal
+          payment={refundTarget}
+          onClose={() => setRefundTarget(null)}
+          onSuccess={(updated) => {
+            setPayments((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+            setRefundTarget(null);
+          }}
+        />
+      )}
 
       {showRejectModal && (
         <div

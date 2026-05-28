@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Pago Fallido</title></head>
+<body style="font-family:Inter,sans-serif;background:#0B0F19;color:#F9FAFB;padding:32px;">
+<div style="max-width:600px;margin:0 auto;background:#111827;border:1px solid #2D3748;border-radius:12px;padding:32px;">
+  <div style="text-align:center;margin-bottom:24px;"><span style="font-size:48px;">❌</span></div>
+  <h1 style="color:#EF4444;font-size:24px;margin-bottom:16px;text-align:center;">Pago No Procesado</h1>
+  <p style="color:#9CA3AF;margin-bottom:24px;">Hola, {{clientName}}!</p>
+  <p>Lamentablemente tu pago no pudo ser procesado. Intenta de nuevo usando el siguiente enlace:</p>
+  <div style="margin:32px 0;text-align:center;">
+    <a href="{{retryUrl}}" style="background:#EF4444;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;display:inline-block;">
+      Intentar de Nuevo
+    </a>
+  </div>
+  <p style="color:#6B7280;font-size:14px;">Motivo: {{failureReason}}</p>
+</div>
+</body>
+</html>

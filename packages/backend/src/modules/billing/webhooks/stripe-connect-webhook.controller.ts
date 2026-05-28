@@ -11,11 +11,13 @@ import {
 import { Request } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 import { Public } from '../../../common/decorators/public.decorator';
 import { StripeWebhookEvent } from '../subscriptions/stripe-webhook-event.entity';
 import { Tenant } from '../../tenant/domain/tenant.entity';
 import { AuditLog } from '../../audit-log/domain/audit-log.entity';
+import { Payment } from '../domain/payment.entity';
+import { Booking } from '../../bookings/domain/booking.entity';
 import type { Stripe } from 'stripe/cjs/stripe.core';
 
 @ApiTags('webhooks')
@@ -71,10 +73,10 @@ export class StripeConnectWebhookController {
 
     let processingError: unknown = null;
     try {
-      await this.processEvent(event);
+      await this.processEvent(event, stripe);
     } catch (err) {
       processingError = err;
-      this.logger.error(`Connect webhook processing error for event ${event.id}`, err);
+      this.logger.error(`Connect webhook processing error for event ${event.id}: ${(err as Error).message}`, err);
     }
 
     await this.dataSource.getRepository(StripeWebhookEvent).save({
@@ -91,7 +93,7 @@ export class StripeConnectWebhookController {
     return { received: true };
   }
 
-  private async processEvent(event: Stripe.Event): Promise<void> {
+  private async processEvent(event: Stripe.Event, stripe: Stripe): Promise<void> {
     switch (event.type) {
       case 'account.updated':
         await this.handleAccountUpdated(event.data.object as Stripe.Account);
@@ -99,9 +101,144 @@ export class StripeConnectWebhookController {
       case 'account.application.deauthorized':
         await this.handleAccountDeauthorized(event.data.object as any);
         break;
+      case 'payment_intent.succeeded':
+        await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent, stripe);
+        break;
+      case 'payment_intent.payment_failed':
+        await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+        break;
+      case 'charge.refunded':
+        await this.handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+      case 'charge.dispute.created':
+        await this.handleDisputeCreated(event.data.object as Stripe.Dispute);
+        break;
       default:
         this.logger.log(`Unhandled Connect webhook event type: ${event.type}`);
     }
+  }
+
+  private async handlePaymentIntentSucceeded(
+    paymentIntent: Stripe.PaymentIntent,
+    stripe: Stripe,
+  ): Promise<void> {
+    const payment = await this.dataSource.getRepository(Payment).findOne({
+      where: { stripe_payment_intent_id: paymentIntent.id },
+    });
+    if (!payment) {
+      this.logger.warn(`payment_intent.succeeded: no payment found for intent ${paymentIntent.id}`);
+      return;
+    }
+
+    let stripeFee: number | null = null;
+    let netAmount: number | null = null;
+
+    // Retrieve balance transaction to get Stripe fee
+    try {
+      const chargeId = typeof paymentIntent.latest_charge === 'string'
+        ? paymentIntent.latest_charge
+        : (paymentIntent.latest_charge as any)?.id;
+      if (chargeId) {
+        const stripeAcct = (paymentIntent.transfer_data?.destination as string | undefined);
+        const charge = await stripe.charges.retrieve(
+          chargeId,
+          { expand: ['balance_transaction'] },
+          stripeAcct ? { stripeAccount: stripeAcct } : {},
+        );
+        const bt = charge.balance_transaction as Stripe.BalanceTransaction | null;
+        if (bt) {
+          stripeFee = bt.fee;
+          netAmount = bt.net;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Could not retrieve balance transaction for ${paymentIntent.id}: ${(err as Error).message}`);
+    }
+
+    payment.status = 'succeeded';
+    payment.paid_at = new Date(paymentIntent.created * 1000);
+    if (stripeFee !== null) payment.stripe_fee_cents = stripeFee;
+    if (netAmount !== null) payment.net_amount_cents = netAmount;
+
+    const chargeIdValue = typeof paymentIntent.latest_charge === 'string'
+      ? paymentIntent.latest_charge
+      : paymentIntent.latest_charge?.id ?? null;
+    if (chargeIdValue) payment.stripe_charge_id = chargeIdValue;
+
+    await this.dataSource.getRepository(Payment).save(payment);
+
+    // If prepaid — transition booking to confirmed
+    if (payment.payment_timing === 'prepaid' && payment.booking_id) {
+      const booking = await this.dataSource.getRepository(Booking).findOne({
+        where: { id: payment.booking_id, deleted_at: IsNull() },
+      });
+      if (booking && booking.status === 'pending_payment') {
+        booking.status = 'confirmed';
+        await this.dataSource.getRepository(Booking).save(booking);
+        this.logger.log(`Booking ${booking.id} confirmed via payment ${payment.id}`);
+      }
+    }
+
+    await this.logAudit(payment.tenant_id, 'payment.succeeded', 'payment', payment.id);
+    this.logger.log(`PaymentIntent ${paymentIntent.id} succeeded for payment ${payment.id}`);
+  }
+
+  private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+    const payment = await this.dataSource.getRepository(Payment).findOne({
+      where: { stripe_payment_intent_id: paymentIntent.id },
+    });
+    if (!payment) {
+      this.logger.warn(`payment_intent.payment_failed: no payment found for intent ${paymentIntent.id}`);
+      return;
+    }
+
+    const lastError = paymentIntent.last_payment_error;
+    payment.status = 'failed';
+    payment.failure_reason = lastError?.message ?? 'Payment failed';
+    await this.dataSource.getRepository(Payment).save(payment);
+
+    await this.logAudit(payment.tenant_id, 'payment.failed', 'payment', payment.id);
+    this.logger.log(`PaymentIntent ${paymentIntent.id} failed for payment ${payment.id}: ${payment.failure_reason}`);
+  }
+
+  private async handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+    const piId = typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id;
+    if (!piId) return;
+
+    const payment = await this.dataSource.getRepository(Payment).findOne({
+      where: { stripe_payment_intent_id: piId },
+    });
+    if (!payment) {
+      this.logger.warn(`charge.refunded: no payment found for intent ${piId}`);
+      return;
+    }
+
+    payment.status = 'refunded';
+    payment.refunded_at = new Date();
+    await this.dataSource.getRepository(Payment).save(payment);
+
+    await this.logAudit(payment.tenant_id, 'payment.refunded', 'payment', payment.id);
+    this.logger.log(`Charge refunded for payment ${payment.id}`);
+  }
+
+  private async handleDisputeCreated(dispute: Stripe.Dispute): Promise<void> {
+    const piId = typeof dispute.payment_intent === 'string'
+      ? dispute.payment_intent
+      : dispute.payment_intent?.id;
+
+    const payment = piId
+      ? await this.dataSource.getRepository(Payment).findOne({
+          where: { stripe_payment_intent_id: piId },
+        })
+      : null;
+
+    const tenantId = payment?.tenant_id ?? 'unknown';
+    const resourceId = payment?.id ?? dispute.id;
+
+    await this.logAudit(tenantId, 'payment.dispute_created', 'payment', resourceId);
+    this.logger.warn(`Dispute created for payment_intent ${piId ?? 'unknown'}, dispute ${dispute.id}`);
   }
 
   private async handleAccountUpdated(account: Stripe.Account): Promise<void> {

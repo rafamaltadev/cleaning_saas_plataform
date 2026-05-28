@@ -10,6 +10,9 @@ import { StripeTermsVersion } from './connect/stripe-terms-version.entity';
 import { TenantStripeConsent } from './connect/tenant-stripe-consent.entity';
 import { Tenant } from '../tenant/domain/tenant.entity';
 import { AuditLog } from '../audit-log/domain/audit-log.entity';
+import { User } from '../auth/domain/user.entity';
+import { Client } from '../clients/domain/client.entity';
+import { Booking } from '../bookings/domain/booking.entity';
 import { InvoiceRepository } from './infrastructure/invoice.repository';
 import { PaymentRepository } from './infrastructure/payment.repository';
 import { InvoiceNumberService } from './application/invoice-number.service';
@@ -20,12 +23,16 @@ import { StripeTermsService } from './connect/stripe-terms.service';
 import { SubscriptionPlanService } from './subscriptions/subscription-plan.service';
 import { TenantSubscriptionService } from './subscriptions/tenant-subscription.service';
 import { SubscriptionReadjustmentJob } from './jobs/subscription-readjustment.job';
+import { PaymentService } from './payments/payment.service';
+import { PublicPaymentService } from './payments/public-payment.service';
 import { InvoicesController } from './interfaces/invoices.controller';
 import { PaymentsController } from './interfaces/payments.controller';
 import { BillingController } from './interfaces/billing.controller';
 import { AdminSubscriptionController } from './interfaces/admin-subscription.controller';
 import { ConnectController } from './interfaces/connect.controller';
 import { PaymentConfigController } from './interfaces/payment-config.controller';
+import { PaymentController } from './payments/payment.controller';
+import { PublicPaymentController } from './payments/public-payment.controller';
 import { StripePlatformWebhookController } from './webhooks/stripe-platform-webhook.controller';
 import { StripeConnectWebhookController } from './webhooks/stripe-connect-webhook.controller';
 import { AuthModule } from '../auth/auth.module';
@@ -43,6 +50,9 @@ import { AuthModule } from '../auth/auth.module';
       TenantStripeConsent,
       Tenant,
       AuditLog,
+      User,
+      Client,
+      Booking,
     ]),
     AuthModule,
   ],
@@ -57,6 +67,8 @@ import { AuthModule } from '../auth/auth.module';
     SubscriptionPlanService,
     TenantSubscriptionService,
     SubscriptionReadjustmentJob,
+    PaymentService,
+    PublicPaymentService,
   ],
   controllers: [
     InvoicesController,
@@ -65,9 +77,11 @@ import { AuthModule } from '../auth/auth.module';
     AdminSubscriptionController,
     ConnectController,
     PaymentConfigController,
+    PaymentController,
+    PublicPaymentController,
     StripePlatformWebhookController,
     StripeConnectWebhookController,
   ],
-  exports: [BillingService, SubscriptionPlanService, TenantSubscriptionService],
+  exports: [BillingService, SubscriptionPlanService, TenantSubscriptionService, PaymentService],
 })
 export class BillingModule {}

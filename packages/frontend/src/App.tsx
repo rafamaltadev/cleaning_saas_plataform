@@ -35,6 +35,9 @@ import SubscriptionsPage from './pages/platform-admin/SubscriptionsPage';
 import StripeConnectedPage from './pages/settings/StripeConnectedPage';
 import PaymentsInfoBRPage from './pages/settings/PaymentsInfoBRPage';
 import PaymentsInfoUSPage from './pages/settings/PaymentsInfoUSPage';
+import PublicPaymentPage from './pages/public/PublicPaymentPage';
+import PaymentSuccessPage from './pages/public/PaymentSuccessPage';
+import PaymentsListPage from './pages/payments/PaymentsListPage';
 
 export default function App() {
   return (
@@ -49,6 +52,8 @@ export default function App() {
           <Route path="/t/:tenantSlug/orcamento/cadastro" element={<PublicQuoteRegisterPage />} />
           <Route path="/t/:tenantSlug/orcamento/agendar" element={<PublicSchedulingPage />} />
           <Route path="/t/:tenantSlug/orcamento/confirmacao" element={<PublicConfirmationPage />} />
+          <Route path="/t/:tenantSlug/pagamento" element={<PublicPaymentPage />} />
+          <Route path="/t/:tenantSlug/pagamento/sucesso" element={<PaymentSuccessPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/settings/payments/info-br" element={<PaymentsInfoBRPage />} />
           <Route path="/settings/payments/info-us" element={<PaymentsInfoUSPage />} />
@@ -64,6 +69,14 @@ export default function App() {
               <Route path="/bookings/:id" element={<BookingDetailPage />} />
               <Route path="/bookings/:id/edit" element={<BookingEditPage />} />
               <Route path="/kanban" element={<KanbanPage />} />
+              <Route
+                path="/payments"
+                element={
+                  <RoleGuard requiredRoles={['tenant_admin', 'supervisor']}>
+                    <PaymentsListPage />
+                  </RoleGuard>
+                }
+              />
               <Route path="/clients" element={<ClientListPage />} />
               <Route path="/clients/new" element={<ClientCreatePage />} />
               <Route path="/clients/:id/edit" element={<ClientEditPage />} />

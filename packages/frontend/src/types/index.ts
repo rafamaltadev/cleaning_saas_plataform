@@ -154,7 +154,7 @@ export interface QuoteAddon {
 }
 
 export type ApiQuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'rejected';
-export type ApiBookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed' | 'pending_approval';
+export type ApiBookingStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed' | 'pending_approval' | 'pending_payment';
 
 export interface PaginationMeta {
   total: number;
